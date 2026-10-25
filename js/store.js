@@ -172,6 +172,46 @@ window.LL = window.LL || {};
     return writeFolders(all);
   }
 
+  const folderKey = (name) => String(name || '').trim().toLocaleLowerCase('es').normalize('NFC');
+  /** Creation time encoded in ids like "folder-1792914497974-abcde" (used to pick the original). */
+  const folderBorn = (f) => { const m = /(\d{10,})/.exec(f.id || ''); return m ? Number(m[1]) : Number.MAX_SAFE_INTEGER; };
+
+  /** Is there already a folder with this name in the same place? */
+  function folderNameTaken(name, parentId, exceptId) {
+    const k = folderKey(name);
+    return folders().some((f) => f.id !== exceptId && (f.parentId || null) === (parentId || null) && folderKey(f.name) === k);
+  }
+
+  /** Join folders that have the same name in the same place (e.g. after bringing in old
+   *  activities). The oldest one is kept; everything inside the others moves into it.
+   *  Every device picks the same folder, so tablets agree. Returns how many were merged. */
+  function mergeDuplicateFolders() {
+    let all = folders(), lib = readLibrary(), merged = 0, guard = 0, changed = true;
+    const now = nowISO();
+    while (changed && guard++ < 20) {
+      changed = false;
+      const groups = new Map();
+      for (const f of all) {
+        const k = (f.parentId || '') + '\u0000' + folderKey(f.name);
+        if (!groups.has(k)) groups.set(k, []);
+        groups.get(k).push(f);
+      }
+      for (const g of groups.values()) {
+        if (g.length < 2) continue;
+        g.sort((a, b) => folderBorn(a) - folderBorn(b) || String(a.id).localeCompare(String(b.id)));
+        const keep = g[0];
+        for (const dup of g.slice(1)) {
+          all.forEach((x) => { if (x.parentId === dup.id) { x.parentId = keep.id; x.updatedAt = now; } });
+          lib.forEach((x) => { if (x.folderId === dup.id) { x.folderId = keep.id; x.updatedAt = now; } });
+          all = all.filter((x) => x.id !== dup.id);
+          merged++; changed = true;
+        }
+      }
+    }
+    if (merged) { writeLibrary(lib); writeFolders(all); }
+    return merged;
+  }
+
   /** Delete a folder; anything inside moves up to its parent so nothing is lost. */
   function deleteFolder(id) {
     const all = folders();
@@ -194,7 +234,9 @@ window.LL = window.LL || {};
     while (p) { if (p === id) return false; p = (all.find((x) => x.id === p) || {}).parentId; }
     f.parentId = parentId || null;
     f.updatedAt = nowISO();
-    return writeFolders(all);
+    const ok = writeFolders(all);
+    mergeDuplicateFolders(); // moving next to a folder with the same name joins them
+    return ok;
   }
 
   /** ["Mis actividades", "Español", "Letras"] style trail for a folder id. */
@@ -361,7 +403,7 @@ window.LL = window.LL || {};
   LL.store = {
     KEYS, FOLDER_COLORS, ANIMALS, clone, uid, byName,
     readLibrary, quizzes, getQuiz, isReady, saveQuiz, duplicateQuiz, deleteQuiz, moveQuiz,
-    folders, getFolder, saveFolder, deleteFolder, moveFolder, folderTrail, folderPathLabel, folderHas,
+    folders, getFolder, saveFolder, deleteFolder, moveFolder, folderNameTaken, mergeDuplicateFolders, folderTrail, folderPathLabel, folderHas,
     roster, saveRoster, sonidos, saveSonidos, pinHash, savePinHash, voice, saveVoice, settingsAt, quietly, readJSON, writeJSON, writeLibrary, writeFolders, sonidosScores, saveSonidosScores, todayChicago,
     readDraft, writeDraft, clearDraft,
     exportBackup, importBackup, validateBackup, storageUsed, deleteAllData,

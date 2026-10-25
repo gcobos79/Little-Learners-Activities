@@ -235,6 +235,8 @@ window.LL = window.LL || {};
       actions: [{ label: 'Cancelar', kind: 'ghost', value: false }, { label: isNew ? 'Crear carpeta' : 'Guardar', kind: 'primary', value: () => (name.value.trim() ? true : (name.focus(), undefined)) }],
     });
     if (!ok) return;
+    const parent = f ? (f.parentId || null) : currentFolder;
+    if (S.folderNameTaken(name.value, parent, f && f.id)) { toast('Ya hay una carpeta llamada «' + name.value.trim() + '» aquí. Usa otro nombre.', 'error'); return; }
     S.saveFolder({ id: f && f.id, name: name.value.trim(), color, parentId: currentFolder });
     toast(isNew ? 'Carpeta creada.' : 'Carpeta guardada.', 'success');
     render();

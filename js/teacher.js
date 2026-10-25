@@ -256,6 +256,7 @@ window.LL = window.LL || {};
     if (mode === 'replace' && !(await confirmDialog('¿Reemplazar todo?', 'Se borrarán los quizzes y carpetas de este navegador que no estén en el archivo.', 'Reemplazar', true))) return;
     try {
       const r = S.importBackup(data, mode);
+      S.mergeDuplicateFolders();
       toast('Importado: ' + r.quizzes + ' quiz(zes) y ' + r.folders + ' carpeta(s).', 'success');
       renderBackup();
     } catch (e) { toast(e.message, 'error'); }

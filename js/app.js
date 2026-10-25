@@ -192,6 +192,7 @@ window.LL = window.LL || {};
   });
 
   async function start() {
+    S.mergeDuplicateFolders();
     // Links from invitation / password-reset emails arrive with a token in the address.
     const r = LL.cloud.enabled() ? await LL.cloud.handleRedirect() : null;
     if (r && r.error) { state.loginMessage = null; go('login'); toast('El enlace no es válido o ya caducó. Pide uno nuevo.', 'error'); return; }

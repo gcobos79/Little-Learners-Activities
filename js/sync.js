@@ -48,7 +48,10 @@ window.LL = window.LL || {};
       if (!me) { await LL.cloud.refresh(); }
       st.owner = (LL.cloud.user() || {}).id || st.owner;
       try {
-        const changed = await pull(st);
+        let changed = await pull(st);
+        // Folders with the same name in the same place (e.g. old + new copies) become one.
+        const merged = S.mergeDuplicateFolders();
+        if (merged) { changed += merged; clearTimeout(timer); timer = null; }
         await push(st);
         st.lastOk = new Date().toISOString();
         st.error = null;
