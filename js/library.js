@@ -103,7 +103,7 @@ window.LL = window.LL || {};
     const cover = t.config?.coverImage || '';
     const n = t.config?.questions?.length || 0;
     const main = el('button.card-main', { type: 'button', onclick: () => play(t) },
-      cover.startsWith('data:image/') ? el('img.cover', { src: cover, alt: '' }) : el('span.cover-placeholder', { 'aria-hidden': 'true' }, '❓'),
+      LL.media.isImage(cover) ? el('img.cover', { src: cover, alt: '' }) : el('span.cover-placeholder', { 'aria-hidden': 'true' }, '❓'),
       el('span.name', t.name),
       el('span.meta', 'Quiz · ' + n + (n === 1 ? ' pregunta' : ' preguntas')));
     const card = el('div.card.quiz', { dataset: { quizId: t.id } }, main);
@@ -180,7 +180,7 @@ window.LL = window.LL || {};
       { label: '✏️ Cambiar nombre o color', run: () => editFolder(f) },
       { label: '📂 Mover a otra carpeta', run: () => moveFolderDialog(f) },
       { label: '📤 Compartir (descargar archivo)', run: () => {
-        download('little-learners-' + slug(f.name) + '.json', JSON.stringify(S.exportBackup(f.id)));
+        LL.media.inlineBackup(S.exportBackup(f.id)).then((b) => download('little-learners-' + slug(f.name) + '.json', JSON.stringify(b)));
         toast('Archivo descargado. Otro maestro puede abrirlo en «Respaldo» → «Importar».', 'success');
       } },
       { label: '🗑️ Eliminar carpeta', danger: true, run: async () => {

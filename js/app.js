@@ -40,7 +40,7 @@ window.LL = window.LL || {};
     const center = $('#appbarCenter'), right = $('#appbarRight');
     center.replaceChildren(); right.replaceChildren();
     if (state.mode === 'student' && state.student) {
-      center.append(el('div.student-chip', el('span.animal', state.student.animal), el('span', state.student.name)));
+      center.append(el('div.student-chip', LL.teacher.avatar(state.student), el('span', state.student.name)));
       right.append(el('button.icon-btn.big', { type: 'button', 'aria-label': 'Volver a ¿Quién eres?', title: 'Volver a ¿Quién eres?', onclick: goHome }, '🏠'));
     } else if (state.mode === 'teacher') {
       const tabs = el('div.tabs', { role: 'tablist' });
@@ -123,7 +123,7 @@ window.LL = window.LL || {};
       return;
     }
     for (const s of r) {
-      const card = el('button.student-card', { type: 'button' }, el('span.animal', s.animal), el('span', s.name));
+      const card = el('button.student-card', { type: 'button' }, LL.teacher.avatar(s), el('span', s.name));
       // Little wiggle, then go: the child sees their animal react to the tap.
       card.addEventListener('click', () => { card.classList.add('tapped'); setTimeout(() => selectStudent(s), 280); });
       grid.append(card);

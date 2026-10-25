@@ -15,45 +15,90 @@ window.LL = window.LL || {};
     return grid;
   }
 
+  /** Animal (or picture) for a student, used in lists and on the "¿Quién eres?" cards. */
+  function avatar(s, cls = 'animal') {
+    return s.avatar && LL.media.isImage(s.avatar)
+      ? el('img.avatar-img', { src: s.avatar, alt: '' })
+      : el('span.' + cls, s.animal || '🐾');
+  }
+
   async function studentDialog(existing) {
-    let animal = existing ? existing.animal : S.ANIMALS[0];
-    const name = el('input', { type: 'text', maxlength: '22', placeholder: 'Nombre', value: existing ? existing.name : '' });
+    let animal = existing ? existing.animal : S.ANIMALS[Math.floor(Math.random() * S.ANIMALS.length)];
+    let pic = existing ? existing.avatar || '' : '';
+    const name = el('input', { type: 'text', maxlength: '40', placeholder: 'Nombre', value: existing ? existing.name : '' });
+    const picRow = el('div.media-row');
+    const drawPic = () => {
+      picRow.replaceChildren();
+      if (pic) picRow.append(el('img.thumb', { src: pic, alt: 'Foto o dibujo' }));
+      picRow.append(el('button.btn.sm.ghost', { type: 'button', onclick: async () => {
+        const f = await pickFile('image/*'); if (!f) return;
+        try { pic = await LL.ui.imageFileToDataURL(f, 256, 0.8); drawPic(); } catch (e) { toast(e.message, 'error'); }
+      } }, pic ? '🖼️ Cambiar' : '🖼️ Elegir foto o dibujo'));
+      if (pic) picRow.append(el('button.btn.sm.danger-ghost', { type: 'button', onclick: () => { pic = ''; drawPic(); } }, 'Quitar'));
+    };
+    drawPic();
     const ok = await dialog({
       title: existing ? 'Editar estudiante' : 'Agregar estudiante',
-      body: el('div', { style: { display: 'grid', gap: '14px' } }, el('label.field', 'Nombre', name), el('div.field', 'Animalito', animalPicker(animal, (a) => { animal = a; }))),
+      body: el('div', { style: { display: 'grid', gap: '14px' } },
+        el('label.field', 'Nombre', name),
+        el('div.field', 'Animalito', animalPicker(animal, (a) => { animal = a; })),
+        el('div.field', 'Foto o dibujo (opcional)', el('span.hint', 'Si eliges una, se muestra en lugar del animalito.'), picRow)),
       actions: [{ label: 'Cancelar', kind: 'ghost', value: false }, { label: existing ? 'Guardar' : 'Agregar', kind: 'primary', value: () => (name.value.trim() ? true : (name.focus(), undefined)) }],
     });
-    return ok ? { name: name.value.trim(), animal } : null;
+    return ok ? { name: name.value.trim(), animal, avatar: pic } : null;
+  }
+
+  let rosterBusy = false;
+  /** Run a change to the class list (database when signed in, this device otherwise). */
+  async function rosterChange(fnCloud, fnLocal, okMsg) {
+    if (rosterBusy) return;
+    rosterBusy = true;
+    try {
+      if (LL.cloud.signedIn()) await fnCloud(); else fnLocal();
+      if (okMsg) toast(okMsg, 'success');
+    } catch (e) {
+      toast('No se pudo guardar: ' + (LL.auth ? LL.auth.friendly(e) : e.message), 'error');
+    } finally { rosterBusy = false; renderRoster(); }
   }
 
   function renderRoster() {
     const page = $('#screen-students-admin');
     const r = S.roster();
+    const cloud = LL.cloud.signedIn();
     const list = el('div.roster-list');
+    const dupName = (v, exceptIdx) => r.some((x, k) => k !== exceptIdx && x.name.toLocaleLowerCase('es') === v.name.toLocaleLowerCase('es'));
     r.forEach((s, i) => {
       list.append(el('div.roster-row',
-        el('span.animal', s.animal), el('span.nm', s.name),
-        el('button.icon-btn', { type: 'button', 'aria-label': 'Subir', disabled: i === 0, onclick: () => { [r[i - 1], r[i]] = [r[i], r[i - 1]]; S.saveRoster(r); renderRoster(); } }, '⬆️'),
+        avatar(s), el('span.nm', s.name),
+        el('button.icon-btn', { type: 'button', 'aria-label': 'Subir a ' + s.name, disabled: i === 0, onclick: () => {
+          const order = r.slice(); [order[i - 1], order[i]] = [order[i], order[i - 1]];
+          rosterChange(() => LL.sync.students.reorder(order.map((x) => x.id)), () => S.saveRoster(order));
+        } }, '⬆️'),
         el('button.btn.sm.ghost', { type: 'button', onclick: async () => {
           const v = await studentDialog(s); if (!v) return;
-          if (r.some((x, k) => k !== i && x.name.toLowerCase() === v.name.toLowerCase())) { toast('Ya hay un estudiante con ese nombre.', 'error'); return; }
-          r[i] = v; S.saveRoster(r); renderRoster();
+          if (dupName(v, i)) { toast('Ya hay un estudiante con ese nombre.', 'error'); return; }
+          rosterChange(() => LL.sync.students.update(s.id, v), () => { r[i] = { ...s, ...v }; S.saveRoster(r); }, 'Cambios guardados.');
         } }, '✏️ Editar'),
         el('button.btn.sm.danger-ghost', { type: 'button', onclick: async () => {
-          if (!(await confirmDialog('¿Quitar a ' + s.name + '?', 'Ya no aparecerá en «¿Quién eres?».', 'Quitar', true))) return;
-          r.splice(i, 1); S.saveRoster(r); renderRoster();
+          const msg = cloud ? 'Ya no aparecerá en «¿Quién eres?». Sus resultados anteriores se conservan.' : 'Ya no aparecerá en «¿Quién eres?».';
+          if (!(await confirmDialog('¿Quitar a ' + s.name + '?', msg, 'Quitar', true))) return;
+          rosterChange(() => LL.sync.students.remove(s.id), () => { r.splice(i, 1); S.saveRoster(r); });
         } }, 'Quitar')));
     });
     page.replaceChildren(el('div.tool-page',
       el('div', el('h1', '👧 Estudiantes'), el('p.lead', 'Ellos aparecen en la pantalla «¿Quién eres?».')),
       el('div.panel', { style: { display: 'grid', gap: '12px' } },
         r.length ? list : el('p.muted', 'Todavía no hay estudiantes.'),
-        el('button.btn.primary', { type: 'button', style: { justifySelf: 'start' }, onclick: async () => {
-          const v = await studentDialog(null); if (!v) return;
-          if (r.some((x) => x.name.toLowerCase() === v.name.toLowerCase())) { toast('Ya hay un estudiante con ese nombre.', 'error'); return; }
-          r.push(v); S.saveRoster(r); renderRoster(); toast(v.name + ' agregado.', 'success');
-        } }, '＋ Agregar estudiante')),
-      el('p.small.muted', 'Usa solo el primer nombre o un apodo. La lista se guarda solo en este navegador.')));
+        el('div.media-row',
+          el('button.btn.primary', { type: 'button', onclick: async () => {
+            const v = await studentDialog(null); if (!v) return;
+            if (dupName(v, -1)) { toast('Ya hay un estudiante con ese nombre.', 'error'); return; }
+            rosterChange(() => LL.sync.students.add(v), () => { r.push(v); S.saveRoster(r); }, v.name + ' agregado.');
+          } }, '＋ Agregar estudiante'),
+          cloud ? el('button.btn.ghost', { type: 'button', onclick: async () => { try { await LL.sync.refreshStudents(); renderRoster(); toast('Lista actualizada.'); } catch (e) { toast(LL.auth.friendly(e), 'error'); } } }, '🔄 Actualizar lista') : null)),
+      el('p.small.muted', cloud
+        ? 'La lista se guarda en tu cuenta (tabla «students») y aparece en todas tus tabletas. Usa solo el primer nombre o un apodo.'
+        : 'Usa solo el primer nombre o un apodo. Sin cuenta, la lista se guarda solo en este navegador.')));
   }
 
   /* ---------- Backup ---------- */
@@ -173,8 +218,8 @@ window.LL = window.LL || {};
       box(el('h2', '📥 Descargar respaldo'),
         el('p', 'Guarda en un archivo todos tus quizzes (' + nQ + '), carpetas (' + nF + ') y estudiantes.'),
         el('button.btn.primary', { type: 'button', style: { justifySelf: 'start' }, onclick: () => {
-          download('little-learners-respaldo-' + S.todayChicago() + '.json', JSON.stringify(S.exportBackup()));
-          toast('Respaldo descargado.', 'success');
+          toast('Preparando respaldo…');
+          LL.media.inlineBackup(S.exportBackup()).then((b) => { download('little-learners-respaldo-' + S.todayChicago() + '.json', JSON.stringify(b)); toast('Respaldo descargado.', 'success'); });
         } }, '📥 Descargar respaldo')),
       box(el('h2', '📤 Importar'),
         el('p', 'Abre un archivo de respaldo, o una carpeta que otro maestro compartió contigo.'),
@@ -223,7 +268,7 @@ window.LL = window.LL || {};
         el('label.field', 'Para confirmar, escribe BORRAR', typed)),
       actions: [
         { label: 'Cancelar', kind: 'ghost', value: false },
-        { label: '📥 Descargar respaldo primero', kind: 'soft', value: () => { download('little-learners-respaldo-' + S.todayChicago() + '.json', JSON.stringify(S.exportBackup())); toast('Respaldo descargado.', 'success'); } },
+        { label: '📥 Descargar respaldo primero', kind: 'soft', value: () => { LL.media.inlineBackup(S.exportBackup()).then((b) => { download('little-learners-respaldo-' + S.todayChicago() + '.json', JSON.stringify(b)); toast('Respaldo descargado.', 'success'); }); } },
         { label: 'Borrar todo', kind: 'danger', value: () => (typed.value.trim().toUpperCase() === 'BORRAR' ? true : (toast('Escribe BORRAR para confirmar.', 'error'), typed.focus(), undefined)) },
       ],
     });
@@ -255,8 +300,18 @@ window.LL = window.LL || {};
     if (!mode) return;
     if (mode === 'replace' && !(await confirmDialog('¿Reemplazar todo?', 'Se borrarán los quizzes y carpetas de este navegador que no estén en el archivo.', 'Reemplazar', true))) return;
     try {
+      const cloudRoster = LL.cloud.signedIn() ? S.roster() : null;
       const r = S.importBackup(data, mode);
       S.mergeDuplicateFolders();
+      // Signed in: students from the file are added to the class list in the database.
+      if (cloudRoster) {
+        const have = new Set(cloudRoster.map((x) => x.name.toLocaleLowerCase('es')));
+        S.quietly(() => S.saveRoster(cloudRoster));
+        for (const st of data.data[S.KEYS.roster] || []) {
+          if (st && st.name && !have.has(String(st.name).toLocaleLowerCase('es'))) { have.add(String(st.name).toLocaleLowerCase('es')); await LL.sync.students.add({ name: String(st.name).slice(0, 40), animal: st.animal, avatar: st.avatar || '' }); }
+        }
+        LL.sync.run();
+      }
       toast('Importado: ' + r.quizzes + ' quiz(zes) y ' + r.folders + ' carpeta(s).', 'success');
       renderBackup();
     } catch (e) { toast(e.message, 'error'); }
@@ -343,5 +398,5 @@ window.LL = window.LL || {};
         groups)));
   }
 
-  LL.teacher = { renderRoster, renderBackup, renderSonidos };
+  LL.teacher = { renderRoster, renderBackup, renderSonidos, avatar };
 })();

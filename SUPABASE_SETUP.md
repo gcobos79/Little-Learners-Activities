@@ -1,8 +1,13 @@
 # Supabase and ElevenLabs setup
 
 Already done (project **WebsiteGcobos**):
-- New tables `ll_quizzes`, `ll_folders`, `ll_settings`, each teacher limited to their own rows
-  (row-level security). The older `students`, `assessments` and `letter_results` tables were not changed.
+- `students` (existing table): added `animal`, `avatar_path`, `sort_order`, `updated_at`; every student
+  got a random animal. Existing rows and the `assessments` / `letter_results` tables were not changed.
+- Quiz tables `folders`, `quizzes`, `quiz_questions`, `quiz_options` and the function `save_quiz`,
+  each teacher limited to their own rows (row-level security).
+- Private storage bucket `quiz-media` for pictures and audio (one folder per teacher).
+- `ll_settings` keeps the PIN, voice and Sonidos iniciales settings. `ll_quizzes` / `ll_folders`
+  (used by V122) are kept as a backup after their content is moved to the new tables.
 - Private storage bucket `ll-tts` for voice files, one folder per teacher.
 - Edge function `ll-tts`, which calls ElevenLabs with the secret key and saves the audio.
 - The site's `js/config.js` points to the project with its **publishable** key (safe to be public).

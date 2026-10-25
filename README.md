@@ -20,7 +20,9 @@ Created by Geovanny Cobos.
 
 ## Accounts and tablets (Supabase)
 
-Teachers can sign in to keep their activities in the cloud. Sign in **once on each tablet**;
+Teachers can sign in to keep their activities in the cloud. The class list comes from the
+`students` table, and quizzes are stored in the `quizzes`, `quiz_questions` and `quiz_options`
+tables, with pictures and audio in Supabase Storage (resized and compressed first). Sign in **once on each tablet**;
 the tablet stays signed in and downloads new quizzes automatically. The site still works
 offline from its local copy, and can also be used **without an account** on a single device.
 
@@ -36,7 +38,7 @@ Browsers keep each site's saved data separately, so quizzes made in the old file
 on the new website by themselves. Easiest way:
 
 1. On the **same computer** where you used the old version, open
-   `versions/little-learners-activities-v122.html` in **Chrome** (double-click it).
+   `versions/little-learners-activities-v123.html` in **Chrome** (double-click it).
    It sees the quizzes and folders saved by the old file.
 2. Sign in with your teacher account and choose **“Subir a mi cuenta”**.
 3. Open the website on any device and sign in — everything is there.

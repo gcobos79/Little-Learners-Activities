@@ -141,9 +141,18 @@ window.LL = window.LL || {};
     if (!paths.length) return null;
     return call('/storage/v1/object/' + bucket, { method: 'DELETE', token: await token(), body: { prefixes: paths } });
   }
+  async function uploadFile(bucket, path, blob) {
+    return call('/storage/v1/object/' + bucket + '/' + path.split('/').map(encodeURIComponent).join('/'), { method: 'POST', token: await token(), body: blob, headers: { 'x-upsert': 'true', 'Content-Type': blob.type || 'application/octet-stream' } });
+  }
+  async function rpc(fn, args) {
+    return call('/rest/v1/rpc/' + fn, { method: 'POST', token: await token(), body: args });
+  }
+  async function insert(table, rows, select) {
+    return call('/rest/v1/' + table + (select ? '?select=' + select : ''), { method: 'POST', token: await token(), body: rows, headers: { Prefer: select ? 'return=representation' : 'return=minimal' } });
+  }
   async function invoke(name, body) {
     return call('/functions/v1/' + name, { method: 'POST', token: await token(), body });
   }
 
-  LL.cloud = { enabled, signIn, signOut, refresh, token, sendPasswordReset, setPassword, handleRedirect, user, signedIn, select, upsert, patch, remove, download, listFiles, removeFiles, invoke, CloudError };
+  LL.cloud = { enabled, signIn, signOut, refresh, token, sendPasswordReset, setPassword, handleRedirect, user, signedIn, select, upsert, patch, remove, download, uploadFile, listFiles, removeFiles, invoke, rpc, insert, CloudError };
 })();

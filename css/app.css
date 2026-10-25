@@ -597,3 +597,11 @@ input[type=email]:focus, input[type=password]:focus { border-color: var(--primar
   #playerSpeak { grid-area: speak; justify-self: end; }
   .player-student span:last-child { max-width: 42vw; }
 }
+
+/* Student pictures (when the teacher adds one instead of an animal) */
+.avatar-img { width: 1.15em; height: 1.15em; object-fit: cover; border-radius: 50%; background: #fff; border: 3px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+.student-card .avatar-img { width: clamp(70px, 10vw, 104px); height: clamp(70px, 10vw, 104px); }
+.student-chip .avatar-img { width: 34px; height: 34px; border-width: 2px; }
+.roster-row .avatar-img { width: 44px; height: 44px; }
+img.loading-media { background: var(--surface-2); }
+img.missing-media { visibility: hidden; }

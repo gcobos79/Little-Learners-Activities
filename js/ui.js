@@ -21,6 +21,7 @@ window.LL = window.LL || {};
       else if (k === 'dataset') Object.assign(node.dataset, v);
       else if (k === 'text') node.textContent = v;
       else if (k === 'html') node.innerHTML = v;
+      else if (k === 'src' && LL.media && LL.media.isRef(v)) LL.media.attach(node, v); // stored file: load it
       else if (k in node && typeof v !== 'string') node[k] = v;
       else node.setAttribute(k, v === true ? '' : v);
     }
@@ -93,7 +94,11 @@ window.LL = window.LL || {};
     const ctx = c.getContext('2d');
     ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); // transparent PNGs get a white background
     ctx.drawImage(img, 0, 0, c.width, c.height);
-    return c.toDataURL('image/jpeg', quality);
+    // WebP is ~25-35% smaller than JPEG at the same quality. Browsers that can't
+    // make WebP (older Safari) return PNG instead, so JPEG is used there.
+    const webp = c.toDataURL('image/webp', quality);
+    const jpeg = c.toDataURL('image/jpeg', quality);
+    return webp.startsWith('data:image/webp') && webp.length <= jpeg.length ? webp : jpeg;
   }
 
   async function audioFileToDataURL(file) {
@@ -136,13 +141,17 @@ window.LL = window.LL || {};
   }
 
   let currentAudio = null;
+  let playToken = 0;
   function playAudio(src) {
     stopSound();
     if (!src) return;
-    currentAudio = new Audio(src);
-    currentAudio.play().catch(() => {});
+    const token = ++playToken;
+    const start = (u) => { if (token !== playToken) return; currentAudio = new Audio(u); currentAudio.play().catch(() => {}); };
+    if (LL.media && LL.media.isRef(src)) LL.media.resolve(src).then(start).catch(() => {});
+    else start(src);
   }
   function stopSound() {
+    playToken++;
     if ('speechSynthesis' in window) speechSynthesis.cancel();
     if (currentAudio) { currentAudio.pause(); currentAudio = null; }
   }

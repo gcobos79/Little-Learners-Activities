@@ -263,7 +263,9 @@ window.LL = window.LL || {};
   /* ---------- Roster ---------- */
   function roster() {
     const r = readJSON(KEYS.roster, null);
-    return Array.isArray(r) ? r : clone(DEFAULT_ROSTER);
+    if (Array.isArray(r)) return r;
+    // Signed in: the real class list comes from the database, never the sample names.
+    return LL.cloud && LL.cloud.signedIn() ? [] : clone(DEFAULT_ROSTER);
   }
   function saveRoster(r) { return writeJSON(KEYS.roster, r); }
 
@@ -388,7 +390,7 @@ window.LL = window.LL || {};
   function questionProblem(q) {
     const visible = String(q.text || '').trim() || String(q.image || '').trim() || String(q.emoji || '').trim();
     const altVoice = q.readTextEnabled && String(q.readText || '').trim() && (q.audioMode || 'voice') === 'voice';
-    const fileAudio = q.audioMode === 'file' && String(q.audio || '').startsWith('data:audio/');
+    const fileAudio = q.audioMode === 'file' && LL.media.isAudio(q.audio);
     if (!(visible || altVoice || fileAudio)) return 'Escribe la pregunta, agrega una imagen o un audio.';
     if (q.options.length < 2 || q.options.length > 6) return 'Cada pregunta necesita de 2 a 6 respuestas.';
     const empty = q.options.map((o, i) => (!(String(o.text || '').trim() || o.image || o.audio) ? String.fromCharCode(65 + i) : null)).filter(Boolean);

@@ -25,7 +25,7 @@ window.LL = window.LL || {};
     const who = LL.app.state.student, chip = $('#playerStudent');
     chip.hidden = !who || !!options.preview;
     chip.replaceChildren();
-    if (who && !options.preview) chip.append(el('span.animal', who.animal), el('span', who.name));
+    if (who && !options.preview) chip.append(LL.teacher.avatar(who), el('span', who.name));
     chip.setAttribute('aria-label', who ? 'Estudiante: ' + who.name : '');
     document.body.style.overflow = 'hidden';
     render();
@@ -85,7 +85,7 @@ window.LL = window.LL || {};
     renderProgress();
 
     // Question
-    const hasImg = q.image && String(q.image).startsWith('data:image/');
+    const hasImg = LL.media.isImage(q.image);
     const qa = el('div.question.enter' + (hasImg ? '.has-image' : ''));
     if (q.text) qa.append(el('div.question-text', q.text));
     if (hasImg) qa.append(el('img.question-image', { src: q.image, alt: 'Imagen de la pregunta' }));
@@ -109,7 +109,7 @@ window.LL = window.LL || {};
     const correctNeeded = Math.max(1, q.options.filter((o) => o.correct).length || Number(q.correctCount) || 1);
 
     list.forEach((o, i) => {
-      const img = o.image && String(o.image).startsWith('data:image/');
+      const img = LL.media.isImage(o.image);
       const btn = el('button.option' + (img ? '.has-image' : ''), { type: 'button', dataset: { index: String(o._i) }, 'aria-label': o.text || 'Respuesta ' + (i + 1) });
       btn.style.setProperty('--pastel', PASTELS[i % PASTELS.length]);
       btn.style.setProperty('--i', String(i));

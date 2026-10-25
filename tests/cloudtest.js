@@ -1,9 +1,10 @@
 const { chromium } = require('playwright');
 const seed=require('./seed.js'); const makeMock=require('./mocksb.js');
 const ok=(c,m)=>console.log((c?'PASS ':'FAIL ')+m);
-const shots=process.argv[3];
+const shots=process.argv[3]||'/tmp';
 (async () => {
   const file=process.argv[2]; const mock=makeMock();
+  mock.db.students.push({id:1,teacher_id:'u-1111',name:'Abigail',animal:'🐱',active:true},{id:2,teacher_id:'u-1111',name:'Daniel',animal:'🦖',active:true});
   const b=await chromium.launch();
   const mk=async(w,h)=>{const ctx=await b.newContext({viewport:{width:w,height:h}}); await ctx.route('https://abbtbaupzdzdvtkunmtf.supabase.co/**',mock.handler); const p=await ctx.newPage(); p.errs=[]; p.on('pageerror',e=>p.errs.push(e.message)); return p;};
   const A=await mk(1280,800);
@@ -18,7 +19,7 @@ const shots=process.argv[3];
   await A.fill('input[type=password]','secreto123'); await A.click('button:has-text("Entrar")'); await A.waitForTimeout(400);
   ok(await A.isVisible('.modal:has-text("Subir")'),'A: asks before uploading local activities');
   await A.click('.modal button:has-text("Subir a mi cuenta")'); await A.waitForTimeout(1500);
-  ok(mock.db.ll_quizzes.length===5 && mock.db.ll_folders.length===4,'A: local V121 data uploaded ('+mock.db.ll_quizzes.length+' quizzes, '+mock.db.ll_folders.length+' folders)');
+  ok(mock.db.quizzes.length===4 && mock.db.folders.length===4,'A: local V121 quizzes and folders uploaded to the database ('+mock.db.quizzes.length+' quizzes, '+mock.db.folders.length+' folders)');
   ok(await A.isVisible('#studentGrid'),'A: lands on student picker');
   // Teacher creates a quiz
   await A.focus('.teacher-gate'); await A.keyboard.press('Enter'); await A.waitForTimeout(400);
@@ -31,8 +32,8 @@ const shots=process.argv[3];
   const stored=await A.evaluate(()=>JSON.parse(localStorage.getItem('ll-activities-v10-templates')).find(x=>x.name==='Gatos'));
   ok(stored && stored.config.questions[0].tts && stored.config.questions[0].tts.path,'A: natural-voice audio prepared on save (tts calls: '+mock.stats().ttsCalls+')');
   await A.waitForTimeout(2000);
-  const cloudGatos=mock.db.ll_quizzes.find(r=>r.name==='Gatos');
-  ok(cloudGatos && cloudGatos.config.questions[0].tts,'A: quiz with voice uploaded to cloud');
+  const cloudGatos=mock.db.quizzes.find(r=>r.name==='Gatos');
+  ok(cloudGatos && mock.db.quiz_questions.find(q=>q.quiz_id===cloudGatos.id).tts,'A: quiz with voice uploaded to cloud');
   // PIN
   await A.click('.tab >> nth=3'); await A.waitForTimeout(400);
   await A.screenshot({path:shots+'/c2-settings.png',fullPage:true});
@@ -78,7 +79,7 @@ const shots=process.argv[3];
   await B.click('.modal button:has-text("Continuar")'); await B.waitForTimeout(1500);
   const left=await B.evaluate(()=>LL.store.quizzes().length);
   ok(left===0,'B: other teacher does not see first teacher’s quizzes ('+left+')');
-  ok(!mock.db.ll_quizzes.some(r=>r.owner_id==='u-2222'),'B: first teacher’s data not uploaded into second account');
+  ok(!mock.db.quizzes.some(r=>r.teacher_id==='u-2222'),'B: first teacher’s data not uploaded into second account');
   // local mode
   const C=await mk(1280,800); await C.goto('file://'+require('path').resolve(file)); await C.evaluate(()=>localStorage.clear()); await C.reload(); await C.waitForTimeout(300);
   await C.click('button:has-text("Usar sin cuenta")'); await C.waitForTimeout(300);

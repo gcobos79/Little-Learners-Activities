@@ -18,8 +18,8 @@ const r=await p.evaluate(()=>({f:LL.store.folders().map(f=>f.id+':'+f.name+':'+(
 console.log(JSON.stringify(r,null,0));
 ok(r.f.length===3,'local: 2 English + 2 Español + 2 Letras became 3 folders');
 ok(r.q.every(x=>!x.includes('1792967')),'local: all quizzes moved into the kept (original) folders');
-const live=mock.db.ll_folders.filter(f=>!f.deleted_at).map(f=>f.name);
-ok(live.length===3,'cloud: only 3 folders left ('+live.join(', ')+'); duplicates marked deleted: '+mock.db.ll_folders.filter(f=>f.deleted_at).length);
+const live=mock.db.folders.filter(f=>!f.deleted_at).map(f=>f.name);
+ok(live.length===3,'cloud: only 3 folders left ('+live.join(', ')+'); duplicates marked deleted: '+mock.db.folders.filter(f=>f.deleted_at).length);
 // Block creating a duplicate name
 await p.focus('.teacher-gate'); await p.keyboard.press('Enter'); await p.waitForTimeout(300);
 await p.click('#newFolderBtn'); await p.fill('.modal input[type=text]','ENGLISH'); await p.click('.modal button:has-text("Crear carpeta")'); await p.waitForTimeout(400);

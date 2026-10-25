@@ -175,7 +175,7 @@ window.LL = window.LL || {};
       if (q.image) imgRow.append(el('img.thumb', { src: q.image, alt: 'Imagen de la pregunta' }));
       imgRow.append(el('button.btn.sm.ghost', { type: 'button', onclick: async () => {
         const f = await pickFile('image/*'); if (!f) return;
-        try { q.image = await imageFileToDataURL(f, 1200, 0.82); drawImg(); onEdit(); } catch (e) { toast(e.message, 'error'); }
+        try { q.image = await imageFileToDataURL(f, 1000, 0.8); drawImg(); onEdit(); } catch (e) { toast(e.message, 'error'); }
       } }, q.image ? '🖼️ Cambiar imagen' : '🖼️ Agregar imagen'));
       if (q.image) imgRow.append(el('button.btn.sm.danger-ghost', { type: 'button', onclick: () => { q.image = ''; drawImg(); onEdit(); } }, 'Quitar'));
     };
@@ -266,7 +266,7 @@ window.LL = window.LL || {};
       if (o.image) imgRow.append(el('img.thumb', { src: o.image, alt: '' }));
       imgRow.append(el('button.btn.sm.ghost', { type: 'button', onclick: async () => {
         const f = await pickFile('image/*'); if (!f) return;
-        try { o.image = await imageFileToDataURL(f, 600, 0.82); drawImg(); onEdit(); } catch (e) { toast(e.message, 'error'); }
+        try { o.image = await imageFileToDataURL(f, 600, 0.8); drawImg(); onEdit(); } catch (e) { toast(e.message, 'error'); }
       } }, o.image ? '🖼️ Cambiar' : '🖼️ Imagen'));
       if (o.image) imgRow.append(el('button.btn.sm.danger-ghost', { type: 'button', onclick: () => { o.image = ''; drawImg(); onEdit(); } }, 'Quitar'));
     };
