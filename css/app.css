@@ -112,7 +112,7 @@ main { padding: clamp(14px, 2.5vw, 28px); max-width: 1240px; margin: 0 auto; }
 .hero { text-align: center; margin: clamp(4px, 2vh, 22px) 0 clamp(16px, 3vh, 30px); display: grid; gap: 8px; }
 
 /* ---------- Student picker ---------- */
-.student-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: clamp(12px, 2vw, 22px); }
+.student-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 230px)); justify-content: center; gap: clamp(12px, 2vw, 22px); }
 .student-card {
   display: grid; justify-items: center; gap: 6px; padding: 22px 12px 18px;
   border-radius: var(--radius); border: 3px solid var(--line); background: var(--surface);
@@ -393,7 +393,8 @@ main {
   body { font-size: 18px; }
   main { max-width: 1520px; }
   .card-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
-  .student-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  .student-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 260px)); }
+  .student-card .animal { font-size: 104px; }
   .player-shell { max-width: 1500px; }
   .editor-layout { grid-template-columns: 340px 1fr; }
 }
@@ -558,3 +559,27 @@ body:not(.mode-home) .sky { display: none; }
   .options .option.flash-incorrect { animation: flashBad 1s steps(2, end) 2 !important; }
   .options .option.flash-correct { animation: flashGood 1s steps(2, end) 2 !important; }
 }
+
+/* ---------- Sign-in, PIN pad, sync badge ---------- */
+.login-wrap { min-height: calc(100vh - var(--appbar-h) - 60px); min-height: calc(100dvh - var(--appbar-h) - 60px); display: grid; align-content: center; justify-items: center; gap: 18px; padding: 12px 0; }
+.login-card { width: min(460px, 100%); display: grid; gap: 14px; text-align: center; animation: popIn .35s ease-out both; }
+.login-logo { font-size: 56px; line-height: 1; animation: sparkle 3s ease-in-out infinite; }
+.login-form { display: grid; gap: 14px; text-align: left; }
+.login-form input { font-size: 17px; }
+.login-alt { display: grid; gap: 6px; justify-items: center; text-align: center; }
+.mode-login .appbar-right:empty { display: none; }
+.pin-box { display: grid; gap: 14px; justify-items: center; }
+.pin-dots { display: flex; gap: 12px; min-height: 22px; }
+.pin-dots span { width: 18px; height: 18px; border-radius: 50%; border: 3px solid var(--primary); }
+.pin-dots span.on { background: var(--primary); }
+.pin-pad { display: grid; grid-template-columns: repeat(3, 72px); gap: 10px; }
+.pin-pad button { height: 64px; border-radius: 18px; border: 2px solid var(--line); background: var(--surface); font-size: 26px; font-weight: 900; box-shadow: 0 3px 0 var(--line); }
+.pin-pad button:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
+.pin-pad button.ok { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 3px 0 #2146A8; }
+.sync-badge { font-size: 20px; }
+.sync-badge.spin { animation: spin 1.2s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+input[type=email], input[type=password] { width: 100%; min-height: 48px; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--line); background: var(--surface); font-weight: 600; }
+input[type=email]:focus, input[type=password]:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px var(--primary-soft); }
+@media (max-width: 400px) { .pin-pad { grid-template-columns: repeat(3, 64px); } .pin-pad button { height: 58px; } }
+@media (prefers-reduced-motion: reduce) { .sync-badge.spin, .login-logo, .login-card { animation: none !important; } }

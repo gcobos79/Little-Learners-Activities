@@ -340,7 +340,35 @@ window.LL = window.LL || {};
     renderAll();
     if (problems.length) toast('Guardado como «En preparación». Faltan ' + problems.length + ' pregunta(s) por completar.', 'success');
     else toast(quiz.config.visibility === 'visible' ? '✓ Guardado. Los estudiantes ya pueden verlo.' : '✓ Guardado (en preparación).', 'success');
+    prepareVoices(id);
     return true;
+  }
+
+  /** Copy ElevenLabs file info from `source` into `target`, matching questions/answers by id and text. */
+  function applyTts(target, source) {
+    const map = new Map();
+    for (const q of source.questions || []) for (const it of [q, ...(q.options || [])]) if (it.tts) map.set(it.id, it.tts);
+    for (const q of target.questions || []) for (const it of [q, ...(q.options || [])]) {
+      const t = map.get(it.id);
+      if (t && LL.tts.speechText(it) === t.text) it.tts = t;
+    }
+  }
+
+  /** After saving: make natural-voice audio for new or changed text (runs in the background). */
+  async function prepareVoices(id) {
+    if (!LL.tts || !LL.tts.active()) return;
+    const stored = S.getQuiz(id);
+    if (!stored) return;
+    const work = { ...stored, config: S.clone(stored.config) };
+    const st = () => (quiz && quiz.id === id ? $('#edState') : null);
+    const r = await LL.tts.prepareQuiz(work, (i, n) => { const s = st(); if (s) s.textContent = '🗣️ Preparando voces naturales… ' + i + ' de ' + n; });
+    if (r.made) {
+      const latest = S.getQuiz(id);
+      if (latest) { applyTts(latest.config, work.config); S.saveQuiz({ id, name: latest.name, folderId: latest.folderId, config: latest.config }); }
+      if (quiz && quiz.id === id) { const wasClean = !isDirty(); applyTts(quiz.config, work.config); if (wasClean) snapshot = JSON.stringify(quiz); }
+      toast('🗣️ Voz natural lista para ' + r.made + (r.made === 1 ? ' texto.' : ' textos.'), 'success');
+    }
+    if (quiz && quiz.id === id) changed();
   }
 
   function preview() {

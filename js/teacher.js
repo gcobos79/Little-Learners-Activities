@@ -57,42 +57,161 @@ window.LL = window.LL || {};
   }
 
   /* ---------- Backup ---------- */
+  const box = (...kids) => el('div.panel', { style: { display: 'grid', gap: '12px' } }, ...kids);
+
+  function accountPanel() {
+    if (!LL.cloud.enabled()) return null;
+    if (!LL.cloud.signedIn()) {
+      return box(el('h2', '👤 Cuenta'),
+        el('p', 'Estás usando Little Learners sin cuenta: todo se guarda solo en este navegador.'),
+        el('p.small.muted', 'Con una cuenta, tus quizzes se guardan en la nube y aparecen en todas tus tabletas.'),
+        el('button.btn.primary', { type: 'button', style: { justifySelf: 'start' }, onclick: () => { LL.auth.setLocalMode(false); LL.app.goHome(); } }, 'Iniciar sesión'));
+    }
+    const u = LL.cloud.user() || {};
+    const line = el('p.small');
+    const draw = (st) => {
+      line.textContent = st.busy || st.pending ? '🔄 Guardando en la nube…'
+        : st.error === 'offline' ? '📴 Sin internet. Los cambios se subirán al volver la conexión.'
+        : st.error ? '⚠️ No se pudo sincronizar: ' + st.error
+        : st.lastOk ? '☁️ Todo guardado en la nube · ' + new Date(st.lastOk).toLocaleString('es-US', { dateStyle: 'short', timeStyle: 'short' }) : '☁️ Conectado';
+    };
+    draw(LL.sync.status());
+    const off = LL.sync.onChange((st) => { if (!line.isConnected) { off(); return; } draw(st); });
+    return box(el('h2', '👤 Cuenta'),
+      el('p', 'Sesión iniciada como ', el('strong', u.email || '')),
+      line,
+      el('div.media-row',
+        el('button.btn.soft', { type: 'button', onclick: async () => { const ok = await LL.sync.run(); toast(ok ? '✓ Sincronizado.' : 'No se pudo sincronizar ahora.', ok ? 'success' : 'error'); } }, '🔄 Sincronizar ahora'),
+        el('button.btn.ghost', { type: 'button', onclick: () => LL.auth.signOut() }, 'Cerrar sesión')),
+      el('p.small.muted', 'En cada tableta: abre la página, entra una vez con tu cuenta y la tableta queda lista. Los niños solo tocan su animalito.'));
+  }
+
+  function pinPanel() {
+    const has = !!S.pinHash();
+    return box(el('h2', '🔒 PIN del maestro'),
+      el('p', has ? 'Hay un PIN. Se pide al mantener presionado «Maestro».' : 'Para tabletas compartidas: además de mantener presionado «Maestro», pide un PIN de números.'),
+      el('div.media-row',
+        el('button.btn.soft', { type: 'button', onclick: async () => { await LL.auth.setPinFlow(); renderBackup(); } }, has ? 'Cambiar PIN' : 'Crear PIN'),
+        has ? el('button.btn.danger-ghost', { type: 'button', onclick: async () => { if (await confirmDialog('¿Quitar el PIN?', 'Cualquiera que mantenga presionado «Maestro» podrá entrar.', 'Quitar PIN', true)) { S.savePinHash(null); renderBackup(); } } }, 'Quitar PIN') : null),
+      el('p.small.muted', 'El PIN se guarda cifrado' + (LL.cloud.signedIn() ? ' y se usa en todos tus dispositivos.' : '.')));
+  }
+
+  function voicePanel() {
+    if (!LL.cloud.signedIn()) return null;
+    const v = S.voice();
+    const on = el('input', { type: 'checkbox', checked: v.enabled });
+    on.addEventListener('change', () => { S.saveVoice({ ...S.voice(), enabled: on.checked }); renderBackup(); });
+    const sel = el('select', { 'aria-label': 'Voz', disabled: !v.enabled });
+    sel.append(new Option('Cargando voces…', v.voiceId || ''));
+    const usage = el('div', { style: { display: 'grid', gap: '6px' } });
+    const panel = box(el('h2', '🗣️ Voz natural (ElevenLabs)'),
+      el('label.switch', on, 'Usar voz natural en los quizzes'),
+      el('p.small.muted', 'Al guardar un quiz, cada texto con «Voz automática» se convierte una vez en audio natural. Si no hay internet o se acaban los créditos, se usa la voz del dispositivo.'),
+      el('label.field', 'Voz', sel),
+      el('div.media-row',
+        el('button.btn.ghost', { type: 'button', disabled: !v.enabled, onclick: testVoice }, '🔊 Probar voz'),
+        el('button.btn.soft', { type: 'button', disabled: !v.enabled, onclick: prepareAll }, '🗣️ Preparar voces de todos los quizzes')),
+      usage,
+      el('p.small.muted', 'Voces creadas con ElevenLabs (elevenlabs.io). Con el plan gratuito: solo uso no comercial y se debe mencionar a ElevenLabs.'));
+    if (v.enabled) {
+      LL.tts.voices().then((r) => {
+        sel.replaceChildren();
+        if (!r || !r.voices) { sel.append(new Option(r && r.reason === 'no_api_key' ? 'Falta la clave de ElevenLabs en Supabase' : 'No se pudieron cargar las voces', '')); return; }
+        const current = v.voiceId || r.defaultVoice;
+        r.voices.sort((a, b) => a.name.localeCompare(b.name)).forEach((x) => sel.add(new Option(x.name + (x.gender ? ' · ' + (x.gender === 'female' ? 'mujer' : x.gender === 'male' ? 'hombre' : x.gender) : '') + (x.accent ? ' · ' + x.accent : ''), x.id, false, x.id === current)));
+        sel.disabled = false;
+      }).catch((e) => { sel.replaceChildren(new Option('Sin conexión', '')); console.warn(e); });
+      sel.addEventListener('change', () => { S.saveVoice({ ...S.voice(), voiceId: sel.value }); toast('Voz cambiada. Usa «Preparar voces» para actualizar los quizzes.'); });
+      LL.tts.usage().then((u) => {
+        if (!u || u.used == null) return;
+        const pct = Math.min(100, Math.round((u.used / Math.max(1, u.limit)) * 100));
+        usage.replaceChildren(el('div.meter', el('div', { style: { width: pct + '%', background: pct > 85 ? 'var(--bad)' : 'var(--primary)' } })),
+          el('p.small.muted', 'Créditos usados este mes: ' + u.used.toLocaleString('es-US') + ' de ' + u.limit.toLocaleString('es-US') + (u.resetsAt ? ' · se renuevan el ' + new Date(u.resetsAt * 1000).toLocaleDateString('es-US') : '')));
+      }).catch(() => {});
+    }
+    return panel;
+  }
+
+  async function testVoice() {
+    const text = S.voice().voiceId ? '¡Hola! Vamos a aprender juntos.' : '¡Hola! Vamos a aprender juntos.';
+    try {
+      const r = await LL.cloud.invoke('ll-tts', { action: 'speak', text, voiceId: S.voice().voiceId || '' });
+      if (r && r.path) { await LL.tts.play({ audioMode: 'voice', text, tts: { path: r.path, text } }); return; }
+      toast('Voz natural no disponible (' + (r && r.reason) + '). Se usa la voz del dispositivo.', 'error');
+      LL.ui.speak(text, 'es');
+    } catch (e) { toast(LL.auth.friendly(e), 'error'); }
+  }
+
+  async function prepareAll() {
+    const all = S.quizzes();
+    let made = 0;
+    for (let i = 0; i < all.length; i++) {
+      const q = all[i];
+      const work = { ...q, config: S.clone(q.config) };
+      toast('🗣️ ' + (i + 1) + ' de ' + all.length + ': ' + q.name);
+      const r = await LL.tts.prepareQuiz(work);
+      if (r.made) { S.saveQuiz({ id: q.id, name: q.name, folderId: q.folderId, config: work.config }); made += r.made; }
+      if (r.skipped && !r.made) break;
+    }
+    toast('Listo: ' + made + ' audio(s) nuevo(s).', 'success');
+    renderBackup();
+  }
+
+  /* ---------- Settings: account, PIN, voice, backup, delete ---------- */
   function renderBackup() {
     const page = $('#screen-backup');
     const used = S.storageUsed();
     const quota = 5 * 1024 * 1024; // typical localStorage limit
     const pct = Math.min(100, Math.round((used / quota) * 100));
     const nQ = S.quizzes().length, nF = S.folders().length;
+    const signed = LL.cloud.signedIn();
     page.replaceChildren(el('div.tool-page',
-      el('div', el('h1', '💾 Respaldo y tabletas'), el('p.lead', 'Tus actividades se guardan solo en este navegador. Con un archivo de respaldo puedes cuidarlas y pasarlas a otras tabletas o a otro maestro.')),
-      el('div.panel', { style: { display: 'grid', gap: '12px' } },
-        el('h2', '📥 Descargar respaldo'),
+      el('div', el('h1', '⚙️ Ajustes'), el('p.lead', signed ? 'Tu cuenta, el PIN, la voz y los respaldos.' : 'El PIN, los respaldos y los datos de este dispositivo.')),
+      accountPanel(),
+      pinPanel(),
+      voicePanel(),
+      box(el('h2', '📥 Descargar respaldo'),
         el('p', 'Guarda en un archivo todos tus quizzes (' + nQ + '), carpetas (' + nF + ') y estudiantes.'),
         el('button.btn.primary', { type: 'button', style: { justifySelf: 'start' }, onclick: () => {
           download('little-learners-respaldo-' + S.todayChicago() + '.json', JSON.stringify(S.exportBackup()));
           toast('Respaldo descargado.', 'success');
         } }, '📥 Descargar respaldo')),
-      el('div.panel', { style: { display: 'grid', gap: '12px' } },
-        el('h2', '📤 Importar'),
+      box(el('h2', '📤 Importar'),
         el('p', 'Abre un archivo de respaldo, o una carpeta que otro maestro compartió contigo.'),
-        el('button.btn.soft', { type: 'button', style: { justifySelf: 'start' }, onclick: importFlow }, '📤 Elegir archivo…')),
-      el('div.panel', { style: { display: 'grid', gap: '10px' } },
-        el('h2', '📲 Pasar las actividades a las tabletas'),
+        el('button.btn.soft', { type: 'button', style: { justifySelf: 'start' }, onclick: importFlow }, '📤 Elegir archivo…'),
+        el('p.small.muted', 'Para compartir solo una carpeta: en «Actividades», toca ⋯ en la carpeta → «Compartir».')),
+      signed ? null : box(el('h2', '📲 Pasar las actividades a una tableta sin cuenta'),
         el('ol', { style: { margin: 0, paddingLeft: '22px', display: 'grid', gap: '6px', fontWeight: 700 } },
           el('li', 'En tu computadora: «📥 Descargar respaldo».'),
           el('li', 'Copia el archivo a la tableta (Google Drive, correo o memoria USB).'),
-          el('li', 'En la tableta, abre esta página en Chrome → mantén presionado «Maestro» → «Respaldo» → «📤 Elegir archivo».'),
-          el('li', 'Elige «Agregar a lo que ya tengo». ¡Listo!')),
-        el('p.small.muted', 'Para compartir solo una carpeta: en «Actividades», toca ⋯ en la carpeta → «Compartir».')),
+          el('li', 'En la tableta: mantén presionado «Maestro» → «Ajustes» → «📤 Elegir archivo».'),
+          el('li', 'Elige «Agregar a lo que ya tengo». ¡Listo!'))),
       el('div.panel', { style: { display: 'grid', gap: '8px' } },
         el('h3', 'Espacio usado en este navegador'),
         el('div.meter', el('div', { style: { width: pct + '%', background: pct > 80 ? 'var(--bad)' : 'var(--primary)' } })),
         el('p.small.muted', 'Aproximadamente ' + formatBytes(used) + ' de ~5 MB. Las imágenes y los audios ocupan más espacio; las imágenes nuevas se reducen automáticamente.')),
       el('div.panel', { style: { display: 'grid', gap: '10px', borderColor: '#F3C3C3' } },
-        el('h2', '🗑️ Borrar todos los datos de este dispositivo'),
-        el('p', 'Borra de este navegador todos los quizzes, carpetas, estudiantes, ajustes y resultados de Little Learners. No afecta a otros dispositivos ni a los archivos de respaldo que ya descargaste.'),
-        el('button.btn.danger-ghost', { type: 'button', style: { justifySelf: 'start' }, onclick: deleteAll }, 'Borrar todo…')),
+        el('h2', '🗑️ Borrar datos'),
+        el('p', el('strong', 'Este dispositivo: '), 'borra de este navegador todos los quizzes, carpetas, estudiantes, ajustes y resultados' + (signed ? ', y cierra la sesión. Tu copia en la nube no se toca.' : '. No afecta a otros dispositivos ni a los respaldos descargados.')),
+        el('button.btn.danger-ghost', { type: 'button', style: { justifySelf: 'start' }, onclick: deleteAll }, 'Borrar este dispositivo…'),
+        signed ? el('p', el('strong', 'La nube: '), 'borra tus quizzes, carpetas, estudiantes y voces guardados en tu cuenta, y también de este dispositivo. Tus otras tabletas los quitarán en su siguiente sincronización.') : null,
+        signed ? el('button.btn.danger-ghost', { type: 'button', style: { justifySelf: 'start' }, onclick: deleteCloud }, 'Borrar mis datos de la nube…') : null,
+        signed ? el('p.small.muted', 'Para cerrar la cuenta por completo, pídeselo a quien administra esta página.') : null),
       el('p.small', el('button.link-btn', { type: 'button', onclick: () => LL.app.openInfo('privacidad') }, 'Política de privacidad'), ' · ', el('button.link-btn', { type: 'button', onclick: () => LL.app.openInfo('terminos') }, 'Términos de uso'))));
+  }
+
+  async function deleteCloud() {
+    const typed = el('input', { type: 'text', placeholder: 'BORRAR', autocomplete: 'off', 'aria-label': 'Escribe BORRAR para confirmar' });
+    const ok = await dialog({
+      title: '¿Borrar tus datos de la nube?',
+      body: el('div', { style: { display: 'grid', gap: '10px' } },
+        el('p', 'Se borrarán de tu cuenta todos los quizzes, carpetas, estudiantes, ajustes y voces. Tus otras tabletas dejarán de recibirlos. Esto no se puede deshacer.'),
+        el('label.field', 'Para confirmar, escribe BORRAR', typed)),
+      actions: [{ label: 'Cancelar', kind: 'ghost', value: false }, { label: 'Borrar de la nube', kind: 'danger', value: () => (typed.value.trim().toUpperCase() === 'BORRAR' ? true : (toast('Escribe BORRAR para confirmar.', 'error'), typed.focus(), undefined)) }],
+    });
+    if (!ok) return;
+    try { await LL.sync.deleteCloudData(); toast('Tus datos de la nube se borraron.', 'success'); renderBackup(); }
+    catch (e) { toast('No se pudo borrar: ' + LL.auth.friendly(e), 'error'); }
   }
 
   async function deleteAll() {

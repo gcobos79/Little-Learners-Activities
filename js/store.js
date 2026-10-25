@@ -21,7 +21,17 @@ window.LL = window.LL || {};
     roster: 'll-v122-roster',
     sonidos: 'll-v122-sonidos',
     draft: 'll-v122-editor-draft',
+    pin: 'll-v122-pin',               // hashed teacher PIN for shared tablets
+    voice: 'll-v122-voice',           // { enabled, voiceId } for the ElevenLabs voice
+    settingsAt: 'll-v122-settings-at',
   };
+  // Keys that are copied to the teacher's cloud account when signed in.
+  const SYNCED = new Set([KEYS.library, KEYS.folders, KEYS.roster, KEYS.sonidos, KEYS.pin, KEYS.voice]);
+  const SETTINGS = new Set([KEYS.roster, KEYS.sonidos, KEYS.pin, KEYS.voice]);
+  let applyingRemote = false;
+  /** Run fn without telling the sync module (used when applying data downloaded from the cloud). */
+  function quietly(fn) { applyingRemote = true; try { return fn(); } finally { applyingRemote = false; } }
+  const nowISO = () => new Date().toISOString();
 
   const DEFAULT_ROSTER = [
     { name: 'Abigail', animal: '🐱' }, { name: 'Daniel', animal: '🦖' },
@@ -55,6 +65,10 @@ window.LL = window.LL || {};
   function writeJSON(key, value) {
     try {
       localStorage.setItem(key, JSON.stringify(value));
+      if (!applyingRemote && SYNCED.has(key)) {
+        if (SETTINGS.has(key)) localStorage.setItem(KEYS.settingsAt, JSON.stringify(nowISO()));
+        if (LL.sync) LL.sync.schedule();
+      }
       return true;
     } catch (e) {
       LL.ui && LL.ui.toast('No se pudo guardar. El almacenamiento del navegador podría estar lleno.', 'error');
@@ -137,7 +151,8 @@ window.LL = window.LL || {};
     const t = all.find((x) => x.id === id);
     if (!t) return false;
     const fam = t.familyId || t.id;
-    all.forEach((x) => { if ((x.familyId || x.id) === fam) x.folderId = folderId || null; });
+    const now = nowISO();
+    all.forEach((x) => { if ((x.familyId || x.id) === fam) { x.folderId = folderId || null; x.updatedAt = now; } });
     return writeLibrary(all);
   }
 
@@ -152,8 +167,8 @@ window.LL = window.LL || {};
   function saveFolder(folder) {
     const all = folders();
     const f = folder.id && all.find((x) => x.id === folder.id);
-    if (f) { f.name = folder.name; f.color = folder.color; }
-    else all.push({ id: 'folder-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7), name: folder.name, parentId: folder.parentId || null, color: folder.color });
+    if (f) { f.name = folder.name; f.color = folder.color; f.updatedAt = nowISO(); }
+    else all.push({ id: 'folder-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7), name: folder.name, parentId: folder.parentId || null, color: folder.color, updatedAt: nowISO() });
     return writeFolders(all);
   }
 
@@ -163,9 +178,10 @@ window.LL = window.LL || {};
     const f = all.find((x) => x.id === id);
     if (!f) return false;
     const parent = f.parentId || null;
-    all.forEach((x) => { if (x.parentId === id) x.parentId = parent; });
+    const now = nowISO();
+    all.forEach((x) => { if (x.parentId === id) { x.parentId = parent; x.updatedAt = now; } });
     const lib = readLibrary();
-    lib.forEach((x) => { if (x.folderId === id) x.folderId = parent; });
+    lib.forEach((x) => { if (x.folderId === id) { x.folderId = parent; x.updatedAt = now; } });
     return writeLibrary(lib) && writeFolders(all.filter((x) => x.id !== id));
   }
 
@@ -177,6 +193,7 @@ window.LL = window.LL || {};
     let p = parentId;
     while (p) { if (p === id) return false; p = (all.find((x) => x.id === p) || {}).parentId; }
     f.parentId = parentId || null;
+    f.updatedAt = nowISO();
     return writeFolders(all);
   }
 
@@ -223,6 +240,13 @@ window.LL = window.LL || {};
   }
   function sonidosScores(c) { return readJSON(sonidosScoreKey(c), {}); }
   function saveSonidosScores(c, data) { return writeJSON(sonidosScoreKey(c), data); }
+
+  /* ---------- Teacher PIN and voice ---------- */
+  function pinHash() { return readJSON(KEYS.pin, null); }
+  function savePinHash(h) { return writeJSON(KEYS.pin, h || null); }
+  function voice() { return { enabled: true, voiceId: '', ...readJSON(KEYS.voice, {}) }; }
+  function saveVoice(v) { return writeJSON(KEYS.voice, v); }
+  function settingsAt() { return readJSON(KEYS.settingsAt, null); }
 
   /* ---------- Draft (unsaved editor work) ---------- */
   function readDraft() { return readJSON(KEYS.draft, null); }
@@ -303,7 +327,7 @@ window.LL = window.LL || {};
     for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('ll-')) keys.push(k); }
     keys.forEach((k) => localStorage.removeItem(k));
     // Keep the student list empty instead of falling back to the demo names.
-    writeJSON(KEYS.roster, []);
+    quietly(() => writeJSON(KEYS.roster, []));
     return keys.length;
   }
 
@@ -338,7 +362,7 @@ window.LL = window.LL || {};
     KEYS, FOLDER_COLORS, ANIMALS, clone, uid, byName,
     readLibrary, quizzes, getQuiz, isReady, saveQuiz, duplicateQuiz, deleteQuiz, moveQuiz,
     folders, getFolder, saveFolder, deleteFolder, moveFolder, folderTrail, folderPathLabel, folderHas,
-    roster, saveRoster, sonidos, saveSonidos, sonidosScores, saveSonidosScores, todayChicago,
+    roster, saveRoster, sonidos, saveSonidos, pinHash, savePinHash, voice, saveVoice, settingsAt, quietly, readJSON, writeJSON, writeLibrary, writeFolders, sonidosScores, saveSonidosScores, todayChicago,
     readDraft, writeDraft, clearDraft,
     exportBackup, importBackup, validateBackup, storageUsed, deleteAllData,
     newOption, newQuestion, newQuiz, questionProblem,

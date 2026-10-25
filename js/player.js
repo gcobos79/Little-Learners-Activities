@@ -41,9 +41,14 @@ window.LL = window.LL || {};
   function hasPromptSound(q) {
     return (q.audioMode === 'file' && q.audio) || (q.audioMode === 'voice' && String(promptSpeech(q) || '').trim());
   }
+  /** Natural ElevenLabs voice when it was prepared, otherwise the device voice. */
+  async function sayItem(item, fallbackText) {
+    if (LL.tts && (await LL.tts.play(item))) return;
+    speak(fallbackText, quiz && quiz.config?.lang);
+  }
   function playPrompt(q) {
     if (q.audioMode === 'file' && q.audio) playAudio(q.audio);
-    else if (q.audioMode === 'voice') speak(promptSpeech(q), quiz.config?.lang);
+    else if (q.audioMode === 'voice') sayItem(q, promptSpeech(q));
   }
 
   function renderProgress() {
@@ -110,7 +115,7 @@ window.LL = window.LL || {};
           e.preventDefault(); e.stopPropagation();
           if (answered) return;
           if (o.audioMode === 'file' && o.audio) playAudio(o.audio);
-          else speak(o.readTextEnabled && o.readText ? o.readText : o.text, quiz.config?.lang);
+          else sayItem(o, o.readTextEnabled && o.readText ? o.readText : o.text);
         };
         s.addEventListener('click', play);
         s.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') play(e); });
@@ -123,6 +128,7 @@ window.LL = window.LL || {};
     setTimeout(() => { qa.classList.remove('enter'); grid.classList.remove('enter'); }, 120 + n * 70 + 450);
     requestAnimationFrame(() => { fitLabels(grid); requestAnimationFrame(() => fitLabels(grid)); });
 
+    if (LL.tts) LL.tts.prefetch([q, ...(q.options || [])]);
     // Read the question aloud automatically (needs a tap first, which the child just did).
     const myRun = run;
     timer = setTimeout(() => { if (myRun === run && !root().hidden) playPrompt(q); }, 250);

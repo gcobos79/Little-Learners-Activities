@@ -1,0 +1,88 @@
+const { chromium } = require('playwright');
+const seed=require('./seed.js'); const makeMock=require('./mocksb.js');
+const ok=(c,m)=>console.log((c?'PASS ':'FAIL ')+m);
+const shots=process.argv[3];
+(async () => {
+  const file=process.argv[2]; const mock=makeMock();
+  const b=await chromium.launch();
+  const mk=async(w,h)=>{const ctx=await b.newContext({viewport:{width:w,height:h}}); await ctx.route('https://abbtbaupzdzdvtkunmtf.supabase.co/**',mock.handler); const p=await ctx.newPage(); p.errs=[]; p.on('pageerror',e=>p.errs.push(e.message)); return p;};
+  const A=await mk(1280,800);
+  await A.goto('file://'+require('path').resolve(file));
+  await A.evaluate(s=>{localStorage.clear();localStorage.setItem('ll-activities-v90-folders',JSON.stringify(s.folders));localStorage.setItem('ll-activities-v10-templates',JSON.stringify(s.library))},seed);
+  await A.reload(); await A.waitForTimeout(500);
+  ok(await A.isVisible('#screen-login form'),'A: sign-in screen shown first');
+  await A.screenshot({path:shots+'/c1-login.png'});
+  await A.fill('input[type=email]','teacher@test.org'); await A.fill('input[type=password]','wrong');
+  await A.click('button:has-text("Entrar")'); await A.waitForTimeout(300);
+  ok((await A.textContent('#screen-login')).includes('no son correctos'),'A: wrong password shows friendly error');
+  await A.fill('input[type=password]','secreto123'); await A.click('button:has-text("Entrar")'); await A.waitForTimeout(400);
+  ok(await A.isVisible('.modal:has-text("Subir")'),'A: asks before uploading local activities');
+  await A.click('.modal button:has-text("Subir a mi cuenta")'); await A.waitForTimeout(1500);
+  ok(mock.db.ll_quizzes.length===5 && mock.db.ll_folders.length===4,'A: local V121 data uploaded ('+mock.db.ll_quizzes.length+' quizzes, '+mock.db.ll_folders.length+' folders)');
+  ok(await A.isVisible('#studentGrid'),'A: lands on student picker');
+  // Teacher creates a quiz
+  await A.focus('.teacher-gate'); await A.keyboard.press('Enter'); await A.waitForTimeout(400);
+  await A.click('#newQuizBtn'); await A.waitForTimeout(300);
+  await A.fill('#edName','Gatos'); await A.fill('#edQuestion textarea','¿Dónde está el gato?');
+  const ins=await A.$$('#edQuestion .answer input[type=text]'); await ins[0].fill('gato'); await ins[1].fill('perro'); await ins[2].fill('pato'); await ins[3].fill('sapo');
+  await A.click('.answer >> nth=0 >> .correct-toggle');
+  await A.click('label.switch:has-text("Visible para estudiantes")');
+  await A.click('button:has-text("💾 Guardar")'); await A.waitForTimeout(2500);
+  const stored=await A.evaluate(()=>JSON.parse(localStorage.getItem('ll-activities-v10-templates')).find(x=>x.name==='Gatos'));
+  ok(stored && stored.config.questions[0].tts && stored.config.questions[0].tts.path,'A: natural-voice audio prepared on save (tts calls: '+mock.stats().ttsCalls+')');
+  await A.waitForTimeout(2000);
+  const cloudGatos=mock.db.ll_quizzes.find(r=>r.name==='Gatos');
+  ok(cloudGatos && cloudGatos.config.questions[0].tts,'A: quiz with voice uploaded to cloud');
+  // PIN
+  await A.click('.tab >> nth=3'); await A.waitForTimeout(400);
+  await A.screenshot({path:shots+'/c2-settings.png',fullPage:true});
+  await A.click('button:has-text("Crear PIN")'); await A.waitForTimeout(200);
+  for(const k of '1234') await A.keyboard.press(k); await A.keyboard.press('Enter'); await A.waitForTimeout(250);
+  for(const k of '1234') await A.keyboard.press(k); await A.keyboard.press('Enter'); await A.waitForTimeout(2200);
+  const st=mock.db.ll_settings.find(r=>r.owner_id==='u-1111');
+  ok(st && st.pin_hash && st.pin_hash.startsWith('sha256:'),'A: PIN saved hashed in cloud');
+  // Tablet B
+  const B=await mk(800,1280);
+  await B.goto('file://'+require('path').resolve(file)); await B.evaluate(()=>localStorage.clear()); await B.reload(); await B.waitForTimeout(400);
+  await B.fill('input[type=email]','teacher@test.org'); await B.fill('input[type=password]','secreto123'); await B.click('button:has-text("Entrar")'); await B.waitForTimeout(2500);
+  ok(!(await B.isVisible('.modal')),'B: empty tablet signs in without upload question');
+  const bq=await B.evaluate(()=>LL.store.quizzes().map(q=>q.name));
+  ok(bq.includes('Gatos')&&bq.includes('Colores'),'B: tablet downloaded quizzes: '+bq.join(', '));
+  await B.click('.student-card >> nth=0'); await B.waitForTimeout(600);
+  const names=await B.$$eval('#cardGrid .name',a=>a.map(x=>x.textContent));
+  ok(names.includes('Gatos'),'B: student sees new quiz');
+  let audioReq=0; B.on('request',r=>{if(r.url().includes('/storage/v1/object/authenticated/'))audioReq++});
+  await B.click('#cardGrid >> text=Gatos'); await B.waitForTimeout(1200);
+  ok(audioReq>0,'B: player downloads ElevenLabs audio ('+audioReq+' requests)');
+  await B.screenshot({path:shots+'/c3-tablet-player.png'});
+  await B.click('#playerExit'); await B.click('.appbar-right .icon-btn'); await B.waitForTimeout(300);
+  await B.focus('.teacher-gate'); await B.keyboard.press('Enter'); await B.waitForTimeout(300);
+  ok(await B.isVisible('.pin-pad'),'B: PIN pad shown on tablet');
+  await B.screenshot({path:shots+'/c4-pin.png'});
+  for(const k of '9999') await B.keyboard.press(k); await B.keyboard.press('Enter'); await B.waitForTimeout(300);
+  ok(!(await B.isVisible('#newQuizBtn')),'B: wrong PIN keeps teacher area closed');
+  await B.focus('.teacher-gate'); await B.keyboard.press('Enter'); await B.waitForTimeout(300);
+  for(const k of '1234') await B.keyboard.press(k); await B.keyboard.press('Enter'); await B.waitForTimeout(500);
+  ok(await B.isVisible('#newQuizBtn'),'B: correct PIN opens teacher area');
+  // Delete on A propagates to B
+  await A.click('.tab >> nth=0'); await A.waitForTimeout(300);
+  await A.click('.card.quiz:has-text("Colores") .icon-btn'); await A.click('.menu >> text=Eliminar'); await A.click('.modal button:has-text("Eliminar")'); await A.waitForTimeout(2500);
+  await B.evaluate(()=>LL.sync.run()); await B.waitForTimeout(800);
+  ok(!(await B.evaluate(()=>LL.store.quizzes().some(q=>q.name==='Colores'))),'B: deletion on computer reaches tablet');
+  // Another teacher signs in on B
+  await B.click('text=Salir ↩'); await B.waitForTimeout(200);
+  await B.evaluate(()=>LL.cloud.signOut()); await B.evaluate(()=>LL.app.goHome()); await B.waitForTimeout(300);
+  ok(await B.isVisible('#screen-login form'),'B: sign out returns to sign-in');
+  await B.fill('input[type=email]','other@test.org'); await B.fill('input[type=password]','otro12345'); await B.click('button:has-text("Entrar")'); await B.waitForTimeout(400);
+  ok(await B.isVisible('.modal:has-text("otra cuenta")'),'B: warns that another account’s activities are on device');
+  await B.click('.modal button:has-text("Continuar")'); await B.waitForTimeout(1500);
+  const left=await B.evaluate(()=>LL.store.quizzes().length);
+  ok(left===0,'B: other teacher does not see first teacher’s quizzes ('+left+')');
+  ok(!mock.db.ll_quizzes.some(r=>r.owner_id==='u-2222'),'B: first teacher’s data not uploaded into second account');
+  // local mode
+  const C=await mk(1280,800); await C.goto('file://'+require('path').resolve(file)); await C.evaluate(()=>localStorage.clear()); await C.reload(); await C.waitForTimeout(300);
+  await C.click('button:has-text("Usar sin cuenta")'); await C.waitForTimeout(300);
+  ok(await C.isVisible('#studentGrid'),'C: can use without an account');
+  console.log('ERRORS A',A.errs,'B',B.errs,'C',C.errs);
+  await b.close();
+})();

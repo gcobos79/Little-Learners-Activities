@@ -5,13 +5,13 @@ window.LL = window.LL || {};
   const S = LL.store;
 
   const state = { screen: 'students', mode: null, student: null };
-  const SCREENS = ['students', 'library', 'editor', 'students-admin', 'backup', 'sonidos-admin', 'sonidos', 'result', 'info'];
+  const SCREENS = ['login', 'set-password', 'students', 'library', 'editor', 'students-admin', 'backup', 'sonidos-admin', 'sonidos', 'result', 'info'];
   let infoReturn = 'students';
   const TEACHER_TABS = [
     { id: 'library', icon: '📚', label: 'Actividades' },
     { id: 'students-admin', icon: '👧', label: 'Estudiantes' },
     { id: 'sonidos-admin', icon: '🔤', label: 'Sonidos iniciales' },
-    { id: 'backup', icon: '💾', label: 'Respaldo' },
+    { id: 'backup', icon: '⚙️', label: 'Ajustes' },
   ];
 
   async function go(screen) {
@@ -21,6 +21,9 @@ window.LL = window.LL || {};
     document.body.classList.toggle('mode-student', state.mode === 'student');
     document.body.classList.toggle('mode-teacher', state.mode === 'teacher');
     document.body.classList.toggle('mode-home', !state.mode);
+    document.body.classList.toggle('mode-login', screen === 'login' || screen === 'set-password');
+    if (screen === 'login') LL.auth.renderLogin(state.loginMessage);
+    if (screen === 'set-password') LL.auth.renderSetPassword(state.passwordKind);
     if (screen === 'students') renderStudents();
     if (screen === 'library') LL.library.render();
     if (screen === 'students-admin') LL.teacher.renderRoster();
@@ -46,13 +49,30 @@ window.LL = window.LL || {};
         tabs.append(el('button.tab', { type: 'button', role: 'tab', 'aria-selected': String(active), onclick: () => go(t.id) }, t.icon + ' ', el('span.tab-label', t.label)));
       }
       center.append(tabs);
+      if (LL.cloud.signedIn()) right.append(syncBadge());
       right.append(el('button.icon-btn', { type: 'button', 'aria-label': 'Información, privacidad y términos', title: 'Información', onclick: () => openInfo('acerca') }, 'ℹ️'));
       right.append(el('button.btn.ghost', { type: 'button', onclick: goHome }, 'Salir ↩'));
+    } else if (state.screen === 'login' || state.screen === 'set-password') {
+      // nothing in the bar while signing in
     } else if (state.screen === 'info') {
       right.append(el('button.btn.ghost', { type: 'button', onclick: () => go(infoReturn) }, '⬅️ Volver'));
     } else {
       right.append(teacherGate());
     }
+  }
+
+  /** Small cloud icon showing whether the teacher's changes are saved online. */
+  function syncBadge() {
+    const b = el('button.icon-btn.sync-badge', { type: 'button', onclick: () => { LL.sync.run(); } });
+    const draw = (st) => {
+      const icon = st.busy || st.pending ? '🔄' : st.error === 'offline' ? '📴' : st.error ? '⚠️' : '☁️';
+      const label = st.busy || st.pending ? 'Guardando en la nube…' : st.error === 'offline' ? 'Sin internet: los cambios se subirán al volver la conexión' : st.error ? 'No se pudo sincronizar: ' + st.error : 'Todo guardado en la nube' + (st.lastOk ? ' (' + new Date(st.lastOk).toLocaleTimeString('es-US', { hour: 'numeric', minute: '2-digit' }) + ')' : '');
+      b.textContent = icon; b.title = label; b.setAttribute('aria-label', label);
+      b.classList.toggle('spin', !!(st.busy || st.pending));
+    };
+    draw(LL.sync.status());
+    const off = LL.sync.onChange((st) => { if (!b.isConnected) { off(); return; } draw(st); });
+    return b;
   }
 
   /** "Maestro" button that has to be held for one second, so children don't open it by accident. */
@@ -70,8 +90,10 @@ window.LL = window.LL || {};
     return b;
   }
 
-  function enterTeacher() {
+  async function enterTeacher() {
+    if (!(await LL.auth.checkPin())) return;
     state.mode = 'teacher'; state.student = null;
+    LL.sync.run();
     LL.library.resetToRoot();
     go('library');
   }
@@ -81,7 +103,9 @@ window.LL = window.LL || {};
     if (LL.player.isOpen()) LL.player.close();
     stopSonidos();
     state.mode = null; state.student = null; state.screen = 'editor-left';
+    if (LL.auth.needsLogin()) { go('login'); return; }
     go('students');
+    LL.sync.run();
   }
 
   function openInfo(section) {
@@ -105,6 +129,8 @@ window.LL = window.LL || {};
       grid.append(card);
     }
     LL.ui.stagger(grid);
+    const credit = $('#voiceCredit');
+    if (credit) credit.hidden = !LL.tts.active();
   }
 
   /** A student always starts at the top of the library. */
@@ -162,7 +188,32 @@ window.LL = window.LL || {};
     $('#sonidosExit').addEventListener('click', () => { stopSonidos(); go('library'); });
     $('#resultOk').addEventListener('click', () => go('library'));
     document.querySelectorAll('[data-info]').forEach((b) => b.addEventListener('click', () => openInfo(b.dataset.info)));
+    start();
+  });
+
+  async function start() {
+    // Links from invitation / password-reset emails arrive with a token in the address.
+    const r = LL.cloud.enabled() ? await LL.cloud.handleRedirect() : null;
+    if (r && r.error) { state.loginMessage = null; go('login'); toast('El enlace no es válido o ya caducó. Pide uno nuevo.', 'error'); return; }
+    if (r && (r.type === 'invite' || r.type === 'recovery')) { state.passwordKind = r.type; go('set-password'); return; }
+    if (r) { LL.auth.afterSignIn(); return; }
+    if (LL.auth.needsLogin()) { go('login'); return; }
     go('students');
+    if (LL.cloud.signedIn()) LL.sync.run();
+  }
+
+  // Refresh what's on screen when new activities arrive from the cloud.
+  document.addEventListener('ll-synced', () => {
+    if (LL.player.isOpen()) return;
+    if (state.screen === 'students') renderStudents();
+    else if (state.screen === 'library') LL.library.render();
+    else if (state.screen === 'students-admin') LL.teacher.renderRoster();
+    else if (state.screen === 'sonidos-admin') LL.teacher.renderSonidos();
+  });
+  document.addEventListener('ll-signed-out', () => {
+    if (LL.cloud.signedIn()) return;
+    toast('Tu sesión terminó. Vuelve a entrar para seguir sincronizando.', 'error');
+    if (!LL.player.isOpen() && state.screen !== 'editor' && !state.mode) go('login');
   });
 
   LL.app = { state, go, goHome, openSonidos, openInfo };
