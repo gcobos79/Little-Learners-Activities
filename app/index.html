@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#FBF6EE">
+  <title>Little Learners Activities</title>
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body class="mode-home">
+  <a class="skip-link" href="#app">Saltar al contenido</a>
+  <header class="appbar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">✨</span><span class="brand-name">Little Learners</span></div>
+    <div class="appbar-center" id="appbarCenter"></div>
+    <div class="appbar-right" id="appbarRight"></div>
+  </header>
+
+  <div class="sky" aria-hidden="true"><span>⭐</span><span>☁️</span><span>🌈</span><span>🎈</span><span>✨</span></div>
+
+  <main id="app" tabindex="-1">
+    <!-- 1. Who are you? -->
+    <section id="screen-students" class="screen">
+      <div class="hero">
+        <h1><span class="wave" aria-hidden="true">👋</span> ¿Quién eres?</h1>
+        <p class="lead">Busca tu animalito y tócalo.</p>
+      </div>
+      <div class="student-grid" id="studentGrid"></div>
+      <footer class="site-footer">
+        <button type="button" data-info="acerca">Acerca de</button><span aria-hidden="true">·</span>
+        <button type="button" data-info="privacidad">Privacidad</button><span aria-hidden="true">·</span>
+        <button type="button" data-info="terminos">Términos</button><span aria-hidden="true">·</span>
+        <button type="button" data-info="accesibilidad">Accesibilidad</button>
+      </footer>
+    </section>
+
+    <!-- 2. Activity library (students see a read-only version) -->
+    <section id="screen-library" class="screen" hidden>
+      <div class="library-head">
+        <nav class="crumbs" id="crumbs" aria-label="Ubicación"></nav>
+        <div class="library-actions teacher-only">
+          <button type="button" class="btn ghost" id="newFolderBtn">📁 Nueva carpeta</button>
+          <button type="button" class="btn primary" id="newQuizBtn">＋ Nuevo quiz</button>
+        </div>
+      </div>
+      <div class="card-grid" id="cardGrid"></div>
+      <div class="empty" id="libraryEmpty" hidden></div>
+    </section>
+
+    <!-- 3. Quiz editor (teacher) -->
+    <section id="screen-editor" class="screen" hidden></section>
+
+    <!-- 4. Teacher tools: students, backup, Sonidos iniciales -->
+    <section id="screen-students-admin" class="screen" hidden></section>
+    <section id="screen-backup" class="screen" hidden></section>
+    <section id="screen-sonidos-admin" class="screen" hidden></section>
+    <section id="screen-info" class="screen" hidden></section>
+
+    <!-- 5. Sonidos iniciales (original activity, unchanged) -->
+    <section id="screen-sonidos" class="screen" hidden>
+      <div class="sonidos-bar">
+        <button type="button" class="icon-btn big" id="sonidosExit" aria-label="Salir">↩️</button>
+        <strong id="sonidosTitle">🔤 Sonidos iniciales</strong>
+      </div>
+      <iframe id="sonidosFrame" class="sonidos-frame" title="Sonidos iniciales"></iframe>
+    </section>
+
+    <!-- 6. Sonidos iniciales result + today's ranking (kept from V121) -->
+    <section id="screen-result" class="screen" hidden>
+      <div class="panel result-panel">
+        <div class="trophy" aria-hidden="true">🏆</div>
+        <h1>¡Terminaste, <span id="resultName"></span>!</h1>
+        <div class="score" id="resultScore"></div>
+        <div class="pill" id="resultPlace"></div>
+        <h2>🏅 Clasificación de hoy</h2>
+        <p class="muted small" id="resultDate"></p>
+        <div id="resultRanks" class="ranks"></div>
+        <button type="button" class="btn primary big" id="resultOk">Aceptar ✓</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Full-screen quiz player -->
+  <div id="player" class="player" hidden>
+    <div class="player-shell">
+      <div class="player-top">
+        <button type="button" class="icon-btn big" id="playerExit" aria-label="Volver a las actividades">↩️</button>
+        <div class="player-progress" id="playerProgress" aria-label="Progreso"></div>
+        <button type="button" class="icon-btn big speaker" id="playerSpeak" aria-label="Escuchar la pregunta">🔊</button>
+      </div>
+      <div class="player-body" id="playerBody"></div>
+    </div>
+  </div>
+
+  <div id="toasts" aria-live="polite"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/sonidos-activity.js"></script>
+  <script src="js/image-bank.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/library.js"></script>
+  <script src="js/editor.js"></script>
+  <script src="js/teacher.js"></script>
+  <script src="js/info.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
