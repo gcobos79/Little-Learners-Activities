@@ -593,6 +593,19 @@ input[type=email]:focus, input[type=password]:focus { border-color: var(--primar
 @media (max-width: 400px) { .pin-pad { grid-template-columns: repeat(3, 64px); } .pin-pad button { height: 58px; } }
 @media (prefers-reduced-motion: reduce) { .sync-badge.spin, .login-logo, .login-card { animation: none !important; } }
 
+/* Student name + animal inside the quiz player */
+.player-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.player-student { font-size: clamp(17px, 2.4vh, 22px); padding: 4px 14px 4px 6px; box-shadow: 0 2px 0 var(--line); }
+.player-student .animal { font-size: clamp(28px, 4.5vh, 40px); }
+.player-student span:last-child { max-width: min(40vw, 380px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 640px) {
+  .player-top { grid-template-columns: auto auto; grid-template-areas: 'left speak' 'prog prog'; row-gap: 6px; }
+  .player-left { grid-area: left; }
+  .player-progress { grid-area: prog; }
+  #playerSpeak { grid-area: speak; justify-self: end; }
+  .player-student span:last-child { max-width: 42vw; }
+}
+
 </style>
 </head>
 <body class="mode-home">
@@ -676,7 +689,10 @@ input[type=email]:focus, input[type=password]:focus { border-color: var(--primar
   <div id="player" class="player" hidden>
     <div class="player-shell">
       <div class="player-top">
-        <button type="button" class="icon-btn big" id="playerExit" aria-label="Volver a las actividades">↩️</button>
+        <div class="player-left">
+          <button type="button" class="icon-btn big" id="playerExit" aria-label="Volver a las actividades">↩️</button>
+          <div class="student-chip player-student" id="playerStudent" hidden></div>
+        </div>
         <div class="player-progress" id="playerProgress" aria-label="Progreso"></div>
         <button type="button" class="icon-btn big speaker" id="playerSpeak" aria-label="Escuchar la pregunta">🔊</button>
       </div>
@@ -1852,6 +1868,12 @@ window.LL = window.LL || {};
     index = Math.max(0, Math.min(options.startIndex || 0, questions.length - 1));
     root().hidden = false;
     root().classList.toggle('is-preview', !!options.preview);
+    // Show who is playing, so the teacher can check at a glance that each child is on their own name.
+    const who = LL.app.state.student, chip = $('#playerStudent');
+    chip.hidden = !who || !!options.preview;
+    chip.replaceChildren();
+    if (who && !options.preview) chip.append(el('span.animal', who.animal), el('span', who.name));
+    chip.setAttribute('aria-label', who ? 'Estudiante: ' + who.name : '');
     document.body.style.overflow = 'hidden';
     render();
   }

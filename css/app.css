@@ -584,3 +584,16 @@ input[type=email], input[type=password] { width: 100%; min-height: 48px; padding
 input[type=email]:focus, input[type=password]:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px var(--primary-soft); }
 @media (max-width: 400px) { .pin-pad { grid-template-columns: repeat(3, 64px); } .pin-pad button { height: 58px; } }
 @media (prefers-reduced-motion: reduce) { .sync-badge.spin, .login-logo, .login-card { animation: none !important; } }
+
+/* Student name + animal inside the quiz player */
+.player-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.player-student { font-size: clamp(17px, 2.4vh, 22px); padding: 4px 14px 4px 6px; box-shadow: 0 2px 0 var(--line); }
+.player-student .animal { font-size: clamp(28px, 4.5vh, 40px); }
+.player-student span:last-child { max-width: min(40vw, 380px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 640px) {
+  .player-top { grid-template-columns: auto auto; grid-template-areas: 'left speak' 'prog prog'; row-gap: 6px; }
+  .player-left { grid-area: left; }
+  .player-progress { grid-area: prog; }
+  #playerSpeak { grid-area: speak; justify-self: end; }
+  .player-student span:last-child { max-width: 42vw; }
+}

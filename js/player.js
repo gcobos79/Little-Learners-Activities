@@ -21,6 +21,12 @@ window.LL = window.LL || {};
     index = Math.max(0, Math.min(options.startIndex || 0, questions.length - 1));
     root().hidden = false;
     root().classList.toggle('is-preview', !!options.preview);
+    // Show who is playing, so the teacher can check at a glance that each child is on their own name.
+    const who = LL.app.state.student, chip = $('#playerStudent');
+    chip.hidden = !who || !!options.preview;
+    chip.replaceChildren();
+    if (who && !options.preview) chip.append(el('span.animal', who.animal), el('span', who.name));
+    chip.setAttribute('aria-label', who ? 'Estudiante: ' + who.name : '');
     document.body.style.overflow = 'hidden';
     render();
   }
