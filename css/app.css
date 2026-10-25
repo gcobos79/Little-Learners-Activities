@@ -145,8 +145,9 @@ main { padding: clamp(14px, 2.5vw, 28px); max-width: 1240px; margin: 0 auto; }
 }
 .card-main { flex: 1; display: flex; flex-direction: column; gap: 6px; padding: 16px; border: 0; background: transparent; text-align: left; width: 100%; }
 .card-main:active { background: rgba(0,0,0,.03); }
-.card .cover { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 14px; background: var(--surface-2); }
-.card .cover-placeholder { width: 100%; aspect-ratio: 16 / 9; border-radius: 14px; background: var(--primary-soft); display: grid; place-items: center; font-size: 46px; }
+/* The whole picture is shown (contain), never cropped; empty space gets a soft background. */
+.card .cover { width: 100%; aspect-ratio: 4 / 3; object-fit: contain; border-radius: 14px; background: #fff; border: 2px solid var(--line); padding: 4px; }
+.card .cover-placeholder { width: 100%; aspect-ratio: 4 / 3; border-radius: 14px; background: var(--primary-soft); display: grid; place-items: center; font-size: 46px; }
 .card .name { font-size: 21px; font-weight: 900; line-height: 1.15; overflow-wrap: anywhere; }
 .card .meta { font-size: 14px; font-weight: 800; color: var(--muted); }
 .card.folder { background: var(--folder, #F8EDB8); border-color: rgba(0, 0, 0, .1); }
