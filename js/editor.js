@@ -151,13 +151,18 @@ window.LL = window.LL || {};
       problem.textContent = msg ? '⚠️ ' + msg : '✓ Pregunta lista';
     };
 
-    box.append(el('div.q-editor-head',
+    // Navigation (go to another question) is kept clearly apart from changing the order.
+    const go = (d) => { qIndex = Math.max(0, Math.min(qs.length - 1, qIndex + d)); renderQuestion(); renderQList(); };
+    box.append(el('div.q-nav',
+      el('button.btn.soft', { type: 'button', disabled: qIndex === 0, onclick: () => go(-1), 'aria-label': 'Ir a la pregunta anterior' }, '‹ Anterior'),
       el('h2', 'Pregunta ' + (qIndex + 1) + ' de ' + qs.length),
-      el('div.q-tools',
-        el('button.icon-btn', { type: 'button', 'aria-label': 'Mover arriba', title: 'Mover arriba', disabled: qIndex === 0, onclick: () => moveQuestion(-1) }, '⬆️'),
-        el('button.icon-btn', { type: 'button', 'aria-label': 'Mover abajo', title: 'Mover abajo', disabled: qIndex === qs.length - 1, onclick: () => moveQuestion(1) }, '⬇️'),
-        el('button.btn.sm.ghost', { type: 'button', disabled: qs.length >= 50, onclick: duplicateQuestion }, '📄 Duplicar'),
-        el('button.btn.sm.danger-ghost', { type: 'button', onclick: deleteQuestion }, '🗑️ Eliminar'))));
+      el('button.btn.soft', { type: 'button', disabled: qIndex === qs.length - 1, onclick: () => go(1), 'aria-label': 'Ir a la pregunta siguiente' }, 'Siguiente ›')));
+    box.append(el('div.q-tools',
+      el('span.small.muted', 'Esta pregunta:'),
+      el('button.btn.sm.ghost', { type: 'button', disabled: qs.length >= 50, onclick: duplicateQuestion }, '📄 Duplicar'),
+      el('button.btn.sm.ghost', { type: 'button', title: 'Cambia el orden: la pregunta pasa a un lugar antes', disabled: qIndex === 0, onclick: () => moveQuestion(-1) }, '↑ Cambiar de lugar'),
+      el('button.btn.sm.ghost', { type: 'button', title: 'Cambia el orden: la pregunta pasa a un lugar después', disabled: qIndex === qs.length - 1, onclick: () => moveQuestion(1) }, '↓ Cambiar de lugar'),
+      el('button.btn.sm.danger-ghost', { type: 'button', onclick: deleteQuestion }, '🗑️ Eliminar')));
     box.append(problem);
 
     const onEdit = () => { refreshProblem(); changed(); };
@@ -297,6 +302,7 @@ window.LL = window.LL || {};
     qs.splice(qIndex + 1, 0, copy);
     qIndex++;
     renderQuestion(); changed();
+    toast('Copia creada: ahora estás en la pregunta ' + (qIndex + 1) + '. Cada copia se edita por separado.');
   }
   async function deleteQuestion() {
     const qs = quiz.config.questions;
@@ -312,6 +318,7 @@ window.LL = window.LL || {};
     [qs[qIndex], qs[j]] = [qs[j], qs[qIndex]];
     qIndex = j;
     renderQuestion(); changed();
+    toast('La pregunta se movió al lugar ' + (j + 1) + '. Para ver otra pregunta usa «Anterior» / «Siguiente».');
   }
 
   /* ---------- Save / preview / leave ---------- */

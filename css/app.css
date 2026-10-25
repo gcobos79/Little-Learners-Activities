@@ -605,3 +605,9 @@ input[type=email]:focus, input[type=password]:focus { border-color: var(--primar
 .roster-row .avatar-img { width: 44px; height: 44px; }
 img.loading-media { background: var(--surface-2); }
 img.missing-media { visibility: hidden; }
+
+/* Question navigation in the editor (separate from reordering) */
+.q-nav { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; padding: 8px; border-radius: 16px; background: var(--primary-soft); }
+.q-nav h2 { text-align: center; }
+.q-tools { align-items: center; }
+@media (max-width: 640px) { .q-nav h2 { font-size: 18px; } .q-nav .btn { padding: 8px 10px; } }

@@ -33,6 +33,7 @@ window.LL = window.LL || {};
   function toast(message, kind = 'info') {
     let host = $('#toasts');
     if (!host) { host = el('div', { id: 'toasts', 'aria-live': 'polite' }); document.body.append(host); }
+    while (host.children.length >= 2) host.firstChild.remove(); // never pile up messages
     const t = el('div.toast.' + kind, { role: kind === 'error' ? 'alert' : 'status' }, message);
     host.append(t);
     setTimeout(() => t.classList.add('out'), 3200);
