@@ -1,0 +1,735 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Little Learners Activities V121 — Modo estudiante</title><style>
+*{box-sizing:border-box}body{margin:0;background:#eff5ff;color:#243552;font:17px system-ui,Arial}header{background:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 14px #182c5117}header strong{font-size:22px}button,input,select{font:inherit}button{border:0;border-radius:14px;padding:12px 18px;background:#315bd0;color:#fff;cursor:pointer;font-weight:700}button:disabled{opacity:.45;cursor:default}.outline{border:2px solid #315bd0;background:#fff;color:#315bd0}.wrap{max-width:1120px;margin:24px auto;padding:0 16px}.panel{background:white;border-radius:23px;padding:24px;margin-bottom:18px;box-shadow:0 5px 24px #213f6e17}h1{font-size:30px;margin:0 0 10px}h2{margin:0 0 14px}.muted{color:#61718a}.small{font-size:14px}.hidden{display:none!important}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px}.student{border:3px solid #d4e0f4;background:#f8fbff;color:#243552;min-height:155px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:7px}.student:hover{border-color:#4a72d7}.student.pending{background:#ffe8ef;border-color:#f2b8cb}.student.completed{background:#def6e5;border-color:#82cfa1}.student .studentstatus{font-size:14px;font-weight:750}.student.completed .studentstatus{color:#196a38}.student.pending .studentstatus{color:#98506a}.animal{font-size:61px;line-height:1.15}.studentname{font-size:22px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px}.activitycard{border-radius:24px;min-height:230px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-size:23px;box-shadow:0 7px 15px #20385a25}.activitycard .big{font-size:65px}.red{background:#e94e54}.yellow{background:#f7cc4e;color:#42330a}.green{background:#47b886}.blue{background:#4e8de5}.fields{display:flex;gap:16px;flex-wrap:wrap;align-items:end}.fields label{display:flex;flex-direction:column;gap:7px;font-weight:650}.fields select,.fields input{border:1px solid #aebed7;padding:10px;border-radius:10px;max-width:250px;background:white}.checks{display:flex;flex-wrap:wrap;gap:10px}.checks label{padding:10px 13px;border-radius:12px;background:#eef4ff}.toolbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}.frame{width:100%;height:480px;border:0;border-radius:18px}.center{text-align:center}.score{font-size:55px;font-weight:800;margin:10px}.rank{display:flex;align-items:center;gap:12px;padding:10px 13px;border-radius:12px;background:#f0f5ff;margin:6px 0}.rank .pos{width:36px;font-weight:800}.rank .name{flex:1;font-weight:700}.rank .points{font-weight:800}.rank.mine{outline:3px solid #3264df;background:#e6edff}.pill{display:inline-block;border-radius:100px;background:#e4efff;padding:7px 12px;font-size:14px}.top5{color:#b97805}.hint{border-left:4px solid #4c76dd;padding:10px 14px;background:#f2f6ff;border-radius:7px}.settings{display:grid;gap:16px}.teacher-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.teacher-row label{display:flex;gap:7px;align-items:center}.avatar-input{width:100px!important}.note{font-size:14px;color:#62738a}@media(max-width:650px){header strong{font-size:17px}.panel{padding:15px}.student{min-height:130px}.frame{height:440px}.score{font-size:44px}}
+
+/* V3: dropdowns always readable regardless of browser dark mode */
+.fields select, .fields input {
+  color:#243552 !important;
+  background-color:#ffffff !important;
+  -webkit-text-fill-color:#243552;
+  color-scheme:light;
+  min-height:48px;
+  opacity:1;
+}
+.fields select option {color:#243552 !important;background-color:#ffffff !important;}
+.fields select:focus {outline:3px solid #8bb5ff;outline-offset:2px;}
+.library{border:2px solid #c5d8ff;border-radius:18px;padding:18px;background:#f7faff}.libraryActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.libraryActions button{font-size:15px;padding:10px 13px}.danger{color:#ae2d38!important;border-color:#d68b91!important}.library .fields input{width:250px}.library .fields select{width:260px}.librarySummary{margin-top:10px;padding:12px;background:#e9f2ff;border-radius:10px}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #ffb300;outline-offset:2px}.imageEditor{border:2px solid #b8dbc8;background:#f6fff9;border-radius:18px;padding:16px}.imageGroup{margin:12px 0;border:1px solid #cbd9e9;border-radius:14px;padding:13px;background:white}.imageSlots{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:10px}.imageSlot{display:flex;flex-direction:column;gap:4px;font-size:14px}.imageSlot select{width:100%;max-width:none!important}.imageGroup h3{margin:0 0 10px}.library select{max-width:320px}
+#quizEditor textarea{border:1px solid #aebed7;border-radius:10px;padding:10px;font:inherit;min-width:260px;max-width:480px}#quizEditor .qopt{display:grid;grid-template-columns:40px minmax(150px,1fr) minmax(150px,1fr) minmax(150px,1fr);gap:8px;align-items:center;background:#f1f7ff;border-radius:12px;padding:9px}#quizEditor .qopt input[type=text],#quizEditor .qopt input[type=url]{width:100%;padding:9px;border:1px solid #b7cce2;border-radius:8px;min-width:0}#quizEditor .qopt label{font-size:14px}@media(max-width:750px){#quizEditor .qopt{grid-template-columns:35px 1fr}#quizEditor .qopt label{grid-column:2}}
+
+/* V16 — Estados visuales accesibles para controles bloqueados.
+   Al final del CSS para prevalecer sobre los estilos !important anteriores. */
+#quizEditor input:disabled,
+#quizEditor select:disabled,
+#quizEditor textarea:disabled,
+#quizEditor .fields input:disabled,
+#quizEditor .fields select:disabled {
+  color: #858d99 !important;
+  -webkit-text-fill-color: #858d99 !important;
+  background-color: #eff0f2 !important;
+  border-color: #d5d9df !important;
+  opacity: 1 !important;
+  cursor: not-allowed;
+}
+#quizEditor input:disabled::placeholder,
+#quizEditor textarea:disabled::placeholder { color: #999fa9 !important; opacity: 1; }
+#quizEditor label:has(> input:disabled),
+#quizEditor label:has(> select:disabled),
+#quizEditor label:has(> textarea:disabled) { color: #858d99; }
+#quizEditor button:disabled {
+  color: #858d99 !important;
+  background-color: #eff0f2 !important;
+  border: 1px solid #d5d9df !important;
+  opacity: 1 !important;
+  cursor: not-allowed;
+}
+
+/* V17: central teacher library, isolated from student experience */
+#teacherScreen > .panel.settings > :not(#quizHub):not(#quizEditor){display:none!important}
+#teacherScreen > .panel.settings{max-width:1060px;margin:auto}
+#quizHub{display:block;background:#fff;border:0;padding:6px 0 20px}
+#quizHub.hidden,#quizEditor.hidden{display:none!important}
+#quizHub .hubTop{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+#quizHub .quizCards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:20px}
+#quizHub .quizCard{min-height:172px;border:2px solid #d6e2f4;background:#f7fbff;color:#243552;border-radius:20px;text-align:left;padding:19px;display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+#quizHub .quizCard:hover,#quizHub .quizCard:focus-visible{border-color:#315bd0;background:#eaf2ff}
+#quizHub .quizCard .cardSymbol{font-size:32px}#quizHub .quizCard .cardCover{width:100%;height:92px;object-fit:contain;border-radius:12px;background:#fff;border:1px solid #e0e8f3}#quizHub .quizCard .cardPlaceholder{width:100%;height:92px;display:flex;align-items:center;justify-content:center;font-size:52px;background:#eef4ff;border-radius:12px}#quizHub .quizCard .cardName{font-size:22px;font-weight:750;overflow-wrap:anywhere}
+#quizHub .quizCard .cardMeta{font-size:13px;color:#586e8a}
+#quizEditor{margin:0;border:0!important;background:transparent!important;padding:0!important}
+#quizEditor #qNew{display:none!important}
+#quizEditor #qLibrary{max-width:330px}#quizEditor .quiz-cover-editor{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;margin:14px 0;padding:14px;border:1px solid #d2e3d8;border-radius:12px;background:#fff}#quizEditor #qCoverPreview{width:120px;height:100px;object-fit:contain;border:1px solid #d9e2ed;border-radius:10px;background:#f8fafc}#quizEditor .quiz-cover-controls{display:flex;flex-direction:column;gap:9px;min-width:230px}
+#quizEditor #qHeader .fields label:nth-child(2){display:none!important}
+#quizEditor #qHeader .libraryActions #qDuplicate,#quizEditor #qHeader .libraryActions #qDelete{display:none!important}
+#quizEditor .qopt input:disabled,#quizEditor input:disabled,#quizEditor select:disabled{color:#777!important;background:#eceff3!important;-webkit-text-fill-color:#777!important;opacity:1!important}
+#quizBack{margin-bottom:14px}
+@media(max-width:650px){#quizHub .quizCards{grid-template-columns:1fr}#quizHub .hubTop{align-items:stretch}}
+#quizHub .folderToolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px;padding:12px;background:#f7faff;border:1px solid #dce7f5;border-radius:12px}#quizHub .folderCard{background:var(--folder-bg,#fff9df);border-color:var(--folder-border,#e9d66a)}#quizHub .folderCard:hover{filter:brightness(.98);border-color:#9aa8bc}#quizHub .parentNavCard{background:#f8dfe0;border-color:#e9a5a8}#quizHub .parentNavCard .folderIcon{font-size:48px;color:#b95e63;line-height:1.2}#quizHub .parentNavCard:hover{background:#f5d2d4;border-color:#d7787e}#quizHub .folderIcon{font-size:48px;line-height:1.2}#quizHub .cardActions{display:none!important}
+
+/* V23 — Navegación visual de preguntas */
+#quizEditor .q-navigator{display:flex;align-items:center;gap:12px;flex:1 1 300px;min-width:260px;max-width:560px}
+#quizEditor .q-navigator button{font-size:28px;line-height:1;min-width:44px;min-height:42px;padding:4px 12px}
+#quizEditor .q-progress-wrap{flex:1;min-width:100px;display:flex;flex-direction:column;gap:7px}
+#quizEditor .q-progress-label{text-align:center;font-size:14px;font-weight:700;color:#30425d}
+#quizEditor .q-progress-track{height:9px;background:#e2e8f0;border-radius:999px;overflow:hidden;width:100%}
+#quizEditor .q-progress-fill{height:100%;width:0;background:#27845b;border-radius:999px;transition:width .18s ease}
+#quizEditor .q-hidden-picker{display:none!important}
+@media(max-width:650px){#quizEditor .q-navigator{order:-1;flex-basis:100%;max-width:none}}
+
+/* V54 — Menú contextual integrado, ligero y no nativo */
+#activityContextMenu{position:fixed;z-index:99999;width:min(290px,calc(100vw - 20px));padding:14px;background:#fff;border:1px solid #cbd8eb;border-radius:14px;box-shadow:0 12px 34px #20385a30;color:#243552;display:none}
+#activityContextMenu.open{display:block}
+#activityContextMenu .ctx-title{font-size:15px;font-weight:800;margin:0 0 6px}
+#activityContextMenu .ctx-message{font-size:14px;line-height:1.4;margin:0 0 12px;color:#52637c;overflow-wrap:anywhere}
+#activityContextMenu .ctx-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+#activityContextMenu button{font-size:13px;padding:8px 11px;border-radius:9px}
+#activityContextMenu .ctx-delete{background:#fff0f0;color:#a92e39;border:1px solid #e4a0a5}
+#activityContextMenu .ctx-cancel{background:#f3f6fb;color:#334763;border:1px solid #d4deec}
+
+/* V62 — Diseño profesional y coherente para el editor de medios de pregunta */
+#quizEditor .question-media-panel{margin:16px 0 18px;padding:20px;border:1px solid #dce5f1;border-radius:18px;background:linear-gradient(180deg,#fbfdff 0%,#f6f9fe 100%);box-shadow:0 4px 16px rgba(35,58,91,.06)}
+#quizEditor .question-field{display:flex;flex-direction:column;gap:8px;min-width:0}
+#quizEditor .question-field>label{font-size:15px;font-weight:750;color:#273a57;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#quizEditor .question-media-panel{background:#fff9d9;border-color:#eadb91}
+#quizEditor .question-prompt-field{padding:16px;border:1px solid #eadb91;border-radius:14px;background:transparent}
+#quizEditor .prompt-audio-settings{margin-top:14px;padding:16px;border:1px solid #eadb91;border-radius:14px;background:rgba(255,255,255,.42)}
+#quizEditor .prompt-audio-settings>select{width:100%;max-width:none}
+#quizEditor .prompt-audio-settings .read-text-card{margin-top:8px;padding:12px;border:1px solid #eadb91;border-radius:12px}
+#quizEditor .question-image-section{margin-top:16px;padding:16px;border:1px solid #d7e1ee;border-radius:14px;background:#fff}
+#quizEditor #qSpeak{display:inline-flex}
+#quizEditor .question-prompt-field textarea{background:#fffef7}
+#quizEditor .read-text-card{background:transparent;border-color:#eadb91}
+#quizEditor .question-prompt-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:8px}
+#quizEditor .question-prompt-heading>label{margin:0}
+#quizEditor #qSpeak{align-self:auto;margin:0;white-space:nowrap}
+#quizEditor .question-prompt-field textarea{width:100%;max-width:none;min-width:0;min-height:92px;resize:vertical;border:1px solid #b9c9df;border-radius:12px;padding:13px 14px;background:#fff;color:#243552;font:inherit;line-height:1.5}
+@media(max-width:560px){#quizEditor .question-prompt-heading{align-items:flex-start;flex-direction:column}#quizEditor #qSpeak{width:100%}}
+#quizEditor .question-media-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px 22px;margin-top:20px;align-items:start}
+#quizEditor .field-note{font-size:12px;font-weight:650;color:#687b96;background:#edf2f8;border-radius:999px;padding:3px 8px}
+#quizEditor .field-help{margin:0;color:#687b96;font-size:13px;line-height:1.4}
+#quizEditor .image-actions{display:flex;flex-wrap:wrap;gap:9px;align-items:center}
+#quizEditor .image-select-button{display:inline-flex;align-items:center;justify-content:center;min-height:43px;padding:9px 14px;border:1px solid #315bd0;border-radius:11px;background:#fff;color:#315bd0;font-size:14px;font-weight:750;cursor:pointer}
+#quizEditor .image-select-button:hover{background:#edf4ff}
+#quizEditor .image-actions button{font-size:14px;padding:10px 13px;border-radius:11px}
+#quizEditor .image-preview-wrap{display:flex;align-items:center;gap:8px;margin:0;padding:5px 8px;border:1px solid #dce5f1;border-radius:12px;background:#fff;min-height:54px;width:max-content;max-width:100%;flex:0 0 auto}
+#quizEditor #qPromptImagePreview{width:54px;height:54px;max-width:54px;max-height:54px;object-fit:contain;border-radius:8px;background:#f8fafc}
+#quizEditor .question-settings{padding:0 2px 4px;gap:14px 22px}
+#quizEditor .question-settings label{min-width:190px}
+#quizEditor .question-settings select{min-width:190px;max-width:260px!important}
+@media(max-width:700px){#quizEditor .question-media-panel{padding:14px}#quizEditor .question-media-grid{grid-template-columns:1fr;gap:16px}#quizEditor .question-settings label,#quizEditor .question-settings select{width:100%;max-width:none!important}}
+
+
+/* V69 — Separación correcta del campo de lectura en voz alta */
+#quizEditor .read-text-card{margin-top:14px;padding:16px;border:1px solid #d5dfed;border-radius:12px;background:#fff;display:flex;flex-direction:column;gap:0;min-width:0;width:100%;}
+#quizEditor .read-text-toggle{display:flex;align-items:center;gap:9px;font-weight:650;line-height:1.45;cursor:pointer;margin:0 0 2px;}
+#quizEditor .read-text-toggle input{width:17px;height:17px;flex:0 0 auto;margin:0;accent-color:#315bd0;}
+#quizEditor .read-text-content{margin-top:16px;display:flex;flex-direction:column;align-items:stretch;gap:8px;min-width:0;width:100%;}
+#quizEditor .read-text-label{display:block;font-weight:650;margin:0;line-height:1.4;}
+#quizEditor #qReadText{display:block;width:100%;max-width:none;min-width:0;min-height:88px;resize:vertical;margin:0;padding:12px 13px;border:1px solid #b8c8df;border-radius:10px;background:#fff;color:#243552;font:inherit;line-height:1.45;}
+#quizEditor #qReadText:focus{outline:3px solid #c8dcff;outline-offset:1px;border-color:#668fe0;}
+#quizEditor .read-text-card .field-help{margin:0;font-size:13px;line-height:1.45;color:#61718a;}
+
+
+/* V85 — Escala tipográfica consistente: títulos 16 px, subtítulos 15 px, resto 14 px */
+#quizEditor .question-prompt-heading>label,
+#quizEditor .question-field>label,
+#quizEditor .question-settings>label,
+#quizEditor .options-title,
+#quizEditor .section-title{font-size:16px;font-weight:750}
+#quizEditor .read-text-toggle,
+#quizEditor .read-text-label,
+#quizEditor .field-note,
+#quizEditor .question-media-grid .field-note{font-size:15px}
+#quizEditor .image-select-button,
+#quizEditor .image-actions button,
+#quizEditor .field-help,
+#quizEditor .small,
+#quizEditor .muted,
+#quizEditor input:not([type="checkbox"]):not([type="radio"]),
+#quizEditor textarea,
+#quizEditor select{font-size:14px}
+#quizEditor #qSpeak{font-size:16px;font-weight:750}
+</style>
+<style id="ll-v107-adjustments">
+/* V107: ajustes puntuales solicitados: enunciado 20 px arriba e iconos de audio 20% menores */
+.ll-preview .ll-preview-question-area .ll-preview-question { transform: translateY(-20px) !important; }
+.ll-preview .ll-preview-options .ll-preview-option .ll-preview-answer-audio { width: clamp(45px, 6.72vh, 67px) !important; height: clamp(45px, 6.72vh, 67px) !important; font-size: clamp(26px, 4vh, 40px) !important; }
+@media(max-width:650px){ .ll-preview .ll-preview-options .ll-preview-option .ll-preview-answer-audio { width: clamp(38px, 6.4vh, 51px) !important; height: clamp(38px, 6.4vh, 51px) !important; font-size: 24px !important; } }
+
+/* V108: ajustar solo el texto de respuesta que realmente se desborda */
+.ll-preview-option > span:not(.ll-preview-mark):not(.ll-preview-answer-audio){
+  display:block; width:100%; max-width:100%; min-width:0; min-height:0;
+  flex:0 1 auto; white-space:normal; overflow-wrap:anywhere; word-break:normal;
+  text-align:center;
+}
+</style>
+
+<style id="ll-v109-fixes">
+/* V109: colores por modalidad, parpadeo a intervalos de 0.5 s y enunciado sin recorte inferior */
+.ll-preview .ll-preview-option.flash-correct{animation:llCorrectFlashV109 1s steps(2,end) 2!important}
+.ll-preview .ll-preview-option.flash-incorrect{animation:llIncorrectFlashV109 1s steps(2,end) 2!important}
+@keyframes llCorrectFlashV109{0%,49.999%{background:#22c55e}50%,100%{background:#fff}}
+@keyframes llIncorrectFlashV109{0%,49.999%{background:#ef4444}50%,100%{background:#fff}}
+.ll-preview .ll-preview-question{line-height:1.2!important;max-height:none!important;overflow:visible!important;padding-bottom:.12em!important;box-sizing:content-box!important}
+.ll-preview .ll-preview-question-area{overflow:visible!important}
+</style>
+<style id="ll-student-mode-styles">
+/* V121: student mode reuses the existing library while hiding teacher controls. */
+body.ll-student-mode #teacherBtn,
+body.ll-student-mode #hubCreate,
+body.ll-student-mode #hubChoose,
+body.ll-student-mode #folderCreate,
+body.ll-student-mode #folderPath,
+body.ll-student-mode #llFolderContext,
+body.ll-student-mode #llActivityContext,
+body.ll-student-mode #llMoveModal,
+body.ll-student-mode #llFolderModal {display:none!important}
+body.ll-student-mode #teacherScreen>.panel.settings>:not(#quizHub){display:none!important}
+body.ll-student-mode #quizHub{display:block!important}
+body.ll-student-mode #quizHub .hubTop p{display:none!important}
+body.ll-student-mode #quizHub .hubTop{align-items:center}
+body.ll-student-mode #hubStudents{min-height:54px;touch-action:manipulation}
+body.ll-student-mode #hubCards .quizCard{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+body.ll-student-mode #hubCards .quizCard:focus-visible{outline:4px solid #315bd0;outline-offset:3px}
+</style>
+</head><body><header><strong>✨ Little Learners Activities</strong><button id="teacherBtn" class="outline">Maestro ⚙️</button></header><main class="wrap">
+<section id="studentsScreen"><div class="panel center"><h1>👋 ¿Quién eres?</h1><p class="muted">Busca tu animalito y toca tu nombre. Rosa: pendiente · Verde: completada.</p><div class="grid" id="students"></div></div></section>
+<section id="menuScreen" class="hidden"><div class="panel"><h1 id="greeting"></h1><p class="muted">¡Escoge tu actividad!</p><div class="cards" id="cards"></div><p><button class="outline" id="switchStudent">← Cambiar estudiante</button></p></div></section>
+<section id="activityScreen" class="hidden"><div class="panel"><div class="toolbar"><strong id="activityTitle">🔴 Sonidos iniciales</strong><button class="outline" id="leave">← Salir</button></div><iframe class="frame" id="activity" title="Sonidos iniciales"></iframe></div></section>
+<section id="resultScreen" class="hidden"><div class="panel"><div class="center"><div style="font-size:65px">🏆</div><h1>¡Terminaste, <span id="finishedName"></span>!</h1><div class="muted">Tu resultado</div><div class="score" id="score"></div><div class="pill" id="place"></div></div><h2 style="margin-top:25px">🏅 Clasificación de hoy</h2><p class="muted small" id="dateLabel"></p><div id="ranks"></div><p class="note">⭐ Los cinco primeros puestos están destacados. La clasificación incluye únicamente a quienes terminaron esta misma actividad hoy.</p><div class="center"><button id="accept">Aceptar ✓</button></div></div></section>
+<section id="teacherScreen" class="hidden"><div class="panel settings"><section id="quizHub" class="library"><div class="hubTop"><div><h1>📚 Mis actividades</h1><p class="muted small">Selecciona un Quiz para editarlo o crea uno nuevo.</p></div><button type="button" id="hubCreate">＋ Crear</button></div><div id="hubChoose" class="hidden" style="padding:16px;margin-top:12px;background:#f1f6ff;border-radius:14px"><h2>¿Qué tipo de actividad?</h2><button type="button" id="hubChooseQuiz">❓ Quiz</button><p class="muted small">Clasificación rápida y Encuentra la coincidencia se integrarán en futuras versiones.</p><button type="button" class="outline" id="hubCancelCreate">Cancelar</button></div><div id="folderToolbar" class="folderToolbar"><button type="button" id="folderCreate" class="outline">📁 Nueva carpeta</button><button type="button" id="folderUp" class="outline" hidden>← Carpeta anterior</button><span id="folderPath" class="small muted">Ubicación: Mis actividades</span></div><div id="hubCards" class="quizCards"></div><p id="hubEmpty" class="muted small" style="margin-top:18px"></p><button type="button" class="outline" id="hubStudents" style="margin-top:22px">← Volver a estudiantes</button></section><h1>⚙️ Panel del maestro — demostración</h1><div class="hint">Este prototipo usa estudiantes ficticios y guarda la clasificación solo en este navegador. No está conectado a Supabase ni protege el panel con contraseña.</div><section class="library"><h2>📚 Biblioteca de actividades</h2><p class="muted small">Guarda configuraciones de «Clasificación rápida», reutilízalas y asígnalas en esta demostración. Los datos permanecen únicamente en este navegador.</p><div class="fields"><label>Nombre de la actividad<input id="templateName" maxlength="90" placeholder="Ej. Letras M, P y S"></label><label>Actividad guardada<select id="templateList"><option value="">— Selecciona una actividad —</option></select></label></div><div class="libraryActions"><button id="createTemplate">＋ Guardar como nueva</button><button class="outline" id="loadTemplate">Cargar</button><button class="outline" id="updateTemplate">Guardar cambios</button><button class="outline" id="duplicateTemplate">Duplicar</button><button class="outline danger" id="deleteTemplate">Eliminar</button></div><p class="small muted" id="templateStatus" role="status"></p><div id="templateSummary" class="small"></div></section><section class="imageEditor"><h2>🖼️ Imágenes de esta actividad</h2><p class="muted small">Las imágenes se seleccionan automáticamente. Puedes cambiar cualquiera antes de guardar. Se guardarán las mismas imágenes en cada partida, aunque su orden cambie.</p><div class="libraryActions"><button type="button" class="outline" id="refreshImages">🎲 Generar selección diferente</button></div><div id="imageEditorGrid"></div><p class="small muted" id="imageSelectionStatus" role="status"></p></section><section class="library hidden" id="quizEditor" style="border-color:#b9ddca;background:#f7fffa">
+<button type="button" class="outline" id="quizBack">← Mis actividades</button><h2>🟢 Editor de Quiz — V91</h2><p class="muted small">Cabecera y detalle separados. Las preguntas se conservan en un borrador local mientras trabajas. «Grabar y continuar» abre una pregunta nueva; «Grabar y salir» vuelve al detalle. La visibilidad se guarda como configuración; el acceso de estudiantes se conectará cuando se implemente su pantalla de actividades.</p>
+<div id="qHeader" style="padding:14px;background:#edf7f1;border-radius:12px"><h3>1. Cabecera <span id="qHeaderState" class="small muted">· Selecciona o crea un Quiz</span></h3>
+<div class="fields"><label>Nombre del Quiz<input id="qName" maxlength="90" placeholder="Ej. Animales" disabled></label><label>Quiz guardado<select id="qLibrary"><option value="">— Selecciona un Quiz —</option></select></label><label>Idioma<select id="qLang" disabled><option value="es">Español</option><option value="en">English</option></select></label><label>Modalidad<select id="qMode" disabled><option value="practice">Práctica</option><option value="assessment">Evaluación</option></select></label><label>Orden de las preguntas<select id="qQuestionOrder" disabled><option value="fixed">Orden de creación</option><option value="random">Aleatorio</option></select></label><label>Orden de las respuestas<select id="qAnswerOrder" disabled><option value="fixed">Orden guardado</option><option value="random">Aleatorio por pregunta</option></select></label><label>Visibilidad para estudiantes<select id="qVisibility" disabled><option value="hidden">Invisible · en preparación</option><option value="visible">Visible · aprobada</option></select></label></div>
+<div class="quiz-cover-editor"><img id="qCoverPreview" alt="Vista previa de la imagen de la actividad" src="" hidden><div class="quiz-cover-controls"><strong>Imagen de la actividad</strong><span class="small muted">Opcional. Se mostrará en la tarjeta de Mis actividades.</span><input id="qCoverFile" type="file" accept="image/*" disabled><button type="button" class="outline" id="qCoverRemove" disabled>Quitar imagen</button><span class="small muted" id="qCoverStatus">Todavía no hay una imagen seleccionada.</span></div></div>
+<div class="libraryActions"><button type="button" id="qNew">＋ Nuevo Quiz</button><button type="button" id="qAcceptHeader" disabled>Crear Quiz</button><button type="button" id="qUpdateHeader" disabled>Actualizar Quiz</button><button type="button" class="outline" id="qCancelHeader" disabled>Cancelar</button><button type="button" class="outline" id="qDuplicate">Duplicar</button><button type="button" class="outline danger" id="qDelete">Eliminar</button></div></div>
+<p id="qStatus" role="status" class="small muted"></p>
+<div id="qDetail" style="padding:14px;background:#fff;border:1px solid #c8dfcc;border-radius:12px"><h3>2. Detalle — Preguntas <span id="qCount">(0 / 50)</span></h3>
+<div class="fields" id="qDetailControls">
+<div id="qQuestionNavigator" class="q-navigator" aria-label="Navegación de preguntas">
+<button type="button" class="outline" id="qPrevQuestion" aria-label="Pregunta anterior" disabled>‹</button>
+<div class="q-progress-wrap"><div class="q-progress-label" id="qProgressLabel">Sin preguntas</div><div class="q-progress-track" role="progressbar" aria-label="Progreso de preguntas" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" id="qProgressTrack"><div id="qProgressFill" class="q-progress-fill"></div></div></div>
+<button type="button" class="outline" id="qNextQuestion" aria-label="Pregunta siguiente" disabled>›</button>
+</div>
+<label id="qQuestionPickerWrap" class="q-hidden-picker">Pregunta grabada<select id="qQuestionList" disabled><option value="">— Selecciona —</option></select></label>
+<button type="button" id="qAddQuestion" disabled>＋ Agregar pregunta</button></div>
+<div id="qQuestionForm" class="hidden" style="padding:16px;background:#f8fbff;border-radius:14px;border:1px solid #c8dfcc;margin-top:12px">
+<section class="question-media-panel">
+  <div class="question-field question-prompt-field"><div class="question-prompt-heading"><label for="qPrompt">Enunciado de la pregunta</label><button type="button" class="outline" id="qSpeak">🔊 Escuchar enunciado</button></div><textarea id="qPrompt" rows="3" placeholder="Escribe aquí el enunciado de la pregunta..."></textarea></div>
+  <div class="question-field prompt-audio-settings"><label for="qPromptAudioMode">Configuración de audio</label><select id="qPromptAudioMode"><option value="none">Sin audio</option><option value="voice" selected>Leer el texto automáticamente con voz</option><option value="file">Usar un archivo de audio</option></select>
+    <div id="qPromptVoiceSettings" class="question-field read-text-card"><label class="read-text-toggle" for="qUseReadText"><input id="qUseReadText" type="checkbox"> <span>Usar un texto diferente para leer en voz alta</span></label><div id="qReadTextWrap" class="read-text-content" style="display:none"><label class="read-text-label" for="qReadText">Texto que se va a leer</label><textarea id="qReadText" rows="3" placeholder="Escribe aquí lo que debe escuchar el estudiante..."></textarea><p class="field-help">Este texto se leerá en voz alta, pero no se mostrará escrito al estudiante.</p></div></div>
+    <div id="qPromptFileSettings" class="question-field" style="display:none"><label>Audio de la pregunta</label><div class="image-actions"><label for="qPromptAudioFile" class="image-select-button">🎵 Seleccionar archivo de audio</label><input id="qPromptAudioFile" type="file" accept="audio/*" hidden><button type="button" class="outline" id="qClearPromptAudio">Quitar audio</button></div><div id="qPromptAudioPreviewWrap" style="display:none;margin-top:8px"><audio id="qPromptAudioPreview" controls preload="metadata" style="width:100%;max-width:360px"></audio><p class="field-help">Reproduce el audio para comprobarlo antes de grabar.</p></div><input id="qPromptAudio" type="text" hidden aria-hidden="true"></div>
+  </div>
+  <div class="question-image-section question-field"><label>Imagen de la pregunta <span class="field-note">Opcional</span></label><div class="image-actions"><label for="qPromptImageFile" class="image-select-button">📁 Seleccionar imagen</label><input id="qPromptImageFile" type="file" accept="image/*" hidden><button type="button" class="outline" id="qClearPromptImage">Quitar imagen</button><div id="qPromptImagePreviewWrap" class="image-preview-wrap" style="display:none"><img id="qPromptImagePreview" alt="Vista previa de la imagen de la pregunta"><span class="small muted">Vista previa</span></div></div><input id="qPromptImage" type="text" hidden aria-hidden="true"></div>
+</section>
+<div class="fields question-settings"><label>Cantidad de opciones<select id="qOptionCount"><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option></select></label><label>Respuestas correctas<select id="qCorrectCount"><option value="1">Una</option><option value="2">Dos</option></select></label></div>
+
+<div id="qOptions" style="display:grid;gap:10px;margin-top:12px"></div>
+<div class="libraryActions"><button type="button" id="qCommitContinue">Grabar y continuar</button><button type="button" class="outline" id="qCommitExit">Grabar y salir</button><button type="button" class="outline danger" id="qRemoveQuestion" disabled>Eliminar pregunta grabada</button><button type="button" class="outline" id="qCancelQuestion">Cancelar</button></div></div>
+<p class="small muted" id="qSummary">Completa y acepta la cabecera para habilitar el detalle.</p>
+<div class="libraryActions" id="qFinishArea"><button id="qFinish" type="button" disabled>← Regresar</button></div>
+</div></section><h2>Actividades asignadas</h2><div class="teacher-row"><label><input type="checkbox" id="redEnabled" checked> 🔴 Sonidos iniciales</label><label><input type="checkbox" id="yellowEnabled"> 🟡 Números (demostración)</label><label><input type="checkbox" id="greenEnabled"> 🟢 Figuras (demostración)</label></div><label class="teacher-row"><input type="checkbox" id="autoOpen" checked> Entrar directamente si solo hay una actividad asignada</label><h2>Configurar sonidos iniciales</h2><div class="fields"><label>Idioma<select id="lang"><option value="es">Español</option><option value="en">English</option></select></label><label>Imágenes por letra<select id="per"><option>4</option><option>5</option><option>6</option><option>7</option><option selected>8</option></select></label><label>Velocidad<select id="speed"><option value="28">Lenta</option><option value="45" selected>Normal</option><option value="70">Rápida</option></select></label><label>Modalidad<select id="mode"><option value="practice">Práctica</option><option value="assessment">Evaluación</option></select></label></div><div><strong>Letras:</strong><div class="checks" id="letters"></div></div><h2>Estudiantes de prueba</h2><div class="fields"><label>Nombre<input id="newName" maxlength="22" placeholder="Nombre"></label><label>Animalito<select id="newAnimal"><option>🐱</option><option>🦖</option><option>🦆</option><option>🐸</option><option>🐼</option><option>🦋</option><option>🦁</option><option>🐰</option></select></label><button id="addStudent">Agregar</button></div><p class="small muted" id="roster"></p><div><button id="save">Guardar configuración</button> <button class="outline" id="teacherExit">Volver a los estudiantes</button></div><p class="note">Los resultados históricos reales y el progreso mensual se implementarán posteriormente con seguridad y RLS en Supabase.</p></div></section>
+<p class="center muted small">V89 · Imagen de portada para cada Quiz · Prototipo local · Sin Supabase</p></main>
+<script>
+const activityHTML=new TextDecoder().decode(Uint8Array.from(atob('PCFkb2N0eXBlIGh0bWw+PGh0bWwgbGFuZz0iZXMiPjxtZXRhIGNoYXJzZXQ9InV0Zi04Ij48bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLGluaXRpYWwtc2NhbGU9MSI+Cjx0aXRsZT5MaXR0bGUgTGVhcm5lcnMgwrcgUHJvdG90aXBvIFNvbmlkb3MgSW5pY2lhbGVzPC90aXRsZT4KPHN0eWxlPgoqe2JveC1zaXppbmc6Ym9yZGVyLWJveH1ib2R5e2ZvbnQtZmFtaWx5OnN5c3RlbS11aSxBcmlhbDtiYWNrZ3JvdW5kOiNmM2Y3ZmY7Y29sb3I6IzI0MzM0ZTttYXJnaW46MDtwYWRkaW5nOjIycHh9bWFpbnttYXgtd2lkdGg6MTEwMHB4O21hcmdpbjphdXRvfWgxe21hcmdpbjowIDAgNnB4fS5tdXRlZHtjb2xvcjojNTg2NzdmfS5wYW5lbHtiYWNrZ3JvdW5kOndoaXRlO2JvcmRlci1yYWRpdXM6MThweDtwYWRkaW5nOjE4cHg7bWFyZ2luOjE0cHggMDtib3gtc2hhZG93OjAgM3B4IDE4cHggIzI1Mzg1ODE4fS5zZXR0aW5nc3tkaXNwbGF5OmZsZXg7Z2FwOjE2cHg7ZmxleC13cmFwOndyYXA7YWxpZ24taXRlbXM6Y2VudGVyfWxhYmVse2ZvbnQtd2VpZ2h0OjYwMH1zZWxlY3QsYnV0dG9ue2ZvbnQ6aW5oZXJpdDtwYWRkaW5nOjlweDtib3JkZXItcmFkaXVzOjEwcHg7Ym9yZGVyOjFweCBzb2xpZCAjOWNhOWJjO2JhY2tncm91bmQ6d2hpdGV9YnV0dG9ue2N1cnNvcjpwb2ludGVyO2JhY2tncm91bmQ6IzI4NWRkNDtjb2xvcjp3aGl0ZTtib3JkZXI6MDtmb250LXdlaWdodDo3MDB9YnV0dG9uOmRpc2FibGVke29wYWNpdHk6LjV9LmNob2ljZXN7ZGlzcGxheTpmbGV4O2dhcDoxMHB4O2ZsZXgtd3JhcDp3cmFwfS5jaG9pY2VzIGxhYmVse2JvcmRlcjoxcHggc29saWQgI2FhYjlkNTtib3JkZXItcmFkaXVzOjEycHg7cGFkZGluZzo5cHh9LmJlbHR7cG9zaXRpb246cmVsYXRpdmU7aGVpZ2h0OjE4NXB4O2JhY2tncm91bmQ6cmVwZWF0aW5nLWxpbmVhci1ncmFkaWVudCg5MGRlZywjZGJlNGYwIDAgMzhweCwjZDJkY2U5IDM4cHggNDJweCk7Ym9yZGVyOjVweCBzb2xpZCAjNzg4YWEzO2JvcmRlci1yYWRpdXM6MjJweDtvdmVyZmxvdzpoaWRkZW47dG91Y2gtYWN0aW9uOm5vbmV9LnRpbGV7cG9zaXRpb246YWJzb2x1dGU7dG9wOjI0cHg7d2lkdGg6MTIwcHg7aGVpZ2h0OjEyNnB4O2JhY2tncm91bmQ6I2ZmZjtib3JkZXI6M3B4IHNvbGlkICM3MTg3YTk7Ym9yZGVyLXJhZGl1czoxNXB4O2Rpc3BsYXk6ZmxleDthbGlnbi1pdGVtczpjZW50ZXI7anVzdGlmeS1jb250ZW50OmNlbnRlcjtmbGV4LWRpcmVjdGlvbjpjb2x1bW47Z2FwOjRweDtjdXJzb3I6Z3JhYjt1c2VyLXNlbGVjdDpub25lO3RvdWNoLWFjdGlvbjpub25lO2JveC1zaGFkb3c6MCAzcHggOXB4ICMyMDMyNGM0MH0udGlsZSAuZW1vaml7Zm9udC1zaXplOjYwcHh9LnRpbGUgLndvcmR7Zm9udC1zaXplOjEzcHh9LnRhcmdldHN7ZGlzcGxheTpmbGV4O2p1c3RpZnktY29udGVudDpzcGFjZS1hcm91bmQ7Z2FwOjhweDttYXJnaW4tdG9wOjIycHh9LnRhcmdldHtmbGV4OjE7bWF4LXdpZHRoOjE3NXB4O21pbi1oZWlnaHQ6MTEycHg7Ym9yZGVyOjRweCBkYXNoZWQgIzY4ODBhODtib3JkZXItcmFkaXVzOjE2cHg7YmFja2dyb3VuZDojZjFmNmZmO3RleHQtYWxpZ246Y2VudGVyO2ZvbnQtc2l6ZTo2NHB4O2ZvbnQtd2VpZ2h0OjgwMDtkaXNwbGF5OmdyaWQ7cGxhY2UtaXRlbXM6Y2VudGVyfS50YXJnZXQuaG92ZXJ7YmFja2dyb3VuZDojZTNlY2ZmO2JvcmRlci1jb2xvcjojMzU1YmNhO2JvcmRlci1zdHlsZTpzb2xpZH0udGFyZ2V0Lmdvb2R7YmFja2dyb3VuZDojYjlmNWM2O2JvcmRlci1jb2xvcjojMTQ5MzQzfS50YXJnZXQuYmFke2JhY2tncm91bmQ6I2ZmZDBkMDtib3JkZXItY29sb3I6I2NmMmUzN30KQGtleWZyYW1lcyBsbEJsaW5rQmFkezAlLDEwMCV7YmFja2dyb3VuZDojZjFmNmZmO2JvcmRlci1jb2xvcjojNjg4MGE4fTE1JSw0MCUsNjUlLDkwJXtiYWNrZ3JvdW5kOiNmZmI5Yjk7Ym9yZGVyLWNvbG9yOiNjZjJlMzd9MjclLDUyJSw3NyV7YmFja2dyb3VuZDojZjFmNmZmO2JvcmRlci1jb2xvcjojNjg4MGE4fX0KQGtleWZyYW1lcyBsbEJsaW5rR29vZHswJSwxMDAle2JhY2tncm91bmQ6I2YxZjZmZjtib3JkZXItY29sb3I6IzY4ODBhOH0xMiUsMzglLDYzJSw4OCV7YmFja2dyb3VuZDojOWFlZmFmO2JvcmRlci1jb2xvcjojMTQ5MzQzfTI1JSw1MCUsNzUle2JhY2tncm91bmQ6I2YxZjZmZjtib3JkZXItY29sb3I6IzY4ODBhOH19Ci50YXJnZXQuYmFke2FuaW1hdGlvbjpsbEJsaW5rQmFkIDFzIGxpbmVhciAxfQoudGFyZ2V0Lmdvb2R7YW5pbWF0aW9uOmxsQmxpbmtHb29kIDJzIGxpbmVhciAxO2NvbG9yOiMxNzRmMmJ9LnN0YXRze2ZvbnQtd2VpZ2h0OjcwMDttYXJnaW46MTBweCAwfS5ub3Rle2ZvbnQtc2l6ZToxNHB4fS5yZXN1bHR7Zm9udC1zaXplOjE4cHg7bGluZS1oZWlnaHQ6MS43fS5oaWRkZW57ZGlzcGxheTpub25lfQpib2R5e3BhZGRpbmc6OHB4fW1haW57bWF4LXdpZHRoOjExMDBweH0ucGFuZWw6Zmlyc3Qtb2YtdHlwZXtkaXNwbGF5Om5vbmUhaW1wb3J0YW50fS5ub3Rle2Rpc3BsYXk6bm9uZSFpbXBvcnRhbnR9I3Jlc3VsdHtkaXNwbGF5Om5vbmUhaW1wb3J0YW50fTwvc3R5bGU+CjxtYWluPjxoMT7wn5SkIExpdHRsZSBMZWFybmVycyDCtyBTb25pZG9zIEluaWNpYWxlczwvaDE+PHAgY2xhc3M9Im11dGVkIj5Qcm90b3RpcG8gaW5kZXBlbmRpZW50ZSBkZSBsYSBiYW5kYSB0cmFuc3BvcnRhZG9yYS4gTm8gc2UgY29uZWN0YSBhIFN1cGFiYXNlLjwvcD4KPHNlY3Rpb24gY2xhc3M9InBhbmVsIj48ZGl2IGNsYXNzPSJzZXR0aW5ncyI+PGxhYmVsPklkaW9tYSA8c2VsZWN0IGlkPSJsYW5nIj48b3B0aW9uIHZhbHVlPSJlcyI+RXNwYcOxb2w8L29wdGlvbj48b3B0aW9uIHZhbHVlPSJlbiI+RW5nbGlzaDwvb3B0aW9uPjwvc2VsZWN0PjwvbGFiZWw+PGxhYmVsPkltw6FnZW5lcyBwb3IgbGV0cmEgPHNlbGVjdCBpZD0icGVyIj48b3B0aW9uPjQ8L29wdGlvbj48b3B0aW9uPjU8L29wdGlvbj48b3B0aW9uPjY8L29wdGlvbj48b3B0aW9uPjc8L29wdGlvbj48b3B0aW9uIHNlbGVjdGVkPjg8L29wdGlvbj48L3NlbGVjdD48L2xhYmVsPjxsYWJlbD5WZWxvY2lkYWQgPHNlbGVjdCBpZD0ic3BlZWQiPjxvcHRpb24gdmFsdWU9IjI4Ij5MZW50YTwvb3B0aW9uPjxvcHRpb24gdmFsdWU9IjQ1IiBzZWxlY3RlZD5Ob3JtYWw8L29wdGlvbj48b3B0aW9uIHZhbHVlPSI3MCI+UsOhcGlkYTwvb3B0aW9uPjwvc2VsZWN0PjwvbGFiZWw+PGxhYmVsPk1vZGFsaWRhZCA8c2VsZWN0IGlkPSJtb2RlIj48b3B0aW9uIHZhbHVlPSJwcmFjdGljZSI+UHLDoWN0aWNhPC9vcHRpb24+PG9wdGlvbiB2YWx1ZT0iYXNzZXNzbWVudCI+RXZhbHVhY2nDs248L29wdGlvbj48L3NlbGVjdD48L2xhYmVsPjwvZGl2PjxwPlNlbGVjY2lvbmEgZGUgMSBhIDUgbGV0cmFzOjwvcD48ZGl2IGNsYXNzPSJjaG9pY2VzIiBpZD0iY2hvaWNlcyI+PC9kaXY+PHA+PGJ1dHRvbiBpZD0ic3RhcnQiPkNvbWVuemFyPC9idXR0b24+IDxidXR0b24gaWQ9InBhdXNlIiBkaXNhYmxlZD5QYXVzYXI8L2J1dHRvbj48L3A+PC9zZWN0aW9uPgo8c2VjdGlvbiBjbGFzcz0icGFuZWwiPjxkaXYgY2xhc3M9InN0YXRzIiBpZD0ic3RhdHMiPlNlbGVjY2lvbmEgbGFzIGxldHJhcyB5IGNvbWllbnphLjwvZGl2PjxkaXYgY2xhc3M9ImJlbHQiIGlkPSJiZWx0Ij48L2Rpdj48ZGl2IGNsYXNzPSJ0YXJnZXRzIiBpZD0idGFyZ2V0cyI+PC9kaXY+PHAgY2xhc3M9Im11dGVkIG5vdGUiPkFsIHRvY2FyIHVuIGRpYnVqbyBlc2N1Y2hhcsOhcyBzdSBub21icmUgdW5hIHNvbGEgdmV6IHBvciBhcnJhc3RyZS4gU2kgbG8gZGV2dWVsdmVzIGEgbGEgYmFuZGEsIHBvZHLDoXMgZXNjdWNoYXJsbyBkZSBudWV2byBhbCB0b2NhcmxvLiBBcnJhc3RyYSB1biBkaWJ1am8gYSBzdSBsZXRyYS4gU2kgbG8gc3VlbHRhcyBmdWVyYSBkZSBsYXMgbGV0cmFzLCB2dWVsdmUgYSBzdSBsdWdhciBlbiBsYSBiYW5kYSBlbiBtb3ZpbWllbnRvLiBMb3MgZGlidWpvcyBxdWUgbm8gc2VsZWNjaW9uZXMgdm9sdmVyw6FuIGEgY2lyY3VsYXIuPC9wPjxkaXYgaWQ9InJlc3VsdCIgY2xhc3M9InJlc3VsdCI+PC9kaXY+PC9zZWN0aW9uPjwvbWFpbj4KPHNjcmlwdD4KY29uc3QgYmFuaz17CmVzOntNOltbJ/CfkJInLCdtb25vJ10sWyfwn42OJywnbWFuemFuYSddLFsn8J+miycsJ21hcmlwb3NhJ10sWyfwn4y9JywnbWHDrXonXSxbJ/CfjqQnLCdtaWNyw7Nmb25vJ10sWyfwn6WtJywnbWFuZ28nXSxbJ/CfqrAnLCdtb3NjYSddLFsn8J+Pje+4jycsJ21vdG8nXV0sClA6W1sn8J+QticsJ3BlcnJvJ10sWyfwn42QJywncGVyYSddLFsn8J+mhicsJ3BhdG8nXSxbJ/CfjZ4nLCdwYW4nXSxbJ/CfkJ8nLCdwZXonXSxbJ+KavScsJ3BlbG90YSddLFsn8J+QpCcsJ3BvbGxpdG8nXSxbJ/CfkZYnLCdwYW50YWzDs24nXV0sClM6W1sn4piA77iPJywnc29sJ10sWyfwn5C4Jywnc2FwbyddLFsn8J+loycsJ3NvcGEnXSxbJ/CfqpEnLCdzaWxsYSddLFsn8J+NiScsJ3NhbmTDrWEnXSxbJ/CfkI0nLCdzZXJwaWVudGUnXSxbJ/CfkZ8nLCdzYW5kYWxpYSddLFsn8J+OqScsJ3NvbWJyZXJvJ11dLApMOltbJ/CfjJknLCdsdW5hJ10sWyfwn6aBJywnbGXDs24nXSxbJ/Cfk5UnLCdsaWJybyddLFsn4pyP77iPJywnbMOhcGl6J10sWyfwn42LJywnbGltw7NuJ10sWyfwn6WbJywnbGVjaGUnXSxbJ/CfkLonLCdsb2JvJ10sWyfwn5SNJywnbHVwYSddXSwKRjpbWyfwn4y4JywnZmxvciddLFsn8J+mrScsJ2ZvY2EnXSxbJ/CflKUnLCdmdWVnbyddLFsn8J+NkycsJ2ZyZXNhJ10sWyfwn5G7JywnZmFudGFzbWEnXSxbJ/Cfk7cnLCdmb3RvJ10sWyfwn5qCJywnZmVycm9jYXJyaWwnXSxbJ/CfpqknLCdmbGFtZW5jbyddXX0sCmVuOntNOltbJ/CfjJknLCdtb29uJ10sWyfwn5CSJywnbW9ua2V5J10sWyfwn6WbJywnbWlsayddLFsn8J+Xuu+4jycsJ21hcCddLFsn8J+QrScsJ21vdXNlJ10sWyfwn6WtJywnbWFuZ28nXSxbJ/Cfj43vuI8nLCdtb3RvcmN5Y2xlJ10sWyfwn42IJywnbWVsb24nXV0sClA6W1sn8J+QtycsJ3BpZyddLFsn4pyP77iPJywncGVuY2lsJ10sWyfwn42VJywncGl6emEnXSxbJ/CfkLwnLCdwYW5kYSddLFsn8J+llCcsJ3BvdGF0byddLFsn8J+QpycsJ3Blbmd1aW4nXSxbJ/CfjZAnLCdwZWFyJ10sWyfwn6WnJywncGllJ11dLApTOltbJ+KYgO+4jycsJ3N1biddLFsn4q2QJywnc3RhciddLFsn8J+QjScsJ3NuYWtlJ10sWyfwn6emJywnc29jayddLFsn8J+lqicsJ3NhbmR3aWNoJ10sWyfwn6atJywnc2VhbCddLFsn8J+lhCcsJ3Nwb29uJ10sWyfwn5W377iPJywnc3BpZGVyJ11dLApMOltbJ/CfpoEnLCdsaW9uJ10sWyfwn42LJywnbGVtb24nXSxbJ/CfjYMnLCdsZWFmJ10sWyfwn5KhJywnbGFtcCddLFsn8J+mjicsJ2xpemFyZCddLFsn8J+UkicsJ2xvY2snXSxbJ/CfqpwnLCdsYWRkZXInXSxbJ/CfkYQnLCdsaXAnXV0sCkY6W1sn8J+QnycsJ2Zpc2gnXSxbJ/CfpoonLCdmb3gnXSxbJ/CfkLgnLCdmcm9nJ10sWyfwn4y4JywnZmxvd2VyJ10sWyfwn5SlJywnZmlyZSddLFsn8J+NnycsJ2ZyaWVzJ10sWyfwn6qtJywnZmFuJ10sWyfwn5qpJywnZmxhZyddXX19OwovLyBQcm9udW5jaWEgdW5hIHNvbGEgdmV6IGFsIGNvbWVuemFyIGNhZGEgbnVldm8gYXJyYXN0cmUuCmZ1bmN0aW9uIHNheVdvcmQod29yZCl7CiAgaWYoISgnc3BlZWNoU3ludGhlc2lzJyBpbiB3aW5kb3cpKXJldHVybjsKICB0cnl7CiAgICBzcGVlY2hTeW50aGVzaXMuY2FuY2VsKCk7CiAgICBjb25zdCB1PW5ldyBTcGVlY2hTeW50aGVzaXNVdHRlcmFuY2Uod29yZCk7CiAgICB1Lmxhbmc9JCgnbGFuZycpLnZhbHVlPT09J2VzJz8nZXMtRVMnOidlbi1VUyc7CiAgICB1LnJhdGU9MC44MjsKICAgIHUucGl0Y2g9MTsKICAgIHNwZWVjaFN5bnRoZXNpcy5zcGVhayh1KTsKICB9Y2F0Y2goZXJyKXtjb25zb2xlLndhcm4oJ05vIHNlIHB1ZG8gcHJvbnVuY2lhciBsYSBwYWxhYnJhOicsZXJyKX0KfQpjb25zdCAkPWlkPT5kb2N1bWVudC5nZXRFbGVtZW50QnlJZChpZCk7bGV0IGl0ZW1zPVtdLGFjdGl2ZT1bXSxydW5uaW5nPWZhbHNlLHBhdXNlZD1mYWxzZSxkcmFnPW51bGwsbGFzdD0wLHJhZj0wLHNlbGVjdGVkPVtdLHJlc3VsdHM9e30sZmVlZGJhY2tMb2NrZWQ9ZmFsc2UsZmVlZGJhY2tUaW1lcj1udWxsOwpmdW5jdGlvbiBzaHVmZmxlKGEpe3JldHVybiBhLnNvcnQoKCk9Pk1hdGgucmFuZG9tKCktLjUpfWZ1bmN0aW9uIG1ha2VDaG9pY2VzKCl7ICQoJ2Nob2ljZXMnKS5pbm5lckhUTUw9Jyc7J01QU0xGJy5zcGxpdCgnJykuZm9yRWFjaChjPT57bGV0IGw9ZG9jdW1lbnQuY3JlYXRlRWxlbWVudCgnbGFiZWwnKTtsLmlubmVySFRNTD1gPGlucHV0IHR5cGU9ImNoZWNrYm94IiB2YWx1ZT0iJHtjfSIgY2hlY2tlZD4gJHtjfWA7JCgnY2hvaWNlcycpLmFwcGVuZChsKX0pfW1ha2VDaG9pY2VzKCk7CmZ1bmN0aW9uIGJlZ2luKCl7Y2xlYXJUaW1lb3V0KGZlZWRiYWNrVGltZXIpO2ZlZWRiYWNrTG9ja2VkPWZhbHNlO3NlbGVjdGVkPVsuLi5kb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCcjY2hvaWNlcyBpbnB1dDpjaGVja2VkJyldLm1hcCh4PT54LnZhbHVlKTtpZighc2VsZWN0ZWQubGVuZ3RoKXthbGVydCgnU2VsZWNjaW9uYSBhbCBtZW5vcyB1bmEgbGV0cmEuJyk7cmV0dXJufWlmKHNlbGVjdGVkLmxlbmd0aD41KXthbGVydCgnTcOheGltbyBjaW5jbyBsZXRyYXMuJyk7cmV0dXJufWNhbmNlbEFuaW1hdGlvbkZyYW1lKHJhZik7aWYoZHJhZyljbGVhckRyYWcoKTtydW5uaW5nPXRydWU7cGF1c2VkPWZhbHNlO2RyYWc9bnVsbDtsYXN0PTA7cmVzdWx0cz17fTskKCdyZXN1bHQnKS50ZXh0Q29udGVudD0nJzskKCdiZWx0JykuaW5uZXJIVE1MPScnOyQoJ3RhcmdldHMnKS5pbm5lckhUTUw9Jyc7JCgncGF1c2UnKS5kaXNhYmxlZD1mYWxzZTskKCdwYXVzZScpLnRleHRDb250ZW50PSdQYXVzYXInO2xldCBsYW5nPSQoJ2xhbmcnKS52YWx1ZSxuPSskKCdwZXInKS52YWx1ZTsKaXRlbXM9c2h1ZmZsZShzZWxlY3RlZC5mbGF0TWFwKGxldHRlcj0+KCh3aW5kb3cuZml4ZWRJbWFnZXMmJndpbmRvdy5maXhlZEltYWdlc1tsZXR0ZXJdKXx8YmFua1tsYW5nXVtsZXR0ZXJdLnNsaWNlKDAsbikpLnNsaWNlKDAsbikubWFwKChbZW1vamksd29yZF0pPT4oe2xldHRlcixlbW9qaSx3b3JkLGlkOmNyeXB0by5yYW5kb21VVUlEKCkseDowLGRvbmU6ZmFsc2V9KSkpKTthY3RpdmU9W107c2VsZWN0ZWQuZm9yRWFjaChsZXR0ZXI9PntyZXN1bHRzW2xldHRlcl09e29rOjAsdG90YWw6MH07bGV0IGQ9ZG9jdW1lbnQuY3JlYXRlRWxlbWVudCgnZGl2Jyk7ZC5jbGFzc05hbWU9J3RhcmdldCc7ZC5kYXRhc2V0LmxldHRlcj1sZXR0ZXI7ZC50ZXh0Q29udGVudD1sZXR0ZXI7JCgndGFyZ2V0cycpLmFwcGVuZChkKX0pO2l0ZW1zLmZvckVhY2goKGl0ZW0saSk9PntsZXQgZD1kb2N1bWVudC5jcmVhdGVFbGVtZW50KCdkaXYnKTtkLmNsYXNzTmFtZT0ndGlsZSc7ZC5kYXRhc2V0LmlkPWl0ZW0uaWQ7ZC5pbm5lckhUTUw9YDxzcGFuIGNsYXNzPSJlbW9qaSI+JHtpdGVtLmVtb2ppfTwvc3Bhbj5gO2l0ZW0uZWw9ZDtpdGVtLng9MzAraSoxNTY7JCgnYmVsdCcpLmFwcGVuZChkKTtkLmFkZEV2ZW50TGlzdGVuZXIoJ3BvaW50ZXJkb3duJyxlPT5waWNrdXAoZSxpdGVtKSl9KTt1cGRhdGUoKTtyYWY9cmVxdWVzdEFuaW1hdGlvbkZyYW1lKGZyYW1lKX0KZnVuY3Rpb24gcGlja3VwKGUsaXRlbSl7CiAgaWYoIXJ1bm5pbmd8fHBhdXNlZHx8ZmVlZGJhY2tMb2NrZWR8fGl0ZW0uZG9uZXx8ZHJhZylyZXR1cm47CiAgZS5wcmV2ZW50RGVmYXVsdCgpOwogIHNheVdvcmQoaXRlbS53b3JkKTsKICBjb25zdCByZWN0PWl0ZW0uZWwuZ2V0Qm91bmRpbmdDbGllbnRSZWN0KCk7CiAgY29uc3QgZ2hvc3Q9aXRlbS5lbC5jbG9uZU5vZGUodHJ1ZSk7CiAgLy8gTGEgdGFyamV0YSBvcmlnaW5hbCBzaWd1ZSBhdmFuemFuZG8sIGludmlzaWJsZSwgeSByZXNlcnZhIHN1IGx1Z2FyLgogIC8vIFNpIGVsIG5pw7FvIGNhbmNlbGEsIHJlYXBhcmVjZSBlbiBlc2UgbWlzbW8gZXNwYWNpbyBtw7N2aWwuCiAgZ2hvc3QucmVtb3ZlQXR0cmlidXRlKCdkYXRhLWlkJyk7CiAgT2JqZWN0LmFzc2lnbihnaG9zdC5zdHlsZSx7CiAgICBwb3NpdGlvbjonZml4ZWQnLGxlZnQ6cmVjdC5sZWZ0KydweCcsdG9wOnJlY3QudG9wKydweCcsCiAgICB3aWR0aDpyZWN0LndpZHRoKydweCcsaGVpZ2h0OnJlY3QuaGVpZ2h0KydweCcsCiAgICBtYXJnaW46JzAnLHpJbmRleDonOTk5OTknLHBvaW50ZXJFdmVudHM6J25vbmUnLAogICAgdHJhbnNmb3JtOidub25lJyxjdXJzb3I6J2dyYWJiaW5nJwogIH0pOwogIGRvY3VtZW50LmJvZHkuYXBwZW5kKGdob3N0KTsKICBpdGVtLmVsLnN0eWxlLnZpc2liaWxpdHk9J2hpZGRlbic7CiAgZHJhZz17aXRlbSxnaG9zdCxweDplLmNsaWVudFgscHk6ZS5jbGllbnRZLGxlZnQ6cmVjdC5sZWZ0LHRvcDpyZWN0LnRvcCxwb2ludGVySWQ6ZS5wb2ludGVySWR9OwogIGl0ZW0uZWwuc2V0UG9pbnRlckNhcHR1cmUoZS5wb2ludGVySWQpOwogIGl0ZW0uZWwuYWRkRXZlbnRMaXN0ZW5lcigncG9pbnRlcm1vdmUnLG1vdmUpOwogIGl0ZW0uZWwuYWRkRXZlbnRMaXN0ZW5lcigncG9pbnRlcnVwJyxkcm9wLHtvbmNlOnRydWV9KTsKICBpdGVtLmVsLmFkZEV2ZW50TGlzdGVuZXIoJ3BvaW50ZXJjYW5jZWwnLGNhbmNlbERyb3Ase29uY2U6dHJ1ZX0pOwp9CmZ1bmN0aW9uIG1vdmUoZSl7CiAgaWYoIWRyYWd8fGUucG9pbnRlcklkIT09ZHJhZy5wb2ludGVySWQpcmV0dXJuOwogIGNvbnN0IGQ9ZHJhZzsKICBkLmdob3N0LnN0eWxlLmxlZnQ9KGQubGVmdCtlLmNsaWVudFgtZC5weCkrJ3B4JzsKICBkLmdob3N0LnN0eWxlLnRvcD0oZC50b3ArZS5jbGllbnRZLWQucHkpKydweCc7CiAgZG9jdW1lbnQucXVlcnlTZWxlY3RvckFsbCgnLnRhcmdldCcpLmZvckVhY2godD0+ewogICAgY29uc3Qgcj10LmdldEJvdW5kaW5nQ2xpZW50UmVjdCgpOwogICAgdC5jbGFzc0xpc3QudG9nZ2xlKCdob3ZlcicsZS5jbGllbnRYPj1yLmxlZnQmJmUuY2xpZW50WDw9ci5yaWdodCYmZS5jbGllbnRZPj1yLnRvcCYmZS5jbGllbnRZPD1yLmJvdHRvbSk7CiAgfSk7Cn0KZnVuY3Rpb24gY2xlYXJEcmFnKCl7CiAgaWYoIWRyYWcpcmV0dXJuIG51bGw7CiAgY29uc3QgZD1kcmFnOwogIGRyYWc9bnVsbDsKICBkLml0ZW0uZWwucmVtb3ZlRXZlbnRMaXN0ZW5lcigncG9pbnRlcm1vdmUnLG1vdmUpOwogIGQuaXRlbS5lbC5yZW1vdmVFdmVudExpc3RlbmVyKCdwb2ludGVyY2FuY2VsJyxjYW5jZWxEcm9wKTsKICBkLmdob3N0LnJlbW92ZSgpOwogIGQuaXRlbS5lbC5zdHlsZS52aXNpYmlsaXR5PScnOwogIGRvY3VtZW50LnF1ZXJ5U2VsZWN0b3JBbGwoJy50YXJnZXQnKS5mb3JFYWNoKHQ9PnQuY2xhc3NMaXN0LnJlbW92ZSgnaG92ZXInKSk7CiAgcmV0dXJuIGQ7Cn0KZnVuY3Rpb24gY2FuY2VsRHJvcChlKXsKICBpZighZHJhZ3x8ZS5wb2ludGVySWQhPT1kcmFnLnBvaW50ZXJJZClyZXR1cm47CiAgY2xlYXJEcmFnKCk7Cn0KZnVuY3Rpb24gZHJvcChlKXsKICBpZighZHJhZ3x8ZS5wb2ludGVySWQhPT1kcmFnLnBvaW50ZXJJZClyZXR1cm47CiAgY29uc3QgZD1jbGVhckRyYWcoKTsKICBjb25zdCB0YXJnZXQ9Wy4uLmRvY3VtZW50LnF1ZXJ5U2VsZWN0b3JBbGwoJy50YXJnZXQnKV0uZmluZCh0PT57CiAgICBjb25zdCByPXQuZ2V0Qm91bmRpbmdDbGllbnRSZWN0KCk7CiAgICByZXR1cm4gZS5jbGllbnRYPj1yLmxlZnQmJmUuY2xpZW50WDw9ci5yaWdodCYmZS5jbGllbnRZPj1yLnRvcCYmZS5jbGllbnRZPD1yLmJvdHRvbTsKICB9KTsKICBpZighdGFyZ2V0KXJldHVybjsKICBjb25zdCBnb29kPXRhcmdldC5kYXRhc2V0LmxldHRlcj09PWQuaXRlbS5sZXR0ZXI7CiAgZC5pdGVtLmRvbmU9dHJ1ZTsKICBkLml0ZW0uZWwucmVtb3ZlKCk7CiAgcmVzdWx0c1tkLml0ZW0ubGV0dGVyXS50b3RhbCsrOwogIGlmKGdvb2QpcmVzdWx0c1tkLml0ZW0ubGV0dGVyXS5vaysrOwogIHVwZGF0ZSgpOwogIGNvbnN0IGNvbXBsZXRlZD1pdGVtcy5ldmVyeSh4PT54LmRvbmUpOwogIGlmKCQoJ21vZGUnKS52YWx1ZT09PSdwcmFjdGljZScpewogICAgLy8gQ29uZ2VsYW1vcyBsYSBiYW5kYSB5IGJsb3F1ZWFtb3MgbnVldm9zIGFycmFzdHJlcyBtaWVudHJhcyBzZSBlbnNlw7FhIGxhIHJlc3B1ZXN0YS4KICAgIGZlZWRiYWNrTG9ja2VkPXRydWU7CiAgICBjb25zdCBvbGQ9dGFyZ2V0LnRleHRDb250ZW50OwogICAgdGFyZ2V0LmNsYXNzTGlzdC5hZGQoZ29vZD8nZ29vZCc6J2JhZCcpOwogICAgdGFyZ2V0LnRleHRDb250ZW50PWdvb2Q/b2xkOifinJUnOwogICAgZmVlZGJhY2tUaW1lcj1zZXRUaW1lb3V0KCgpPT57CiAgICAgIHRhcmdldC5jbGFzc0xpc3QucmVtb3ZlKCdnb29kJywnYmFkJyk7CiAgICAgIHRhcmdldC50ZXh0Q29udGVudD1vbGQ7CiAgICAgIGlmKGdvb2QpewogICAgICAgIGZlZWRiYWNrTG9ja2VkPWZhbHNlOwogICAgICAgIGlmKGNvbXBsZXRlZClmaW5pc2goKTsKICAgICAgICByZXR1cm47CiAgICAgIH0KICAgICAgLy8gVHJhcyBtb3N0cmFyIGVsIGVycm9yIHBhcnBhZGVhbnRlIGR1cmFudGUgMSBzZWd1bmRvLCBpbHVtaW5hbW9zIGxhIGxldHJhIGNvcnJlY3RhIDIgc2VndW5kb3MuCiAgICAgIGNvbnN0IGNvcnJlY3Q9Wy4uLmRvY3VtZW50LnF1ZXJ5U2VsZWN0b3JBbGwoJy50YXJnZXQnKV0uZmluZCh0PT50LmRhdGFzZXQubGV0dGVyPT09ZC5pdGVtLmxldHRlcik7CiAgICAgIGlmKGNvcnJlY3QpewogICAgICAgIGNvcnJlY3QuY2xhc3NMaXN0LmFkZCgnZ29vZCcpOwogICAgICAgIGNvbnN0IG9yaWdpbmFsPWNvcnJlY3QudGV4dENvbnRlbnQ7CiAgICAgICAgY29ycmVjdC50ZXh0Q29udGVudD1vcmlnaW5hbDsgLy8gTGEgbGV0cmEgcGVybWFuZWNlIHZpc2libGUgZHVyYW50ZSBsb3MgaW50ZXJ2YWxvcyBkZWwgcGFycGFkZW8uCiAgICAgICAgZmVlZGJhY2tUaW1lcj1zZXRUaW1lb3V0KCgpPT57CiAgICAgICAgICBjb3JyZWN0LmNsYXNzTGlzdC5yZW1vdmUoJ2dvb2QnKTsKICAgICAgICAgIGNvcnJlY3QudGV4dENvbnRlbnQ9b3JpZ2luYWw7CiAgICAgICAgICBmZWVkYmFja0xvY2tlZD1mYWxzZTsKICAgICAgICAgIGlmKGNvbXBsZXRlZClmaW5pc2goKTsKICAgICAgICB9LDIwMDApOwogICAgICB9ZWxzZXsKICAgICAgICBmZWVkYmFja0xvY2tlZD1mYWxzZTsKICAgICAgICBpZihjb21wbGV0ZWQpZmluaXNoKCk7CiAgICAgIH0KICAgIH0sZ29vZD81MDA6MTAwMCk7CiAgfWVsc2UgaWYoY29tcGxldGVkKXsKICAgIGZpbmlzaCgpOwogIH0KfQpmdW5jdGlvbiBmcmFtZSh0cyl7aWYoIXJ1bm5pbmcpcmV0dXJuO2xldCBkdD1NYXRoLm1pbigodHMtbGFzdCkvMTAwMHx8MCwuMDUpO2xhc3Q9dHM7aWYoIXBhdXNlZCYmIWZlZWRiYWNrTG9ja2VkKXtsZXQgd2lkdGg9JCgnYmVsdCcpLmNsaWVudFdpZHRoO2xldCBhbGl2ZT1pdGVtcy5maWx0ZXIoeD0+IXguZG9uZSk7YWxpdmUuZm9yRWFjaChpdGVtPT57e2l0ZW0ueCs9KyQoJ3NwZWVkJykudmFsdWUqZHQ7aWYoaXRlbS54PndpZHRoKzIwKXtsZXQgbGVmdD1NYXRoLm1pbiguLi5hbGl2ZS5maWx0ZXIoYT0+YSE9PWl0ZW0pLm1hcChhPT5hLngpLHdpZHRoKTtpdGVtLng9TWF0aC5taW4oLTEyNSxsZWZ0LTE1NSl9aXRlbS5lbC5zdHlsZS5sZWZ0PWl0ZW0ueCsncHgnfX0pfXJhZj1yZXF1ZXN0QW5pbWF0aW9uRnJhbWUoZnJhbWUpfQpmdW5jdGlvbiB1cGRhdGUoKXtsZXQgZG9uZT1pdGVtcy5maWx0ZXIoeD0+eC5kb25lKS5sZW5ndGgsb2s9T2JqZWN0LnZhbHVlcyhyZXN1bHRzKS5yZWR1Y2UoKHMseCk9PnMreC5vaywwKTskKCdzdGF0cycpLnRleHRDb250ZW50PWBDbGFzaWZpY2FkYXM6ICR7ZG9uZX0vJHtpdGVtcy5sZW5ndGh9IMK3IEFjaWVydG9zIHJlZ2lzdHJhZG9zOiAke29rfWB9CmZ1bmN0aW9uIGZpbmlzaCgpe2ZlZWRiYWNrTG9ja2VkPWZhbHNlO2NsZWFyVGltZW91dChmZWVkYmFja1RpbWVyKTt3aW5kb3cucGFyZW50LnBvc3RNZXNzYWdlKHt0eXBlOiJsbC1maW5pc2hlZCIsb2s6T2JqZWN0LnZhbHVlcyhyZXN1bHRzKS5yZWR1Y2UoKHMseCk9PnMreC5vaywwKSx0b3RhbDppdGVtcy5sZW5ndGgsYnlMZXR0ZXI6cmVzdWx0c30sIioiKTtydW5uaW5nPWZhbHNlO2NhbmNlbEFuaW1hdGlvbkZyYW1lKHJhZik7JCgncGF1c2UnKS5kaXNhYmxlZD10cnVlO2xldCBkb25lPWl0ZW1zLmxlbmd0aCxvaz1PYmplY3QudmFsdWVzKHJlc3VsdHMpLnJlZHVjZSgocyx4KT0+cyt4Lm9rLDApOyQoJ3Jlc3VsdCcpLmlubmVySFRNTD1gPHN0cm9uZz5SZXN1bHRhZG86ICR7b2t9LyR7ZG9uZX0gKCR7TWF0aC5yb3VuZChvay9kb25lKjEwMCl9JSk8L3N0cm9uZz48YnI+YCtzZWxlY3RlZC5tYXAoeD0+YCR7eH06ICR7cmVzdWx0c1t4XS5va30vJHtyZXN1bHRzW3hdLnRvdGFsfWApLmpvaW4oJyDCtyAnKStgPHAgY2xhc3M9Im5vdGUiPlNvbG8gZGVtb3N0cmFjacOzbiBsb2NhbDogbm8gZ3VhcmRhIGRhdG9zIG5pIGFsdGVyYSBMaXR0bGUgTGVhcm5lcnMuPC9wPmB9CiQoJ3N0YXJ0Jykub25jbGljaz1iZWdpbjskKCdwYXVzZScpLm9uY2xpY2s9KCk9PntwYXVzZWQ9IXBhdXNlZDskKCdwYXVzZScpLnRleHRDb250ZW50PXBhdXNlZD8nQ29udGludWFyJzonUGF1c2FyJ307CndpbmRvdy5hZGRFdmVudExpc3RlbmVyKCdtZXNzYWdlJyxlPT57aWYoZS5kYXRhPy50eXBlIT09J2xsLXN0YXJ0JylyZXR1cm47Y29uc3QgYz1lLmRhdGEuY29uZmlnOyQoJ2xhbmcnKS52YWx1ZT1jLmxhbmc7JCgncGVyJykudmFsdWU9Yy5wZXI7JCgnc3BlZWQnKS52YWx1ZT1jLnNwZWVkOyQoJ21vZGUnKS52YWx1ZT1jLm1vZGU7ZG9jdW1lbnQucXVlcnlTZWxlY3RvckFsbCgnI2Nob2ljZXMgaW5wdXQnKS5mb3JFYWNoKHg9PnguY2hlY2tlZD1jLmxldHRlcnMuaW5jbHVkZXMoeC52YWx1ZSkpO3dpbmRvdy5maXhlZEltYWdlcz1jLmZpeGVkSW1hZ2VzfHxudWxsO2JlZ2luKCl9KTs8L3NjcmlwdD48L2h0bWw+'),c=>c.charCodeAt(0)));
+const $=id=>document.getElementById(id);
+const IMAGE_BANK={
+es:{M:[['🐒','mono'],['🍎','manzana'],['🦋','mariposa'],['🌽','maíz'],['🎤','micrófono'],['🥭','mango'],['🪰','mosca'],['🏍️','moto']],
+P:[['🐶','perro'],['🍐','pera'],['🦆','pato'],['🍞','pan'],['🐟','pez'],['⚽','pelota'],['🐤','pollito'],['👖','pantalón']],
+S:[['☀️','sol'],['🐸','sapo'],['🥣','sopa'],['🪑','silla'],['🍉','sandía'],['🐍','serpiente'],['👟','sandalia'],['🎩','sombrero']],
+L:[['🌙','luna'],['🦁','león'],['📕','libro'],['✏️','lápiz'],['🍋','limón'],['🥛','leche'],['🐺','lobo'],['🔍','lupa']],
+F:[['🌸','flor'],['🦭','foca'],['🔥','fuego'],['🍓','fresa'],['👻','fantasma'],['📷','foto'],['🚂','ferrocarril'],['🦩','flamenco']]},
+en:{M:[['🌙','moon'],['🐒','monkey'],['🥛','milk'],['🗺️','map'],['🐭','mouse'],['🥭','mango'],['🏍️','motorcycle'],['🍈','melon']],
+P:[['🐷','pig'],['✏️','pencil'],['🍕','pizza'],['🐼','panda'],['🥔','potato'],['🐧','penguin'],['🍐','pear'],['🥧','pie']],
+S:[['☀️','sun'],['⭐','star'],['🐍','snake'],['🧦','sock'],['🥪','sandwich'],['🦭','seal'],['🥄','spoon'],['🕷️','spider']],
+L:[['🦁','lion'],['🍋','lemon'],['🍃','leaf'],['💡','lamp'],['🦎','lizard'],['🔒','lock'],['🪜','ladder'],['👄','lip']],
+F:[['🐟','fish'],['🦊','fox'],['🐸','frog'],['🌸','flower'],['🔥','fire'],['🍟','fries'],['🪭','fan'],['🚩','flag']]}};
+const LIBRARY_KEY='ll-activities-v10-templates';
+let editingImages=null;
+let imageContext='';
+function readLibrary(){try{const a=JSON.parse(localStorage.getItem(LIBRARY_KEY)||'[]');return Array.isArray(a)?a:[]}catch{return []}}
+function writeLibrary(a){try{localStorage.setItem(LIBRARY_KEY,JSON.stringify(a));return true}catch{alert('No fue posible guardar en este navegador. Revisa el almacenamiento disponible.');return false}}
+function randomSubset(array,n){const a=[...array];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a.slice(0,n)}
+function imageSignature(){const c=getFormBasics();return JSON.stringify([c.lang,c.per,[...c.letters].sort()])}
+function getFormBasics(){return {lang:$('lang').value,per:Number($('per').value),speed:Number($('speed').value),mode:$('mode').value,letters:[...document.querySelectorAll('#letters input:checked')].map(x=>x.value),red:$('redEnabled').checked,yellow:$('yellowEnabled').checked,green:$('greenEnabled').checked,auto:$('autoOpen').checked}}
+function syncImages(force=false){
+ const c=getFormBasics(),signature=imageSignature();
+ if(!force&&editingImages&&imageContext===signature)return;
+ const prev=(!force&&editingImages&&editingImages.lang===c.lang)?editingImages.images:{};
+ const images={};
+ for(const letter of c.letters){
+   const bank=IMAGE_BANK[c.lang][letter], valid=(prev?.[letter]||[]).filter(([emoji,word])=>bank.some(([e,w])=>e===emoji&&w===word));
+   const unique=[];
+   for(const item of valid){if(!unique.some(x=>x[1]===item[1]))unique.push(item)}
+   const free=bank.filter(([e,w])=>!unique.some(x=>x[1]===w));
+   images[letter]=[...unique.slice(0,c.per),...randomSubset(free,Math.max(0,c.per-unique.length))];
+ }
+ editingImages={lang:c.lang,images};imageContext=signature;renderImages();
+}
+function renderImages(){
+ const c=getFormBasics(),target=$('imageEditorGrid');target.replaceChildren();
+ if(!c.letters.length){target.textContent='Selecciona al menos una letra para ver sus imágenes.';return}
+ for(const letter of c.letters){
+  const group=document.createElement('div');group.className='imageGroup';
+  const heading=document.createElement('h3');heading.textContent='Letra '+letter;group.append(heading);
+  const slots=document.createElement('div');slots.className='imageSlots';
+  (editingImages?.images[letter]||[]).forEach(([emoji,word],index)=>{
+    const label=document.createElement('label');label.className='imageSlot';label.textContent='Imagen '+(index+1);
+    const sel=document.createElement('select');sel.setAttribute('aria-label','Letra '+letter+', imagen '+(index+1));
+    IMAGE_BANK[c.lang][letter].forEach(([e,w],idx)=>{const opt=new Option(e+' '+w,String(idx));if(e===emoji&&w===word)opt.selected=true;sel.add(opt)});
+    sel.onchange=()=>{
+      const next=IMAGE_BANK[c.lang][letter][Number(sel.value)];
+      const duplicate=editingImages.images[letter].some((item,i)=>i!==index&&item[1]===next[1]);
+      if(duplicate){alert('Esa imagen ya está seleccionada para esta letra. Elige otra.');renderImages();return}
+      editingImages.images[letter][index]=[...next];renderImages();
+    };label.append(sel);slots.append(label);
+  });group.append(slots);target.append(group)
+ }
+ $('imageSelectionStatus').textContent='Total: '+c.letters.length*c.per+' imágenes. Puedes cambiarlas usando los menús de cada letra.';
+}
+function loadImages(c){editingImages={lang:c.lang,images:structuredClone(c.fixedImages||{})};imageContext=imageSignature();if(!c.fixedImages){editingImages=null;syncImages();}else renderImages()}
+function frozenConfig(){syncImages();const c=getFormBasics();return {...c,fixedImages:structuredClone(editingImages.images)}}
+function getFormConfig(){return frozenConfig()}
+function setFormConfig(c){$('lang').value=c.lang;$('per').value=String(c.per);$('speed').value=String(c.speed);$('mode').value=c.mode;document.querySelectorAll('#letters input').forEach(x=>x.checked=c.letters.includes(x.value));$('redEnabled').checked=!!c.red;$('yellowEnabled').checked=!!c.yellow;$('greenEnabled').checked=!!c.green;$('autoOpen').checked=!!c.auto;loadImages(c)}
+function libraryStatus(t){$('templateStatus').textContent=t}
+function renderLibrary(selected=''){const a=readLibrary();const sel=$('templateList');sel.replaceChildren(new Option('— Selecciona una actividad —',''));a.filter(t=>t.type!=='quiz').forEach(t=>sel.add(new Option(t.name+' — versión '+t.version,t.id)));sel.value=selected;const t=a.find(x=>x.id===sel.value);$('templateSummary').textContent=t?'Clasificación rápida · '+t.config.letters.join(', ')+' · '+t.config.per+' imágenes por letra · '+(t.config.mode==='practice'?'Práctica':'Evaluación')+' · '+(t.config.fixedImages?'imágenes fijas':'imágenes no fijadas')+' · Versión '+t.version:'Actividades guardadas: '+a.length}
+function chosenTemplate(){return readLibrary().find(x=>x.id===$('templateList').value)}
+function validForm(){if(!getFormConfig().letters.length){alert('Selecciona al menos una letra.');return false}return true}
+function newId(){return 'act-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8)}
+function makeTemplate(name,config){return {id:newId(),type:'quick_sort',name,version:1,config,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}}
+function uniqueName(name,a){let n=name,i=2;while(a.some(t=>t.name.toLowerCase()===n.toLowerCase()))n=name+' ('+(i++)+')';return n}
+function saveNewTemplate(){if(!validForm())return;const name=$('templateName').value.trim();if(!name){alert('Escribe un nombre para la actividad.');return}const a=readLibrary();const t=makeTemplate(uniqueName(name,a),getFormConfig());t.familyId=t.id;a.push(t);if(writeLibrary(a)){renderLibrary(t.id);$('templateName').value=t.name;libraryStatus('✓ Actividad guardada en este navegador.')}}
+function loadTemplate(){const t=chosenTemplate();if(!t){alert('Selecciona una actividad guardada.');return}setFormConfig(t.config);$('templateName').value=t.name;config={...t.config};libraryStatus('✓ Actividad cargada. Puedes cambiar su configuración y guardar una nueva versión.');renderLibrary(t.id)}
+function updateTemplate(){const t=chosenTemplate();if(!t){alert('Selecciona una actividad para actualizar.');return}if(!validForm())return;const name=$('templateName').value.trim();if(!name){alert('Escribe el nombre de la actividad.');return}const a=readLibrary();if(a.some(x=>x.id!==t.id&&(x.familyId||x.id)!==(t.familyId||t.id)&&x.name.toLowerCase()===name.toLowerCase())){alert('Ya existe una actividad con ese nombre.');return}const versions=a.filter(x=>x.familyId===(t.familyId||t.id)||x.id===(t.familyId||t.id));const nextVersion=Math.max(...versions.map(x=>x.version))+1;const updated={...t,id:newId(),familyId:t.familyId||t.id,name,version:nextVersion,config:getFormConfig(),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};a.push(updated);if(writeLibrary(a)){renderLibrary(updated.id);libraryStatus('✓ Versión v'+updated.version+' guardada sin modificar las anteriores.')}}
+function duplicateTemplate(){const t=chosenTemplate();if(!t){alert('Selecciona una actividad para duplicar.');return}const a=readLibrary();const n=makeTemplate(uniqueName(t.name+' — copia',a),JSON.parse(JSON.stringify(t.config)));n.familyId=n.id;a.push(n);if(writeLibrary(a)){renderLibrary(n.id);$('templateName').value=n.name;libraryStatus('✓ Copia creada.')}}
+function deleteTemplate(){const t=chosenTemplate();if(!t){alert('Selecciona una actividad para eliminar.');return}if(!confirm('¿Eliminar «'+t.name+'» de la biblioteca local?'))return;const a=readLibrary().filter(x=>x.id!==t.id);if(writeLibrary(a)){renderLibrary();$('templateName').value='';libraryStatus('Actividad eliminada de la biblioteca local.')}}
+
+const screens=['studentsScreen','menuScreen','activityScreen','resultScreen','teacherScreen'];
+const roster=[{name:'Abigail',animal:'🐱'},{name:'Daniel',animal:'🦖'},{name:'Camila',animal:'🦋'},{name:'Lucas',animal:'🦆'},{name:'Emma',animal:'🐼'},{name:'Mateo',animal:'🐸'}];
+let current=null, config={lang:'es',per:8,speed:45,mode:'practice',letters:['M','P','S','L','F'],red:true,yellow:false,green:false,auto:true};
+function show(id){screens.forEach(s=>$(s).classList.toggle('hidden',s!==id))}
+function today(){const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Chicago',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const v=Object.fromEntries(parts.map(p=>[p.type,p.value]));return `${v.year}-${v.month}-${v.day}`}
+function key(){return 'll-demo-v2:'+today()+':red:'+JSON.stringify([config.lang,config.per,config.letters.slice().sort(),config.mode])}
+function scores(){try{return JSON.parse(localStorage.getItem(key())||'{}')}catch{return {}}}
+function saveScores(data){try{localStorage.setItem(key(),JSON.stringify(data))}catch(e){console.warn('No se pudo guardar la clasificación de demostración',e)}}
+function students(){ $('students').innerHTML='';const completed=scores();roster.forEach(s=>{const isDone=Object.prototype.hasOwnProperty.call(completed,s.name);const b=document.createElement('button');b.className='student '+(isDone?'completed':'pending');const a=document.createElement('span');a.className='animal';a.textContent=s.animal;const n=document.createElement('span');n.className='studentname';n.textContent=s.name;const status=document.createElement('span');status.className='studentstatus';status.textContent=isDone?'✓ Completada':'Pendiente';b.append(a,n,status);b.onclick=()=>selectStudent(s);$('students').append(b)});$('roster').textContent=roster.map(s=>s.animal+' '+s.name).join(' · ')}
+function assigned(){return [config.red&&'red',config.yellow&&'yellow',config.green&&'green'].filter(Boolean)}
+function selectStudent(s){current=s;window.__llStudentMode=true;document.body.classList.add('ll-student-mode');document.dispatchEvent(new CustomEvent('ll-open-student-library'));}
+function menu(){show('menuScreen');$('greeting').textContent='¡Hola, '+current.name+'! '+current.animal;const list=$('cards');list.innerHTML='';const data={red:['🔤','Actividad roja','Sonidos iniciales'],yellow:['🔢','Actividad amarilla','Números · próximamente'],green:['🔷','Actividad verde','Figuras · próximamente']};assigned().forEach(c=>{let b=document.createElement('button');b.className='activitycard '+c;let icon=document.createElement('span');icon.className='big';icon.textContent=data[c][0];let label=document.createElement('span');label.textContent=data[c][1];let desc=document.createElement('span');desc.className='small';desc.textContent=data[c][2];b.append(icon,label,desc);b.onclick=()=>openActivity(c);list.append(b)});if(!assigned().length)list.textContent='No hay actividades asignadas todavía.'}
+function openActivity(type){if(type!=='red'){alert('Esta actividad estará disponible en una próxima versión.');return}show('activityScreen');$('activityTitle').textContent='🔴 Sonidos iniciales · '+current.name;const f=$('activity');f.onload=()=>f.contentWindow.postMessage({type:'ll-start',config},'*');f.srcdoc=activityHTML}
+function stopActivity(){$('activity').removeAttribute('srcdoc');$('activity').src='about:blank'}
+function finish(result){stopActivity();const s=scores();const previous=s[current.name];if(!previous||result.ok>previous.ok)s[current.name]={ok:result.ok,total:result.total,animal:current.animal};saveScores(s);students();$('finishedName').textContent=current.name;$('score').textContent=result.ok+' / '+result.total;const ranking=Object.entries(s).map(([name,data])=>({name,...data})).sort((a,b)=>b.ok-a.ok||a.name.localeCompare(b.name));const place=ranking.findIndex(x=>x.name===current.name)+1;$('place').textContent='Puesto '+place+' de '+ranking.length+' participantes';$('dateLabel').textContent='Solo resultados del '+today()+' · misma actividad y configuración';$('ranks').innerHTML='';ranking.forEach((r,i)=>{const row=document.createElement('div');row.className='rank'+(r.name===current.name?' mine':'');const pos=document.createElement('span');pos.className='pos'+(i<5?' top5':'');pos.textContent=(i+1)+'.'+(i<5?' ⭐':'');const avatar=document.createElement('span');avatar.textContent=r.animal||'🐾';const name=document.createElement('span');name.className='name';name.textContent=r.name;const pts=document.createElement('span');pts.className='points';pts.textContent=r.ok+'/'+r.total;row.append(pos,avatar,name,pts);$('ranks').append(row)});show('resultScreen')}
+window.addEventListener('message',e=>{if(e.source!==$('activity').contentWindow||e.data?.type!=='ll-finished'||!current)return;finish(e.data)});
+'MPSLF'.split('').forEach(c=>{const l=document.createElement('label');l.innerHTML=`<input type="checkbox" value="${c}" checked> ${c}`;$('letters').append(l)});
+['lang','per'].forEach(id=>$(id).addEventListener('change',()=>syncImages()));document.querySelectorAll('#letters input').forEach(el=>el.addEventListener('change',()=>syncImages()));$('refreshImages').onclick=()=>syncImages(true);syncImages();
+$('teacherBtn').onclick=()=>{show('teacherScreen')};$('teacherExit').onclick=()=>{students();show('studentsScreen')};$('switchStudent').onclick=()=>show('studentsScreen');$('leave').onclick=()=>{stopActivity();show('studentsScreen')};$('accept').onclick=()=>{current=null;students();show('studentsScreen')};
+$('save').onclick=()=>{if(!validForm())return;config=getFormConfig();students();show('studentsScreen')};
+$('addStudent').onclick=()=>{const name=$('newName').value.trim();if(!name)return;if(roster.some(s=>s.name.toLocaleLowerCase()===name.toLocaleLowerCase())){alert('Ya existe ese nombre en esta demostración.');return}roster.push({name,animal:$('newAnimal').value});$('newName').value='';students()};
+$('createTemplate').onclick=saveNewTemplate;
+$('loadTemplate').onclick=loadTemplate;
+$('updateTemplate').onclick=updateTemplate;
+$('duplicateTemplate').onclick=duplicateTemplate;
+$('deleteTemplate').onclick=deleteTemplate;
+$('templateList').onchange=()=>{const t=chosenTemplate();if(t)$('templateName').value=t.name;renderLibrary($('templateList').value)};
+renderLibrary();students();
+</script>
+<script>
+/* V24: delete saved question stays available whenever at least one saved question exists. */
+(()=>{
+const $=id=>document.getElementById(id);
+const KEY='ll-activities-v10-templates', DRAFTKEY='ll-activities-v14-workdraft';
+const clone=x=>JSON.parse(JSON.stringify(x));
+const uid=()=> 'quiz-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10);
+const getAll=()=>{try{const x=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(x)?x:[]}catch{return []}};
+const putAll=a=>{try{localStorage.setItem(KEY,JSON.stringify(a));return true}catch(e){status('Error guardando: '+e.message);return false}};
+const status=m=>{const el=$('qStatus');el.textContent=m;const bad=/necesita|completa|marca exactamente|falta|faltan|antes de guardar|no se pudo|error/i.test(m);el.style.cssText=bad?'margin:10px 0;padding:12px 14px;border:1px solid #e3a0a0;border-radius:10px;background:#fff1f1;color:#9f2424;font-weight:600;':'margin:8px 0;padding:8px 0;color:#426052;';el.setAttribute('role',bad?'alert':'status')};
+let phase='idle',kind='new',originalId='',familyId='',version=0,questions=[],editing=null,editIndex=-1,header={name:'',lang:'es',mode:'practice',questionOrder:'fixed',answerOrder:'fixed',visibility:'hidden',coverImage:''},savedHeader=null;
+function setControls(){
+ const h=phase==='header', d=phase==='detail';
+ for(let id of ['qName','qLang','qMode','qQuestionOrder','qAnswerOrder','qVisibility','qCoverFile','qCoverRemove'])$(id).disabled=!h;
+ $('qLibrary').disabled=d || (h && kind==='new'); $('qNew').disabled=d;
+ $('qAcceptHeader').textContent=(kind==='existing'||questions.length>0)?'Modificar Quiz':'Crear Quiz';
+ const headerDirty=!!(h&&kind==='existing'&&savedHeader&&( $('qName').value.trim()!==savedHeader.name || $('qLang').value!==savedHeader.lang || $('qMode').value!==savedHeader.mode || $('qQuestionOrder').value!==(savedHeader.questionOrder||'fixed') || $('qAnswerOrder').value!==(savedHeader.answerOrder||'fixed') || $('qVisibility').value!==(savedHeader.visibility||'hidden') || (header.coverImage||'')!== (savedHeader.coverImage||'')));
+ $('qAcceptHeader').disabled=!h||!$('qName').value.trim()||headerDirty;
+ $('qAcceptHeader').textContent=kind==='existing'?'Modificar Quiz':'Crear Quiz';
+ $('qUpdateHeader').disabled=!(h&&kind==='existing'&&headerDirty&&$('qName').value.trim());
+ $('qCancelHeader').disabled=!(h&&kind==='existing'&&headerDirty);
+ $('qAddQuestion').disabled=!d||!!editing||questions.length>=50;
+ $('qQuestionList').disabled=!d||!!editing||!questions.length;
+ $('qPrevQuestion').disabled=!d||!questions.length||!!(editing&&editIndex<0)||(!editing&&$('qQuestionList').value!==''&&Number($('qQuestionList').value)<=0);
+ $('qNextQuestion').disabled=!d||!questions.length||!!(editing&&editIndex<0)||(!editing&&$('qQuestionList').value!==''&&Number($('qQuestionList').value)>=questions.length-1);
+ $('qAddQuestion').classList.toggle('hidden',!!editing);
+ $('qRemoveQuestion').classList.toggle('hidden',!questions.length||(!!editing&&editIndex<0));
+ updateQuestionNavigator();
+ $('qRemoveQuestion').disabled=!d||!questions.length||(!!editing&&editIndex<0);
+ $('qFinish').disabled=!d;
+ // Mantener bloqueado «Mis actividades» mientras se trabaja en el detalle.
+ // Se habilita de nuevo al regresar a la cabecera o salir del editor.
+ $('quizBack').disabled=d;
+ $('qDuplicate').disabled=d||!$('qLibrary').value;
+ $('qDelete').disabled=d||!$('qLibrary').value;
+ $('qHeaderState').textContent=d?'· Bloqueada':h?'· En edición':'· Selecciona o crea un Quiz';
+ $('qQuestionForm').classList.toggle('hidden',!editing);
+ $('qDetailControls').classList.toggle('hidden',!d);
+ $('qQuestionPickerWrap').classList.toggle('hidden',!questions.length);
+ $('qRemoveQuestion').classList.toggle('hidden',!questions.length||(!!editing&&editIndex<0));
+ $('qFinishArea').classList.toggle('hidden',!d);
+ $('qCount').textContent='('+questions.length+' / 50)';
+ $('qSummary').textContent=d?('Preguntas grabadas: '+questions.length+(editing?' · Hay una pregunta sin grabar.':' · Puedes agregar o editar preguntas.')):'Completa y acepta la cabecera para habilitar el detalle.';
+}
+function list(selected=''){const sel=$('qLibrary');sel.replaceChildren(new Option('— Selecciona un Quiz —',''));getAll().filter(x=>x.type==='quiz').forEach(t=>sel.add(new Option(t.name+' — versión '+t.version,t.id)));sel.value=selected;}
+function newQuestion(){const count=Math.max(2,Math.min(6,Number($('qOptionCount')?.value)||4));return {id:uid(),text:'',readTextEnabled:false,readText:'',audioMode:'voice',emoji:'',image:'',audio:'',correctCount:1,options:Array.from({length:count},(_,i)=>({id:uid(),text:'',readTextEnabled:false,readText:'',audioMode:'none',image:'',audio:'',correct:i===0}))};}
+function drawQuestionList(selected=''){const s=$('qQuestionList');s.replaceChildren(new Option('— Selecciona una pregunta grabada —',''));questions.forEach((q,i)=>s.add(new Option((i+1)+'. '+(q.text||'(Sin título)').slice(0,65),String(i))));s.value=selected!==''&&Number(selected)>=0&&Number(selected)<questions.length?String(selected):'';updateQuestionNavigator();}
+function updateQuestionNavigator(){
+ const n=questions.length,raw=$('qQuestionList').value,idx=raw===''?-1:Number(raw);
+ const label=$('qProgressLabel'),track=$('qProgressTrack'),fill=$('qProgressFill');
+ // When Grabar y continuar opens a blank question, show saved-question progress
+ // instead of making the progress bar look empty.
+ if(editing && editIndex<0){
+   label.textContent=n===1?'1 pregunta grabada · nueva pregunta en edición':`${n} preguntas grabadas · nueva pregunta en edición`;
+   fill.style.width=(n/50*100)+'%';
+   track.setAttribute('aria-valuemax','50');track.setAttribute('aria-valuenow',String(n));
+   return;
+ }
+ label.textContent=!n?'Sin preguntas':idx<0?`${n} pregunta${n===1?'':'s'} grabada${n===1?'':'s'} · usa las flechas para navegar`:`Pregunta ${idx+1} de ${n}`;
+ const pct=idx<0||!n?Math.min(n/50*100,100):((idx+1)/n)*100;
+ fill.style.width=pct+'%';
+ track.setAttribute('aria-valuemax',String(idx<0?50:n));track.setAttribute('aria-valuenow',String(idx<0?n:idx+1));
+}
+function updatePromptImagePreview(){const src=$('qPromptImage').value.trim(),wrap=$('qPromptImagePreviewWrap'),img=$('qPromptImagePreview');if(src){img.src=src;wrap.style.display='flex';img.onerror=()=>{wrap.style.display='none'};img.onload=()=>{wrap.style.display='flex'}}else{img.removeAttribute('src');wrap.style.display='none'}}
+function displayQuestion(){if(!editing)return;let q=editing;$('qPrompt').value=q.text||'';$('qPromptAudioMode').value=q.audioMode||((String(q.audio||'').startsWith('data:audio/'))?'file':'voice');$('qUseReadText').checked=!!q.readTextEnabled;$('qReadText').value=q.readText||'';$('qReadTextWrap').style.display=q.readTextEnabled?'block':'none';$('qPromptImage').value=(String(q.image||'').startsWith('data:image/')?q.image:'');$('qPromptAudio').value=String(q.audio||'').startsWith('data:audio/')?q.audio:'';$('qPromptAudioFile').value='';updatePromptAudioPreview();$('qPromptImageFile').value='';updatePromptImagePreview();$('qOptionCount').value=String(q.options.length);$('qCorrectCount').value=String(q.options.length===2?1:(q.correctCount||1));$('qCorrectCount').querySelector('option[value="2"]').disabled=q.options.length===2;if(q.options.length===2){q.correctCount=1;let kept=false;q.options.forEach(o=>{if(o.correct){if(!kept)kept=true;else o.correct=false;}})}drawOptions();}
+function drawOptions(){
+ if(!editing)return;const root=$('qOptions');root.replaceChildren();
+ editing.options.forEach((o,i)=>{
+  if(!String(o.image||'').startsWith('data:image/'))o.image='';
+  if(!String(o.audio||'').startsWith('data:audio/'))o.audio='';
+  if(typeof o.readTextEnabled!=='boolean')o.readTextEnabled=false;
+  if(typeof o.readText!=='string')o.readText='';
+  const palette=[{bg:'#f0f6ff',border:'#8db5f0',head:'#dceaff',accent:'#2459a9'},{bg:'#effaf2',border:'#83c99a',head:'#d8f2df',accent:'#246b3a'},{bg:'#fff7e9',border:'#e7bd69',head:'#ffebc5',accent:'#8a5b08'},{bg:'#fff0f4',border:'#e6a0b5',head:'#ffdae5',accent:'#9a3d5b'},{bg:'#f5f0ff',border:'#b6a0e8',head:'#e7ddff',accent:'#5e43a1'},{bg:'#eafafa',border:'#80c9ca',head:'#d0f0f0',accent:'#216d70'}][i%6];
+  const panel=document.createElement('div');panel.className='qopt';panel.style.cssText='padding:14px;border:2px solid '+palette.border+';border-radius:15px;display:grid;grid-template-columns:1fr;gap:12px;background:'+palette.bg+';box-shadow:0 3px 10px #20385a0d';
+  const top=document.createElement('div');top.style.cssText='display:flex;align-items:center;gap:10px;background:'+palette.head+';border-radius:10px;padding:10px 12px;color:'+palette.accent+';border:1px solid '+palette.border;
+  const cb=document.createElement('input');cb.type='checkbox';cb.className='qcorrect';cb.checked=!!o.correct;cb.addEventListener('change',()=>{o.correct=cb.checked});
+  const mark=document.createElement('label');mark.style.cssText='display:flex;align-items:center;gap:6px;font-weight:600';mark.append(cb,document.createTextNode('Respuesta '+(i+1)+' · correcta'));top.append(mark);panel.append(top);
+  const textLabel=document.createElement('label');textLabel.textContent='Texto que verá el estudiante';textLabel.style.cssText='display:grid;gap:7px;font-weight:700;background:#ffffffb8;border:1px solid '+palette.border+';border-radius:10px;padding:10px';
+  const textInput=document.createElement('input');textInput.className='qtext';textInput.type='text';textInput.value=o.text||'';textInput.placeholder='Respuesta '+(i+1);textInput.style.fontWeight='400';textInput.addEventListener('input',()=>{o.text=textInput.value});textLabel.append(textInput);panel.append(textLabel);
+  const answerModeLabel=document.createElement('label');answerModeLabel.textContent='Audio de la respuesta';answerModeLabel.style.cssText='display:grid;gap:6px;font-weight:700';const answerMode=document.createElement('select');answerMode.className='q-audio-mode';answerMode.innerHTML='<option value="none">Sin audio (el niño lee)</option><option value="voice">Leer el texto automáticamente con voz</option><option value="file">Usar un archivo de audio</option>';answerMode.value=o.audioMode||(String(o.audio||'').startsWith('data:audio/')?'file':'none');answerMode.addEventListener('change',()=>{o.audioMode=answerMode.value;answerSpeak.disabled=answerMode.value==='none';answerSpeak.textContent=answerMode.value==='none'?'🔇 Sin audio':answerMode.value==='file'?'▶ Reproducir audio de la respuesta':'🔊 Escuchar respuesta'});answerModeLabel.append(answerMode);panel.append(answerModeLabel);const answerSpeak=document.createElement('button');answerSpeak.type='button';answerSpeak.className='outline';answerSpeak.textContent=answerMode.value==='none'?'🔇 Sin audio':answerMode.value==='file'?'▶ Reproducir audio de la respuesta':'🔊 Escuchar respuesta';answerSpeak.disabled=answerMode.value==='none';answerSpeak.style.cssText='justify-self:start;white-space:nowrap;margin-top:-6px';answerSpeak.addEventListener('click',()=>{if(answerMode.value==='none')return;if(answerMode.value==='file'){if(o.audio){const player=audioPlayer;player.currentTime=0;player.play().catch(()=>status('No se pudo reproducir el archivo de audio.'));}else status('Selecciona primero un archivo de audio para esta respuesta.');return;}const t=String((readCheck.checked?o.readText:textInput.value)||'').trim();if(!t){status(readCheck.checked?'Escribe el texto que se va a leer.':'Escribe el texto de la respuesta.');return;}if(!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined'){status('La lectura en voz alta no está disponible en este navegador.');return;}try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang=header.lang==='es'?'es-ES':'en-US';speechSynthesis.speak(u);}catch(e){status('No se pudo iniciar la lectura en voz alta.');}});panel.append(answerSpeak);
+  const readCheckLabel=document.createElement('label');readCheckLabel.style.cssText='display:flex;align-items:center;gap:8px;font-weight:650;background:'+palette.head+';border:1px solid '+palette.border+';border-radius:10px;padding:10px 12px;color:'+palette.accent;
+  const readCheck=document.createElement('input');readCheck.type='checkbox';readCheck.checked=!!o.readTextEnabled;
+  readCheckLabel.append(readCheck,document.createTextNode('Usar un texto diferente para leer en voz alta'));panel.append(readCheckLabel);
+  const readWrap=document.createElement('div');readWrap.style.cssText='display:'+(o.readTextEnabled?'grid':'none')+';gap:7px;font-weight:700;background:#ffffffb8;border:1px dashed '+palette.border+';border-radius:10px;padding:10px';
+  const readTitle=document.createElement('label');readTitle.textContent='Texto que se va a leer';readTitle.style.cssText='display:block;font-weight:700';readWrap.append(readTitle);
+  const readInput=document.createElement('textarea');readInput.className='qreadText';readInput.rows=2;readInput.value=o.readText||'';readInput.placeholder='Escribe lo que debe escuchar el estudiante…';readInput.style.cssText='font-weight:400;width:100%;box-sizing:border-box';readInput.addEventListener('input',()=>{o.readText=readInput.value});
+  readWrap.append(readInput);panel.append(readWrap);
+  readCheck.addEventListener('change',()=>{o.readTextEnabled=readCheck.checked;readWrap.style.display=readCheck.checked?'grid':'none'});
+  const mediaRow=document.createElement('div');mediaRow.style.cssText='display:flex;flex-wrap:wrap;gap:12px;align-items:stretch;background:#ffffff9c;border:1px solid '+palette.border+';border-radius:12px;padding:12px';
+  const imageBox=document.createElement('div');imageBox.style.cssText='display:grid;gap:8px;min-width:180px;flex:1;background:'+palette.bg+';border:1px solid '+palette.border+';border-radius:10px;padding:10px';const imageTitle=document.createElement('strong');imageTitle.textContent='🖼️ Imagen (opcional)';imageTitle.style.color=palette.accent;imageBox.append(imageTitle);
+  const imageControls=document.createElement('div');imageControls.style.cssText='display:flex;align-items:center;gap:8px';const imageButton=document.createElement('label');imageButton.className='image-select-button';imageButton.textContent='📁 Seleccionar imagen';imageButton.style.cssText='cursor:pointer';const imageInput=document.createElement('input');imageInput.type='file';imageInput.accept='image/*';imageInput.hidden=true;
+  const imagePreview=document.createElement('img');imagePreview.alt='Vista previa de respuesta';imagePreview.style.cssText='width:42px;height:42px;object-fit:contain;border:1px solid #d5deea;border-radius:8px;padding:2px;display:'+(o.image?'block':'none');if(o.image)imagePreview.src=o.image;
+  const imageRemove=document.createElement('button');imageRemove.type='button';imageRemove.className='outline';imageRemove.textContent='Quitar';imageRemove.style.cssText='padding:5px 9px';imageRemove.addEventListener('click',()=>{o.image='';imageInput.value='';imagePreview.removeAttribute('src');imagePreview.style.display='none'});
+  imageInput.addEventListener('change',()=>{const f=imageInput.files&&imageInput.files[0];if(!f)return;if(!f.type.startsWith('image/'))return;const r=new FileReader();r.onload=()=>{o.image=String(r.result||'');imagePreview.src=o.image;imagePreview.style.display='block'};r.readAsDataURL(f)});
+  imageButton.append(imageInput);imageControls.append(imageButton,imagePreview,imageRemove);imageBox.append(imageControls);mediaRow.append(imageBox);
+  const audioBox=document.createElement('div');audioBox.style.cssText='display:grid;gap:8px;min-width:220px;flex:1;background:'+palette.bg+';border:1px solid '+palette.border+';border-radius:10px;padding:10px';const audioTitle=document.createElement('strong');audioTitle.textContent='🔊 Audio diferente (opcional)';audioTitle.style.color=palette.accent;audioBox.append(audioTitle);
+  const audioInput=document.createElement('input');audioInput.type='file';audioInput.accept='audio/*';audioInput.hidden=true;
+  const audioControls=document.createElement('div');audioControls.style.cssText='display:flex;flex-wrap:wrap;align-items:center;gap:8px';
+  const audioChoose=document.createElement('label');audioChoose.className='image-select-button';audioChoose.textContent='📁 Seleccionar archivo de audio';audioChoose.style.cssText='cursor:pointer;width:max-content;max-width:100%';audioChoose.append(audioInput);
+  const audioFileName=document.createElement('span');audioFileName.textContent='Ningún archivo seleccionado';audioFileName.style.cssText='font-size:13px;color:#53657b;overflow-wrap:anywhere';
+  const audioPlayer=document.createElement('audio');audioPlayer.controls=true;audioPlayer.preload='metadata';audioPlayer.style.cssText='width:230px;max-width:100%;display:'+(o.audio?'block':'none');if(o.audio)audioPlayer.src=o.audio;
+  const audioRemove=document.createElement('button');audioRemove.type='button';audioRemove.className='outline';audioRemove.textContent='Quitar audio';audioRemove.style.cssText='padding:5px 9px;width:max-content';audioRemove.addEventListener('click',()=>{o.audio='';audioInput.value='';audioFileName.textContent='Ningún archivo seleccionado';audioPlayer.removeAttribute('src');audioPlayer.load();audioPlayer.style.display='none';if(answerMode.value==='file'){answerMode.value='voice';o.audioMode='voice';answerSpeak.disabled=false;answerSpeak.textContent='🔊 Escuchar respuesta'}});
+  audioInput.addEventListener('change',()=>{const f=audioInput.files&&audioInput.files[0];if(!f)return;if(!f.type.startsWith('audio/')){status('Selecciona un archivo de audio válido.');audioInput.value='';return}if(f.size>5*1024*1024){status('El audio de cada opción debe pesar 5 MB o menos.');audioInput.value='';return}audioFileName.textContent=f.name;const r=new FileReader();r.onload=()=>{o.audio=String(r.result||'');audioPlayer.src=o.audio;audioPlayer.style.display='block';answerMode.value='file';o.audioMode='file';answerSpeak.disabled=false;answerSpeak.textContent='▶ Reproducir audio de la respuesta'};r.readAsDataURL(f)});
+  audioControls.append(audioChoose,audioFileName);audioBox.append(audioControls,audioPlayer,audioRemove);mediaRow.append(audioBox);panel.append(mediaRow);root.append(panel);
+ });
+}
+function capture(){if(!editing)return;editing.text=$('qPrompt').value;editing.audioMode=$('qPromptAudioMode').value;editing.readTextEnabled=$('qUseReadText').checked;editing.readText=$('qReadText').value;editing.image=$('qPromptImage').value.trim().startsWith('data:image/')?$('qPromptImage').value.trim():'';editing.audio=$('qPromptAudio').value.trim().startsWith('data:audio/')?$('qPromptAudio').value.trim():'';editing.correctCount=Number($('qCorrectCount').value);}
+function validateQuestion(q){const visiblePrompt=String(q.text||'').trim()||String(q.image||'').trim()||String(q.emoji||'').trim();const alternateVoice=!!q.readTextEnabled&&!!String(q.readText||'').trim()&&(q.audioMode||'voice')==='voice';const promptAudio=(q.audioMode==='file'&&String(q.audio||'').startsWith('data:audio/'));if(!(visiblePrompt||alternateVoice||promptAudio))return 'Agrega un enunciado visible, una imagen o emoji, un texto alternativo para leer en voz alta o un archivo de audio.';if(q.options.length<2||q.options.length>6)return 'La pregunta debe tener de 2 a 6 opciones.';if(q.options.length===2&&q.correctCount>1)return 'Cuando hay 2 opciones, solo se permite 1 respuesta correcta.';const missing=q.options.map((x,i)=>({x,i})).filter(({x})=>!(String(x.text||'').trim()||x.image||x.audio)).map(({i})=>'Respuesta '+(i+1));if(missing.length)return 'No se puede guardar todavía. Completa estos campos: '+missing.join(', ')+'.';if(q.options.filter(x=>x.correct).length!==q.correctCount)return 'Marca exactamente '+q.correctCount+' respuesta(s) correcta(s).';return '';}
+function saveDraft(){if(phase!=='detail')return;try{localStorage.setItem(DRAFTKEY,JSON.stringify({kind,originalId,familyId,version,header,questions}))}catch(e){status('Advertencia: no se pudo respaldar el borrador local: '+e.message)}}
+function persistQuiz(){
+ if(!questions.length||!header.name.trim())return false;
+ const all=getAll(),now=new Date().toISOString();
+ let t=originalId?all.find(x=>x.id===originalId&&x.type==='quiz'):null;
+ if(t){
+   t.name=header.name.trim();t.config={lang:header.lang,mode:header.mode,questionOrder:header.questionOrder||'fixed',answerOrder:header.answerOrder||'fixed',visibility:header.visibility||'hidden',coverImage:header.coverImage||'',questions:clone(questions)};
+   t.updatedAt=now;
+ }else{
+   const id=uid();originalId=id;familyId=id;kind='existing';version=1;
+   all.push({id,familyId:id,type:'quiz',name:header.name.trim(),version:1,config:{lang:header.lang,mode:header.mode,questionOrder:header.questionOrder||'fixed',answerOrder:header.answerOrder||'fixed',visibility:header.visibility||'hidden',coverImage:header.coverImage||'',questions:clone(questions)},createdAt:now,updatedAt:now});
+ }
+ if(!putAll(all)){return false}
+ list(originalId);
+ document.dispatchEvent(new Event('ll-quiz-library-updated'));
+ return true;
+}
+function clearDraft(){localStorage.removeItem(DRAFTKEY)}
+function loadQuiz(id){let t=getAll().find(x=>x.id===id&&x.type==='quiz');if(!t){reset();return}kind='existing';originalId=id;familyId=t.familyId||t.id;version=t.version;questions=clone(t.config.questions||[]);header={name:t.name,lang:t.config.lang||'es',mode:t.config.mode||'practice',questionOrder:t.config.questionOrder||'fixed',answerOrder:t.config.answerOrder||'fixed',visibility:t.config.visibility||'hidden',coverImage:t.config.coverImage||''};savedHeader={...header};for(let [k,v] of [['qName',header.name],['qLang',header.lang],['qMode',header.mode],['qQuestionOrder',header.questionOrder],['qAnswerOrder',header.answerOrder],['qVisibility',header.visibility]])$(k).value=v;setCoverPreview(header.coverImage);phase='header';editing=null;editIndex=-1;drawQuestionList();saveDraft();setControls();status('Quiz existente cargado. Revisa o cambia el nombre, idioma o modalidad; pulsa «Modificar Quiz» para entrar al detalle de preguntas.');}
+function reset(){phase='idle';kind='new';originalId='';familyId='';version=0;questions=[];editing=null;editIndex=-1;header={name:'',lang:'es',mode:'practice',questionOrder:'fixed',answerOrder:'fixed',visibility:'hidden',coverImage:''};savedHeader=null;$('qName').value='';$('qLang').value='es';$('qMode').value='practice';$('qQuestionOrder').value='fixed';$('qAnswerOrder').value='fixed';$('qVisibility').value='hidden';setCoverPreview('');$('qCoverFile').value='';$('qLibrary').value='';drawQuestionList();setControls();}
+function confirmSwitch(){if(phase==='header'&&kind==='new'&&$('qName').value.trim())return confirm('¿Descartar la cabecera nueva?');return true}
+$('qNew').onclick=()=>{if(!confirmSwitch())return;clearDraft();phase='header';kind='new';originalId='';familyId='';version=0;questions=[];editing=null;editIndex=-1;$('qName').value='';$('qLang').value='es';$('qMode').value='practice';$('qQuestionOrder').value='fixed';$('qAnswerOrder').value='fixed';$('qVisibility').value='hidden';setCoverPreview('');$('qCoverFile').value='';header.coverImage='';savedHeader=null;$('qLibrary').value='';drawQuestionList();setControls();status('Define la cabecera y presiona Crear Quiz.');};
+$('qLibrary').onchange=()=>{const id=$('qLibrary').value;if(!confirmSwitch()){ $('qLibrary').value=originalId;return }clearDraft();if(id)loadQuiz(id);else reset();};
+$('qName').addEventListener('input',()=>{if(phase==='header')header.name=$('qName').value;setControls()});$('qLang').addEventListener('change',setControls);$('qMode').addEventListener('change',setControls);$('qQuestionOrder').addEventListener('change',setControls);$('qAnswerOrder').addEventListener('change',setControls);$('qVisibility').addEventListener('change',setControls);
+function setCoverPreview(data){const img=$('qCoverPreview');img.src=data||'';img.hidden=!data;$('qCoverStatus').textContent=data?'Imagen de portada seleccionada.':'Todavía no hay una imagen seleccionada.';$('qCoverRemove').disabled=phase!=='header'||!data;}
+$('qCoverFile').addEventListener('change',()=>{const file=$('qCoverFile').files&&$('qCoverFile').files[0];if(!file)return;if(!file.type.startsWith('image/')){status('Selecciona un archivo de imagen válido.');$('qCoverFile').value='';return}if(file.size>12*1024*1024){status('La imagen supera 12 MB. Selecciona una imagen más pequeña.');$('qCoverFile').value='';return}const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{try{const max=480,scale=Math.min(1,max/Math.max(img.width,img.height)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);const data=canvas.toDataURL('image/jpeg',0.76);header.coverImage=data;setCoverPreview(data);saveDraft();setControls();status('Imagen de actividad preparada. Pulsa «Crear Quiz» o «Actualizar Quiz» para guardar la cabecera.')}catch(e){status('No se pudo preparar la imagen. Prueba con otro archivo.')}};img.onerror=()=>status('No se pudo abrir esa imagen.');img.src=reader.result};reader.onerror=()=>status('No se pudo leer la imagen.');reader.readAsDataURL(file)});
+$('qCoverRemove').addEventListener('click',()=>{header.coverImage='';$('qCoverFile').value='';setCoverPreview('');saveDraft();setControls();status('Imagen de actividad quitada. Guarda la cabecera para conservar el cambio.')});
+$('qUpdateHeader').onclick=()=>{if(phase!=='header'||kind!=='existing')return;const name=$('qName').value.trim();if(!name){status('Escribe el nombre del Quiz.');return}const all=getAll(),t=all.find(x=>x.id===originalId&&x.type==='quiz');if(!t){status('No se encontró el Quiz guardado.');return}t.name=name;t.config={...(t.config||{}),lang:$('qLang').value,mode:$('qMode').value,questionOrder:$('qQuestionOrder').value,answerOrder:$('qAnswerOrder').value,visibility:$('qVisibility').value,coverImage:header.coverImage||'',questions:clone(questions)};t.updatedAt=new Date().toISOString();if(!putAll(all)){status('No se pudieron guardar los cambios.');return}header={name,lang:$('qLang').value,mode:$('qMode').value,questionOrder:$('qQuestionOrder').value,answerOrder:$('qAnswerOrder').value,visibility:$('qVisibility').value,coverImage:header.coverImage||''};savedHeader={...header};list(originalId);saveDraft();setControls();status('✓ Cabecera actualizada. El Quiz existente se conservó; ya puedes modificar las preguntas.');};
+$('qCancelHeader').onclick=()=>{if(phase!=='header'||kind!=='existing'||!savedHeader)return;$('qName').value=savedHeader.name;$('qLang').value=savedHeader.lang;$('qMode').value=savedHeader.mode;$('qQuestionOrder').value=savedHeader.questionOrder||'fixed';$('qAnswerOrder').value=savedHeader.answerOrder||'fixed';$('qVisibility').value=savedHeader.visibility||'hidden';header={...savedHeader};setCoverPreview(header.coverImage||'');$('qCoverFile').value='';setControls();status('Cambios de cabecera cancelados. Se restauraron los valores guardados.');};
+$('qAcceptHeader').onclick=()=>{const name=$('qName').value.trim();if(!name){status('Escribe el nombre del Quiz.');return}header={name,lang:$('qLang').value,mode:$('qMode').value,questionOrder:$('qQuestionOrder').value,answerOrder:$('qAnswerOrder').value,visibility:$('qVisibility').value,coverImage:header.coverImage||''};if(kind==='existing')savedHeader={...header};phase='detail';if(kind==='existing'){editing=null;editIndex=-1;drawQuestionList('');saveDraft();setControls();status('Quiz listo para modificar. Usa cualquiera de las flechas para cargar una pregunta guardada y editarla.');}else{editing=newQuestion();editIndex=-1;displayQuestion();saveDraft();setControls();status('Cabecera aceptada y bloqueada. La primera pregunta está lista para editarse.');}};
+$('qAddQuestion').onclick=()=>{if(phase!=='detail'||editing)return;editing=newQuestion();editIndex=-1;displayQuestion();setControls();status('Pregunta nueva en edición; aún no está grabada.');};
+$('qQuestionList').onchange=()=>{if(editing||!$('qQuestionList').value)return;editIndex=Number($('qQuestionList').value);editing=clone(questions[editIndex]);displayQuestion();setControls();status('Editando pregunta '+(editIndex+1)+'. Los cambios no afectan la versión grabada hasta presionar Grabar y continuar o Grabar y salir.');};
+function navigateQuestion(delta){
+ if(!questions.length)return;
+ // Después de «Grabar y salir», la selección queda vacía; la flecha derecha
+ // lleva directamente a la última pregunta guardada/editada.
+ if(!editing && $('qQuestionList').value==='' && delta>0){
+   const last=questions.length-1;
+   drawQuestionList(String(last));
+   setControls();
+   $('qQuestionList').dispatchEvent(new Event('change',{bubbles:true}));
+   return;
+ }
+ let current=$('qQuestionList').value===''?-1:Number($('qQuestionList').value);
+ if(editing){
+   capture();const err=validateQuestion(editing);
+   if(err){status(err+' Guarda o corrige la pregunta antes de navegar.');return;}
+   const oldIndex=editIndex;
+   if(oldIndex<0){questions.push(clone(editing));current=questions.length-1;}
+   else{questions[oldIndex]=clone(editing);current=oldIndex;}
+   editing=null;editIndex=-1;saveDraft();
+ }
+ const next=Math.max(0,Math.min(questions.length-1,current+delta));
+ drawQuestionList(String(next));setControls();
+ $('qQuestionList').dispatchEvent(new Event('change',{bubbles:true}));
+}
+$('qPrevQuestion').onclick=()=>navigateQuestion(-1);
+$('qNextQuestion').onclick=()=>navigateQuestion(1);
+$('qOptionCount').onchange=()=>{capture();const n=Number($('qOptionCount').value);while(editing.options.length<n)editing.options.push({id:uid(),text:'',readTextEnabled:false,readText:'',audioMode:'none',image:'',audio:'',correct:false});editing.options.length=n;const correctSelect=$('qCorrectCount');correctSelect.querySelector('option[value="2"]').disabled=n===2;if(n===2){correctSelect.value='1';editing.correctCount=1;let kept=false;editing.options.forEach(o=>{if(o.correct){if(!kept)kept=true;else o.correct=false;}})}drawOptions()};
+$('qCorrectCount').onchange=()=>{if(!editing)return;if(editing.options.length===2){$('qCorrectCount').value='1';editing.correctCount=1;status('Con 2 opciones, solo se permite 1 respuesta correcta.');return}editing.correctCount=Number($('qCorrectCount').value)};
+function commitEditedQuestion(continueNext){
+ if(!editing)return;
+ capture();
+ const err=validateQuestion(editing);
+ if(err){status(err);return;}
+ if(editIndex<0)questions.push(clone(editing));
+ else questions[editIndex]=clone(editing);
+ const savedIndex=editIndex<0?questions.length-1:editIndex;
+ editing=null;editIndex=-1;
+ drawQuestionList(continueNext?'':String(savedIndex));
+ persistQuiz();
+ saveDraft();
+ if(continueNext && questions.length<50){
+   editing=newQuestion();editIndex=-1;displayQuestion();setControls();
+   status('✓ Pregunta grabada. Ahora estás editando una pregunta nueva ('+(questions.length+1)+').');
+   $('qPrompt').focus();
+ }else{
+   // Dejar el navegador sin selección para que la flecha derecha permita
+   // volver a la última pregunta activa/guardada.
+   drawQuestionList('');
+   setControls();
+   status('✓ Pregunta grabada. Regresaste al listado del detalle ('+questions.length+' preguntas). Pulsa la flecha derecha para volver a la última pregunta.');
+ }
+}
+
+$('qCommitExit').onclick=()=>commitEditedQuestion(false);
+$('qCommitContinue').onclick=()=>commitEditedQuestion(true);
+$('qCancelQuestion').onclick=()=>{editing=null;editIndex=-1;drawQuestionList('');setControls();status('Edición de pregunta cancelada. Todas las preguntas grabadas permanecen intactas. Usa la flecha izquierda para volver a la primera pregunta o la derecha para ir a la última.');};
+function removeSavedQuestion(){
+ if(phase!=='detail'){status('Abre el detalle del Quiz antes de eliminar una pregunta.');return;}
+ if(!questions.length){status('Este Quiz no tiene preguntas grabadas para eliminar.');return;}
+ // Prefer the actual selected saved-question index; editIndex is only a fallback.
+ const selected=$('qQuestionList').value;
+ let idx=selected!==''?Number(selected):(editIndex>=0?editIndex:-1);
+ if(editIndex>=0 && selected==='' ) idx=editIndex;
+ if(!Number.isInteger(idx)||idx<0||idx>=questions.length){
+   status('Selecciona una pregunta grabada en el navegador de preguntas antes de eliminarla.');return;
+ }
+ const num=idx+1;
+ if(!confirm('¿Eliminar definitivamente la pregunta '+num+' del Quiz guardado? Esta acción no se puede deshacer.'))return;
+ const all=getAll(),t=originalId?all.find(x=>x.id===originalId&&x.type==='quiz'):null;
+ if(!t){status('No se encontró el Quiz guardado. No se eliminó ninguna pregunta.');return;}
+ const nextQuestions=clone(questions);nextQuestions.splice(idx,1);
+ const oldConfig=clone(t.config||{});
+ t.config={...oldConfig,lang:header.lang||oldConfig.lang||'es',mode:header.mode||oldConfig.mode||'practice',questionOrder:header.questionOrder||oldConfig.questionOrder||'fixed',answerOrder:header.answerOrder||oldConfig.answerOrder||'fixed',visibility:header.visibility||oldConfig.visibility||'hidden',questions:clone(nextQuestions)};
+ t.updatedAt=new Date().toISOString();
+ if(!putAll(all)){status('No se pudo guardar la eliminación. Las preguntas originales permanecen intactas.');return;}
+ questions=nextQuestions;editing=null;editIndex=-1;
+ drawQuestionList(questions.length?String(Math.min(idx,questions.length-1)):'');
+ saveDraft();setControls();list(originalId);
+ document.dispatchEvent(new Event('ll-quiz-library-updated'));
+ status('✓ Pregunta '+num+' eliminada del Quiz guardado. Quedan '+questions.length+' preguntas.');
+}
+$('qRemoveQuestion').onclick=(ev)=>{ev.preventDefault();ev.stopPropagation();removeSavedQuestion();};
+
+function updatePromptAudioPreview(){const data=String($('qPromptAudio').value||'');const wrap=$('qPromptAudioPreviewWrap'),player=$('qPromptAudioPreview'),hasAudio=data.startsWith('data:audio/');if(hasAudio){player.src=data}else{player.removeAttribute('src');player.load()}const mode=$('qPromptAudioMode').value;const speak=$('qSpeak');$('qPromptVoiceSettings').style.display=mode==='voice'?'flex':'none';$('qPromptFileSettings').style.display=mode==='file'?'flex':'none';speak.style.display=mode==='none'?'none':'inline-flex';speak.disabled=false;speak.textContent=mode==='file'?'▶ Reproducir audio de la pregunta':'🔊 Escuchar enunciado';speak.title=mode==='file'?'Reproduce el archivo de audio cargado':'Lee en voz alta el enunciado o el texto alternativo';wrap.style.display=hasAudio&&mode==='file'?'block':'none';}
+$('qPromptAudioMode').addEventListener('change',()=>{if(editing){editing.audioMode=$('qPromptAudioMode').value;saveDraft()}updatePromptAudioPreview()});
+$('qPromptAudioFile').addEventListener('change',()=>{const file=$('qPromptAudioFile').files&&$('qPromptAudioFile').files[0];if(!file)return;if(!file.type.startsWith('audio/')){status('Selecciona un archivo de audio válido.');return}if(file.size>5*1024*1024){status('El archivo de audio supera 5 MB. Usa un archivo más corto o comprimido para evitar llenar el almacenamiento local.');$('qPromptAudioFile').value='';return}const reader=new FileReader();reader.onload=()=>{const data=String(reader.result||'');if(!data.startsWith('data:audio/')){status('No se pudo leer el archivo de audio.');return}$('qPromptAudio').value=data;$('qPromptAudioMode').value='file';updatePromptAudioPreview();if(editing){editing.audio=data;editing.audioMode='file';saveDraft()}status('Audio cargado. Reprodúcelo para comprobarlo y pulsa «Grabar y continuar» o «Grabar y salir».')};reader.onerror=()=>status('No se pudo leer el archivo de audio.');reader.readAsDataURL(file)});
+$('qClearPromptAudio').onclick=()=>{$('qPromptAudio').value='';$('qPromptAudioFile').value='';if($('qPromptAudioMode').value==='file')$('qPromptAudioMode').value='voice';updatePromptAudioPreview();if(editing){editing.audio='';editing.audioMode=$('qPromptAudioMode').value;saveDraft()}status('Audio quitado. Graba la pregunta para guardar el cambio.')};
+$('qPromptImage').addEventListener('input',()=>{updatePromptImagePreview();if(editing){editing.image=$('qPromptImage').value.trim().startsWith('data:image/')?$('qPromptImage').value.trim():'';saveDraft()}});
+$('qPromptImageFile').addEventListener('change',()=>{const file=$('qPromptImageFile').files&&$('qPromptImageFile').files[0];if(!file)return;if(!file.type.startsWith('image/')){status('Selecciona un archivo de imagen.');return}const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{try{const max=1200,scale=Math.min(1,max/Math.max(img.width,img.height)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);const data=canvas.toDataURL('image/jpeg',0.82);$('qPromptImage').value=data;updatePromptImagePreview();if(editing){editing.image=data;saveDraft()}status('Imagen cargada. Pulsa «Grabar y continuar» o «Grabar y salir» para guardar la pregunta.')}catch(e){status('No se pudo preparar la imagen. Prueba con otro archivo.')}};img.onerror=()=>status('No se pudo abrir esa imagen.');img.src=reader.result};reader.onerror=()=>status('No se pudo leer el archivo de imagen.');reader.readAsDataURL(file)});
+
+$('qClearPromptImage').onclick=()=>{$('qPromptImage').value='';$('qPromptImageFile').value='';updatePromptImagePreview();if(editing){editing.image='';saveDraft()}status('Imagen quitada. Graba la pregunta para guardar el cambio.')};
+$('qUseReadText').addEventListener('change',()=>{$('qReadTextWrap').style.display=$('qUseReadText').checked?'block':'none';if(editing){editing.readTextEnabled=$('qUseReadText').checked;editing.readText=$('qReadText').value;}});$('qReadText').addEventListener('input',()=>{if(editing)editing.readText=$('qReadText').value;});
+$('qSpeak').onclick=()=>{if(!editing)return;const mode=$('qPromptAudioMode').value;if(mode==='none')return;const audio=String($('qPromptAudio').value||'');if(mode==='file'){if(!audio.startsWith('data:audio/')){status('Selecciona primero un archivo de audio para esta pregunta.');return;}const player=$('qPromptAudioPreview');if(player&&player.src){player.currentTime=0;player.play().catch(()=>status('No se pudo reproducir el archivo de audio. Usa el reproductor de audio para comprobarlo.'));}else status('Hay un archivo de audio cargado.');return;}const t=String(($('qUseReadText').checked?$('qReadText').value:$('qPrompt').value)||'').trim();if(!t){status($('qUseReadText').checked?'Escribe el texto que se va a leer.':'Escribe el enunciado de la pregunta.');return;}if(!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined'){status('La lectura en voz alta no está disponible en este navegador.');return;}try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang=header.lang==='es'?'es-ES':'en-US';speechSynthesis.speak(u);}catch(e){status('No se pudo iniciar la lectura en voz alta.');}};
+$('qFinish').onclick=()=>{
+ if(phase!=='detail')return;
+ // Regresar a la cabecera conserva el nombre y los datos del Quiz.
+ if(editing){
+  // Comparar con la versión grabada para no avisar al navegar sin hacer cambios.
+  capture();
+  const hasQuestionData=!!(String(editing.text||'').trim()||String(editing.image||'').trim()||String(editing.audio||'').trim()||editing.options.some(o=>String(o.text||'').trim()||String(o.image||'').trim()||String(o.audio||'').trim()));
+  const savedQuestion=editIndex>=0?questions[editIndex]:null;
+  const changedSavedQuestion=!!savedQuestion && JSON.stringify(editing)!==JSON.stringify(savedQuestion);
+  const changedNewQuestion=editIndex<0 && hasQuestionData;
+  if((changedSavedQuestion||changedNewQuestion)&&!confirm('La pregunta actual tiene cambios sin grabar. ¿Deseas descartarlos y volver a la cabecera del Quiz?'))return;
+  editing=null;editIndex=-1;
+ }
+ phase='header';
+ $('qName').value=header.name||'';
+ $('qLang').value=header.lang||'es';
+ $('qMode').value=header.mode||'practice';
+ $('qQuestionOrder').value=header.questionOrder||'fixed';
+ $('qAnswerOrder').value=header.answerOrder||'fixed';
+ $('qVisibility').value=header.visibility||'hidden';
+ setControls();
+ status('Regresaste a la cabecera. Puedes corregir el nombre y volver a pulsar «Crear Quiz». Las preguntas ya grabadas se conservan.');
+ $('qName').focus();
+};
+$('qDuplicate').onclick=()=>{const t=getAll().find(x=>x.id===$('qLibrary').value&&x.type==='quiz');if(!t)return;let all=getAll(),base=t.name+' — copia',name=base,n=2;while(all.some(x=>x.type==='quiz'&&x.name===name))name=base+' ('+(n++)+')';let id=uid(),now=new Date().toISOString();all.push({id,familyId:id,type:'quiz',name,version:1,config:clone(t.config),createdAt:now,updatedAt:now});if(putAll(all)){list(id);loadQuiz(id);status('✓ Copia guardada.')}};
+$('qDelete').onclick=()=>{const id=$('qLibrary').value,t=getAll().find(x=>x.id===id&&x.type==='quiz');if(!t||!confirm('¿Eliminar únicamente '+t.name+' (v'+t.version+')?'))return;if(putAll(getAll().filter(x=>x.id!==id))){list();reset();status('Quiz eliminado; otras versiones intactas.')}};
+document.addEventListener('ll-reset-quiz-editor',()=>{clearDraft();reset();status('Borrador descartado. Puedes crear un Quiz nuevo.');});
+// V52: al cancelar una pregunta, dejar la selección vacía para habilitar ambas flechas de navegación.
+// Inicio limpio: no interrumpir la apertura con recuperación automática de borradores.
+list();reset();clearDraft();
+})();
+</script>
+
+<script>
+/* V98: texto adaptable, prioridad de imagen y audio dentro de la respuesta */
+(()=>{
+ const byId=id=>document.getElementById(id), KEY='ll-activities-v10-templates';
+ const hub=byId('quizHub'),editor=byId('quizEditor'),cards=byId('hubCards');
+ const read=()=>{try{const x=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(x)?x.filter(t=>t.type==='quiz'):[]}catch{return []}};
+ const FKEY='ll-activities-v90-folders';let currentFolder=null;
+ const readFolders=()=>{try{const x=JSON.parse(localStorage.getItem(FKEY)||'[]');return Array.isArray(x)?x:[]}catch{return []}};
+ const writeFolders=x=>localStorage.setItem(FKEY,JSON.stringify(x));
+ const latestEntries=()=>{const latest=new Map();for(const t of read()){const family=t.familyId||t.id,old=latest.get(family);if(!old||Number(t.version)>Number(old.version))latest.set(family,old?{...t,folderId:old.folderId||t.folderId}:t)}return [...latest.values()].sort((a,b)=>a.name.localeCompare(b.name,'es',{sensitivity:'base'}))};
+ const isReadyForStudents=t=>t?.config?.visibility==='visible'&&Array.isArray(t.config.questions)&&t.config.questions.length>0;
+ const folderHasReady=(id,folders,readyEntries)=>readyEntries.some(t=>(t.folderId||null)===id)||folders.some(f=>(f.parentId||null)===id&&folderHasReady(f.id,folders,readyEntries));
+ const folderName=id=>readFolders().find(f=>f.id===id)?.name||'Mis actividades';
+ const pastel=[['Rosa','#F6D6D6'],['Melocotón','#F9DEC9'],['Amarillo','#F8EDB8'],['Verde menta','#CDEBDD'],['Verde suave','#DCECCB'],['Celeste','#CFE8F7'],['Azul lavanda','#D9DDF7'],['Lila','#E9D5F5'],['Lavanda rosada','#F3D8E8'],['Gris claro','#E7E9ED']];
+ const ensureModal=(id,html)=>{let el=byId(id);if(!el){el=document.createElement('div');el.id=id;el.innerHTML=html;document.body.append(el)}return el};
+ const style=document.createElement('style');style.textContent=`.ll-modal{position:fixed;inset:0;z-index:100001;background:#1c2c4380;display:none;align-items:center;justify-content:center;padding:16px}.ll-modal.open{display:flex}.ll-modal-box{background:#fff;color:#243552;border-radius:18px;padding:20px;width:min(520px,100%);max-height:90vh;overflow:auto;box-shadow:0 20px 60px #10204055}.ll-modal-box h2{margin:0 0 14px;font-size:21px}.ll-modal-box input[type=text],.ll-modal-box select{width:100%;padding:11px;border:1px solid #c4d0df;border-radius:9px;font:inherit;box-sizing:border-box}.ll-modal-actions{display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap;margin-top:18px}.ll-palette{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;margin-top:12px}.ll-color{border:2px solid transparent;border-radius:10px;min-height:56px;cursor:pointer;display:flex;align-items:center;justify-content:center}.ll-color.chosen{border-color:#26364b;box-shadow:0 0 0 2px white inset}.ll-context{position:fixed;z-index:100002;display:none;min-width:180px;padding:6px;background:white;border:1px solid #ccd6e5;border-radius:12px;box-shadow:0 10px 30px #1b2b4233}.ll-context.open{display:grid}.ll-context button{border:0;background:white;text-align:left;padding:10px 12px;border-radius:8px;color:#243552;font-size:14px}.ll-context button:hover{background:#eef4ff}.ll-preview{position:fixed;inset:0;z-index:100003;background:#f4f7fb;display:none;overflow:hidden;padding:clamp(6px,1.5vw,18px);box-sizing:border-box}.ll-preview.open{display:block}.ll-preview-shell{width:100%;height:100%;max-width:1200px;box-sizing:border-box;margin:0 auto;background:white;border-radius:clamp(10px,2vw,20px);padding:clamp(8px,1.8vw,22px);box-shadow:0 8px 30px #1a31501c;display:flex;flex-direction:column;overflow:hidden}.ll-preview-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:nowrap;margin-bottom:clamp(4px,1vh,12px);flex-shrink:0}.ll-preview-head h1{font-size:clamp(17px,2.5vw,28px)!important}.ll-preview-question{font-size:clamp(24px,5vw,54px);font-weight:800;margin:clamp(4px,1vh,12px) 0;text-align:center;white-space:pre-wrap;overflow-wrap:anywhere;flex-shrink:0}.ll-preview-qimage{display:block;max-width:min(100%,30vh);max-height:22vh;object-fit:contain;margin:4px auto;border-radius:12px;flex-shrink:1}.ll-preview-options{display:grid;grid-template-columns:repeat(var(--option-columns,2),minmax(0,1fr));grid-template-rows:repeat(var(--option-rows,2),minmax(0,1fr));gap:clamp(6px,1.2vw,14px);margin-top:clamp(6px,1vh,12px);flex:1;min-height:0;overflow:hidden}.ll-preview-option{position:relative;min-width:0;min-height:0;overflow:hidden;border:2px solid #d7e2ef;border-radius:clamp(10px,1.8vw,18px);background:var(--answer-pastel,#f8fbff);padding:clamp(6px,1.6vw,18px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(4px,1vh,10px);color:#243552;font-size:clamp(30px,7vw,82px);font-weight:800;line-height:1.05}.ll-preview-option img{width:100%;height:100%;max-height:100%;object-fit:contain;min-height:0}.ll-preview-option span{max-width:100%;overflow-wrap:anywhere}.ll-preview-option.selected{border-color:#4777d5;background:#edf4ff}.ll-preview-option.correct{border-color:#58a979;background:#e4f7e9}.ll-preview-option.incorrect{border-color:#d97d83;background:#fff0f0}.ll-preview-feedback{min-height:0;font-weight:750;margin-top:4px;text-align:center;flex-shrink:0}.ll-preview-progress{color:#62738a;font-size:clamp(11px,1.6vw,14px)}.ll-preview-actions{display:none}.ll-preview-mark{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:clamp(64px,15vw,160px);font-weight:1000;line-height:1;color:#dc2626;text-shadow:0 2px 8px #ffffffdd;pointer-events:none;z-index:2}.ll-preview-mark.good{color:#15803d}.ll-preview-blink{animation:llPreviewBlink .25s steps(2,start) 3}.ll-preview-blink-long{animation:llPreviewBlink .3s steps(2,start) 5}@keyframes llPreviewBlink{to{visibility:hidden}}.ll-preview-shell{min-height:0}.ll-preview-shell #llPreviewBody{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}.ll-preview-question{font-size:clamp(18px,4.2vh,46px);line-height:1.08;margin:clamp(2px,.6vh,7px) 0;max-height:12vh;overflow:hidden}.ll-preview-qimage{max-width:min(100%,22vh);max-height:15vh;object-fit:contain;flex:0 1 auto}.ll-preview-options{flex:1 1 0;min-height:0;grid-template-rows:repeat(var(--option-rows,1),minmax(0,1fr));gap:clamp(3px,.7vw,9px);margin-top:clamp(3px,.6vh,7px)}.ll-preview-option{padding:clamp(3px,.65vw,9px);gap:clamp(2px,.4vh,5px);font-size:clamp(16px,5vh,64px);line-height:1;}.ll-preview-option img{width:100%;height:100%;max-height:100%;object-fit:contain;min-height:0;flex:1 1 auto}.ll-preview-option span{font-size:clamp(14px,3.8vh,44px);line-height:1.05}.ll-preview-option audio{max-width:100%}.ll-preview-options.ll-preview-five{grid-template-columns:repeat(6,minmax(0,1fr))}.ll-preview-options.ll-preview-five button:nth-child(-n+3){grid-column:span 2}.ll-preview-options.ll-preview-five button:nth-child(4){grid-column:2 / span 2}.ll-preview-options.ll-preview-five button:nth-child(5){grid-column:4 / span 2}@media(max-height:520px){.ll-preview-shell{padding:5px}.ll-preview-question{font-size:clamp(18px,4vh,34px);margin:2px}.ll-preview-qimage{max-height:12vh}.ll-preview-options{gap:5px;margin-top:4px}.ll-preview-option{padding:4px;font-size:clamp(22px,5vh,44px)}}
+/* V96: pantalla dividida 60/40, respuestas de tamaño moderado y audio independiente */
+.ll-preview-shell{padding:clamp(6px,1vw,14px)!important}
+.ll-preview-shell #llPreviewBody{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;gap:0}
+.ll-preview-question-area{height:60%;min-height:0;flex:0 0 60%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(3px,.7vh,8px);overflow:hidden;padding:clamp(3px,.6vw,8px);padding-bottom:clamp(10px,2vh,22px);box-sizing:border-box}
+.ll-preview-question{font-size:clamp(18px,3.4vh,42px)!important;line-height:1.05!important;max-height:20%;margin:0!important;flex:0 0 auto;overflow:hidden}
+.ll-preview-qimage{display:block;width:auto!important;height:auto!important;max-width:min(90%,52vw)!important;max-height:68%!important;object-fit:contain;margin:0 auto!important;flex:0 1 auto;min-height:0}
+.ll-preview-prompt-audio{flex:0 0 auto;min-height:0}
+.ll-preview-prompt-audio button{padding:clamp(4px,.7vh,8px) clamp(10px,1.2vw,16px);font-size:clamp(12px,1.7vh,16px)}
+.ll-preview-options{height:40%;flex:0 0 40%!important;min-height:0!important;overflow:hidden;box-sizing:border-box;margin-top:0!important;padding:clamp(4px,.6vw,8px);gap:clamp(5px,.8vw,10px)!important;grid-template-columns:repeat(var(--option-columns,2),minmax(0,1fr));grid-template-rows:repeat(var(--option-rows,1),minmax(0,1fr))!important}
+.ll-preview-option-wrap{position:relative;min-width:0;min-height:0;overflow:visible;display:flex;align-items:stretch;justify-content:center}
+.ll-preview-option{position:relative;width:100%;height:100%;box-sizing:border-box;padding:clamp(4px,.65vw,9px)!important;gap:clamp(2px,.35vh,5px)!important;font-size:clamp(20px,4.2vh,54px)!important;line-height:1!important;border-width:2px!important;border-radius:clamp(8px,1vw,14px)!important;container-type:size}
+.ll-preview-option img{width:100%;height:72%;max-width:100%;max-height:72%;object-fit:contain;min-height:0;flex:1 1 72%}
+.ll-preview-option span{font-size:clamp(16px,min(70cqi,22cqb),100px)!important;line-height:1;width:70%;max-width:70%;max-height:28%;overflow-wrap:anywhere;text-align:center;flex:0 1 auto}
+.ll-preview-option:not(.has-answer-image) span{font-size:clamp(18px,min(70cqi,70cqb),120px)!important;width:100%;max-width:100%;max-height:100%;flex:1 1 auto;display:flex;align-items:center;justify-content:center}
+.ll-preview-answer-audio{position:absolute;right:clamp(4px,.5vw,8px);top:clamp(4px,.5vw,8px);z-index:4;width:clamp(28px,4.2vh,42px);height:clamp(28px,4.2vh,42px);padding:0;border:1px solid #65748a;border-radius:8px;background:#ffffffdf;color:#253550;display:flex;align-items:center;justify-content:center;font-size:clamp(16px,2.5vh,25px);box-shadow:0 1px 3px #0002}
+.ll-preview-answer-audio:disabled{display:none}
+.ll-preview-options.ll-preview-five{grid-template-columns:repeat(6,minmax(0,1fr))!important}
+.ll-preview-options.ll-preview-five .ll-preview-option-wrap:nth-child(-n+3){grid-column:span 2}
+.ll-preview-options.ll-preview-five .ll-preview-option-wrap:nth-child(4){grid-column:2 / span 2}
+.ll-preview-options.ll-preview-five .ll-preview-option-wrap:nth-child(5){grid-column:4 / span 2}
+.ll-preview-mark{font-size:clamp(42px,9vh,100px)!important}
+.ll-preview-option-wrap{margin-left:0!important}
+.ll-preview-option{transition:background-color .1s ease}
+.ll-preview-option.flash-correct{animation:llCorrectFlash .25s steps(2,end) 8}
+.ll-preview-option.flash-incorrect{animation:llIncorrectFlash .25s steps(2,end) 8}
+@keyframes llCorrectFlash{0%,100%{background:#22c55e}50%{background:#fff}}
+@keyframes llIncorrectFlash{0%,100%{background:#ef4444}50%{background:#fff}}
+@media(max-height:520px){.ll-preview-head{margin-bottom:2px}.ll-preview-question-area{gap:2px;padding:2px}.ll-preview-question{font-size:clamp(15px,3.3vh,28px)!important}.ll-preview-qimage{max-height:70%!important}.ll-preview-options{padding:3px;gap:4px!important}.ll-preview-option{padding:3px!important;font-size:clamp(18px,4vh,36px)!important}}
+/* V99: alternancia de color cada 0,2 s; audio accesible fijo en cabecera; sin marcas X/check */
+.ll-preview-prompt-audio-fixed{display:flex;align-items:center;justify-content:center;min-width:0;flex:0 1 auto;margin:0 8px}
+.ll-preview-prompt-audio-fixed:empty{display:none}
+.ll-preview-prompt-audio-fixed button{min-height:42px;padding:8px 14px!important;white-space:nowrap;touch-action:manipulation;position:relative;top:clamp(8px,1.8vw,22px);display:inline-flex;align-items:center;gap:8px}.ll-preview-prompt-audio-fixed .ll-preview-prompt-speaker{font-size:clamp(32px,5vh,50px);line-height:1;display:inline-flex;align-items:center}.ll-preview-prompt-audio-fixed .ll-preview-prompt-label{font-size:clamp(12px,1.7vh,16px)}
+.ll-preview-answer-audio{width:clamp(56px,8.4vh,84px)!important;height:clamp(56px,8.4vh,84px)!important;font-size:clamp(32px,5vh,50px)!important;border-radius:10px!important;touch-action:manipulation}
+.ll-preview-option.flash-correct{animation:llCorrectFlashV99 .4s steps(2,end) 5!important}
+.ll-preview-option.flash-incorrect{animation:llIncorrectFlashV99 .4s steps(2,end) 5!important}
+@keyframes llCorrectFlashV99{0%,49.999%{background:#22c55e}50%,100%{background:#fff}}
+@keyframes llIncorrectFlashV99{0%,49.999%{background:#ef4444}50%,100%{background:#fff}}
+@media(max-width:650px){.ll-preview-prompt-audio-fixed{margin:0 3px}.ll-preview-prompt-audio-fixed button{font-size:12px;padding:6px 8px!important;min-height:38px}.ll-preview-answer-audio{width:clamp(48px,8vh,64px)!important;height:clamp(48px,8vh,64px)!important;font-size:30px!important}}
+/* V115: cabecera en tres posiciones estables; sonido centrado en el ancho real de la pantalla. */
+.ll-preview-head{position:relative!important;display:flex!important;justify-content:space-between!important;align-items:center!important;min-height:clamp(44px,6vh,66px)!important;gap:8px!important;flex-shrink:0!important}
+.ll-preview-heading{min-width:0;max-width:40%;flex:1 1 0;z-index:1}
+.ll-preview-heading h1{overflow-wrap:anywhere;line-height:1.05}
+.ll-preview-prompt-audio-fixed{position:absolute!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;margin:0!important;z-index:2!important;display:flex!important;align-items:center!important;justify-content:center!important;max-width:22vw!important}
+.ll-preview-prompt-audio-fixed button{position:static!important;top:auto!important;min-width:clamp(42px,5.5vh,58px)!important;width:clamp(42px,5.5vh,58px)!important;height:clamp(42px,5.5vh,58px)!important;min-height:0!important;padding:4px!important;display:flex!important;align-items:center!important;justify-content:center!important;border-radius:12px!important;white-space:normal!important}
+.ll-preview-prompt-audio-fixed .ll-preview-prompt-speaker{font-size:clamp(26px,4vh,38px)!important;line-height:1!important}
+.ll-preview-prompt-audio-fixed .ll-preview-prompt-label{display:none!important}
+.ll-preview-back-icon{flex:0 0 auto;z-index:1;width:clamp(42px,5.5vh,58px)!important;height:clamp(42px,5.5vh,58px)!important;min-height:0!important;padding:0!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:clamp(25px,4vh,36px)!important;line-height:1!important;border-radius:15px!important;background:linear-gradient(145deg,#4f8cff,#315bd0)!important;color:#fff!important;border:2px solid #a8c5ff!important;box-shadow:0 4px 0 #2449a8,0 6px 14px #315bd044!important;transition:transform .12s ease,filter .12s ease!important}.ll-preview-back-icon:hover{filter:brightness(1.08)!important;transform:translateY(-1px)!important}.ll-preview-back-icon:active{transform:translateY(2px)!important;box-shadow:0 2px 0 #2449a8!important}
+@media(max-width:480px){.ll-preview-heading{max-width:37%}.ll-preview-heading h1{font-size:clamp(15px,4vw,21px)!important}.ll-preview-progress{font-size:clamp(9px,2.5vw,12px)!important}.ll-preview-prompt-audio-fixed{max-width:20vw!important}.ll-preview-prompt-audio-fixed button,.ll-preview-back-icon{width:38px!important;height:38px!important;min-width:38px!important;font-size:23px!important}.ll-preview-prompt-audio-fixed .ll-preview-prompt-speaker{font-size:25px!important}}
+
+`;document.head.append(style);
+ const folderModal=ensureModal('llFolderModal',`<div class="ll-modal-box"><h2 id="llFolderModalTitle">Crear carpeta</h2><label style="display:grid;gap:7px;font-weight:700">Nombre de la carpeta<input id="llFolderName" type="text" maxlength="90" placeholder="Ej. Español"></label><p style="font-weight:700;margin:16px 0 0">Selecciona un color pastel</p><div class="ll-palette" id="llFolderPalette"></div><div class="ll-modal-actions"><button type="button" id="llFolderCancel" class="outline">Cancelar</button><button type="button" id="llFolderSave">Crear carpeta</button></div></div>`);folderModal.className='ll-modal';
+ let folderEdit=null,chosenColor=pastel[0][1];const palette=byId('llFolderPalette');pastel.forEach(([name,color])=>{const b=document.createElement('button');b.type='button';b.className='ll-color';b.style.background=color;b.title=name;b.setAttribute('aria-label',name);b.addEventListener('click',()=>{chosenColor=color;palette.querySelectorAll('.ll-color').forEach(x=>x.classList.remove('chosen'));b.classList.add('chosen')});palette.append(b)});
+ function openFolderDialog(folder=null){folderEdit=folder;chosenColor=folder?.color||pastel[0][1];byId('llFolderModalTitle').textContent=folder?'Editar carpeta':'Crear carpeta';byId('llFolderName').value=folder?.name||'';byId('llFolderSave').textContent=folder?'Guardar':'Crear carpeta';palette.querySelectorAll('.ll-color').forEach((b,i)=>{b.classList.toggle('chosen',pastel[i][1]===chosenColor)});folderModal.classList.add('open');setTimeout(()=>byId('llFolderName').focus(),30)}
+ byId('llFolderCancel').onclick=()=>folderModal.classList.remove('open');folderModal.addEventListener('click',e=>{if(e.target===folderModal)folderModal.classList.remove('open')});byId('llFolderSave').onclick=()=>{const name=byId('llFolderName').value.trim();if(!name){byId('llFolderName').focus();return}const folders=readFolders();if(folderEdit){const f=folders.find(x=>x.id===folderEdit.id);if(f){f.name=name;f.color=chosenColor}}else folders.push({id:'folder-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),name,parentId:currentFolder||null,color:chosenColor});try{writeFolders(folders);folderModal.classList.remove('open');paint()}catch(e){alert('No se pudo guardar la carpeta en este navegador.')}};
+ const folderMenu=ensureModal('llFolderContext',`<button type="button" data-action="edit">Editar</button><button type="button" data-action="cancel">Cancelar</button>`);folderMenu.className='ll-context';
+ const activityMenu=ensureModal('llActivityContext',`<button type="button" data-action="open">Abrir</button><button type="button" data-action="edit">Editar</button><button type="button" data-action="move">Mover</button>`);activityMenu.className='ll-context';
+ let contextFolder=null,contextEntry=null;function closeMenus(){folderMenu.classList.remove('open');activityMenu.classList.remove('open')};function placeMenu(menu,x,y){menu.classList.add('open');const r=menu.getBoundingClientRect();menu.style.left=Math.max(8,Math.min(x,innerWidth-r.width-8))+'px';menu.style.top=Math.max(8,Math.min(y,innerHeight-r.height-8))+'px'}
+ folderMenu.addEventListener('click',e=>{const action=e.target.closest('button')?.dataset.action;if(action==='edit'&&contextFolder)openFolderDialog(contextFolder);closeMenus()});
+ const moveModal=ensureModal('llMoveModal',`<div class="ll-modal-box"><h2>Mover actividad</h2><p id="llMoveLabel" class="muted"></p><label style="display:grid;gap:7px;font-weight:700">Carpeta de destino<select id="llMoveDestination"></select></label><div class="ll-modal-actions"><button type="button" class="outline" id="llMoveCancel">Cancelar</button><button type="button" id="llMoveSave">Mover</button></div></div>`);moveModal.className='ll-modal';
+ byId('llMoveCancel').onclick=()=>moveModal.classList.remove('open');moveModal.addEventListener('click',e=>{if(e.target===moveModal)moveModal.classList.remove('open')});
+ function folderPath(f,folders){const names=[f.name];let p=f.parentId;while(p){const x=folders.find(z=>z.id===p);if(!x)break;names.unshift(x.name);p=x.parentId}return names.join(' / ')}
+ byId('llMoveSave').onclick=()=>{if(!contextEntry)return;const dest=byId('llMoveDestination').value||null;const all=JSON.parse(localStorage.getItem(KEY)||'[]');const fam=contextEntry.familyId||contextEntry.id;all.forEach(x=>{if((x.familyId||x.id)===fam)x.folderId=dest});localStorage.setItem(KEY,JSON.stringify(all));moveModal.classList.remove('open');paint()};
+ function openMove(entry){contextEntry=entry;const folders=readFolders(),sel=byId('llMoveDestination');sel.replaceChildren(new Option('Mis actividades (sin carpeta)',''));folders.sort((a,b)=>folderPath(a,folders).localeCompare(folderPath(b,folders),'es',{sensitivity:'base'})).forEach(f=>sel.add(new Option(folderPath(f,folders),f.id)));sel.value=entry.folderId||'';byId('llMoveLabel').textContent='Elige dónde guardar «'+entry.name+'».';moveModal.classList.add('open')}
+ const preview=ensureModal('llStudentPreview',`<div class="ll-preview-shell"><div class="ll-preview-head"><div class="ll-preview-heading"><h1 id="llPreviewTitle" style="margin:0;font-size:clamp(22px,3vw,30px)"></h1><div class="ll-preview-progress" id="llPreviewProgress"></div></div><div id="llPreviewPromptAudio" class="ll-preview-prompt-audio ll-preview-prompt-audio-fixed" aria-live="polite"></div><button type="button" class="outline ll-preview-back-icon" id="llPreviewClose" aria-label="Volver a actividades" title="Volver a actividades">↩️</button></div><div id="llPreviewBody"></div><div class="ll-preview-feedback" id="llPreviewFeedback" role="status"></div><div class="ll-preview-actions" aria-hidden="true"></div></div>`);preview.className='ll-preview';
+ let previewEntry=null,previewQuestions=[],previewIndex=0,previewSelected=new Set(),previewAnswered=false,previewTimer=null,previewRun=0;
+ function speak(text,lang){if(!text)return;if('speechSynthesis'in window){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=lang==='en'?'en-US':'es-ES';speechSynthesis.speak(u)}}
+ // V118: acierto mágico y error tipo Wrong Buzzer / Fail Buzzer.
+ // Se generan localmente en el navegador, sin archivos externos.
+ function playFeedbackTone(isCorrect){
+  try{
+   const AudioCtx=window.AudioContext||window.webkitAudioContext;if(!AudioCtx)return;
+   const ctx=new AudioCtx();if(ctx.state==='suspended')ctx.resume().catch(()=>{});const now=ctx.currentTime;
+   // El acierto usa notas agudas, ascendentes y breves destellos armónicos para evocar magia.
+   // Sonidos generados localmente; el buzzer es breve y moderado para Pre-K.
+   const notes=isCorrect
+    ?[{f:783.99,t:0,d:.12,level:.1125,type:'sine'},{f:987.77,t:.075,d:.14,level:.1125,type:'sine'},{f:1174.66,t:.15,d:.16,level:.1125,type:'sine'},{f:1567.98,t:.22,d:.2,level:.09,type:'sine'},{f:2349.32,t:.19,d:.12,level:.045,type:'sine'}]
+    // Error: buzzer reconocible de concurso, breve, grave y no estridente.
+    :[{f:185,t:0,d:1.46,level:.16,type:'square'},{f:155.56,t:.025,d:1.42,level:.12,type:'sawtooth'}];
+   notes.forEach(n=>{const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type=n.type;osc.frequency.setValueAtTime(n.f,now+n.t);gain.gain.setValueAtTime(.0001,now+n.t);gain.gain.exponentialRampToValueAtTime(n.level,now+n.t+.018);gain.gain.exponentialRampToValueAtTime(.0001,now+n.t+n.d);osc.connect(gain);gain.connect(ctx.destination);osc.start(now+n.t);osc.stop(now+n.t+n.d+.02)});
+   setTimeout(()=>ctx.close().catch(()=>{}),1700);
+  }catch(e){}
+ }
+ function clearPreviewTimer(){if(previewTimer){clearTimeout(previewTimer);previewTimer=null}previewRun++}
+ function finishPreview(){clearPreviewTimer();byId('llPreviewPromptAudio').replaceChildren();byId('llPreviewBody').innerHTML='<h2 style="text-align:center;margin:auto">¡Actividad completada!</h2><p style="text-align:center">Has terminado todas las preguntas.</p>';byId('llPreviewFeedback').textContent='';byId('llPreviewProgress').textContent='Actividad completada'}
+ function goNextAfter(ms,run){previewTimer=setTimeout(()=>{if(run!==previewRun||!preview.classList.contains('open'))return;previewTimer=null;if(previewIndex<previewQuestions.length-1){previewIndex++;renderPreview()}else finishPreview()},ms)}
+ function renderPreview(){clearPreviewTimer();const q=previewQuestions[previewIndex];if(!q){byId('llPreviewPromptAudio').replaceChildren();byId('llPreviewBody').innerHTML='<h2>Esta actividad no tiene preguntas todavía.</h2>';byId('llPreviewProgress').textContent='Vista previa';byId('llPreviewFeedback').textContent='';return}previewSelected=new Set();previewAnswered=false;byId('llPreviewTitle').textContent=previewEntry.name;byId('llPreviewProgress').textContent=`${previewEntry.config?.mode==='assessment'?'Evaluación':'Práctica'} · Pregunta ${previewIndex+1} de ${previewQuestions.length}`;byId('llPreviewFeedback').textContent='';const body=byId('llPreviewBody');body.replaceChildren();const questionArea=document.createElement('div');questionArea.className='ll-preview-question-area';const prompt=document.createElement('div');prompt.className='ll-preview-question';prompt.textContent=q.text||'';questionArea.append(prompt);if(q.image&&q.image.startsWith('data:image/')){const img=document.createElement('img');img.className='ll-preview-qimage';img.src=q.image;img.alt='Imagen de la pregunta';questionArea.append(img)}const promptAudio=byId('llPreviewPromptAudio');promptAudio.replaceChildren();if(q.audioMode==='file'&&q.audio){const b=document.createElement('button');b.type='button';b.className='outline';b.innerHTML='<span class="ll-preview-prompt-speaker" aria-hidden="true">🔊</span>';b.setAttribute('aria-label','Escuchar enunciado');b.onclick=()=>{const a=new Audio(q.audio);a.play().catch(()=>{});};promptAudio.append(b)}else if(q.audioMode==='voice'&&String(q.readTextEnabled&&q.readText?q.readText:q.text||'').trim()){const b=document.createElement('button');b.type='button';b.className='outline';b.innerHTML='<span class="ll-preview-prompt-speaker" aria-hidden="true">🔊</span>';b.setAttribute('aria-label','Escuchar enunciado');b.onclick=()=>speak(q.readTextEnabled&&q.readText?q.readText:q.text,previewEntry.config?.lang);promptAudio.append(b)}body.append(questionArea);const options=document.createElement('div');options.className='ll-preview-options';let opts=(q.options||[]).map((o,i)=>({...o,_i:i}));if(previewEntry.config?.answerOrder==='random')opts.sort(()=>Math.random()-.5);const optionCount=opts.length;const optionColumns=optionCount<=4?optionCount:3;const optionRows=optionCount<=4?1:2;options.style.setProperty('--option-columns',String(optionColumns));options.style.setProperty('--option-rows',String(optionRows));if(optionCount===5)options.classList.add('ll-preview-five');const answerPastels=['#F8DDE3','#FBE4D0','#FFF1BD','#DDF2D7','#D8F0EC','#DCE8FC'];let correctCount=Math.max(1,Number(q.correctCount||1));function markOption(btn,text,good=false,long=false){const mark=document.createElement('span');mark.className='ll-preview-mark'+(good?' good':'')+(long?' ll-preview-blink-long':' ll-preview-blink');mark.textContent=text;btn.append(mark);btn.classList.add(good?'correct':'incorrect');return mark}function submitAnswer(chosen,chosenBtn){if(previewAnswered)return;previewAnswered=true;const correct=chosen.size===correctCount&&[...chosen].every(i=>(q.options[i]||{}).correct)&&q.options.filter(x=>x.correct).length===chosen.size;const run=previewRun;options.querySelectorAll('button.ll-preview-option').forEach(btn=>btn.disabled=true);options.querySelectorAll('.ll-preview-answer-audio').forEach(btn=>btn.disabled=true);byId('llPreviewFeedback').textContent='';const flash=(btn,kind)=>{if(!btn)return;btn.classList.remove('selected','correct','incorrect');btn.classList.add(kind==='correct'?'flash-correct':'flash-incorrect');};if(correct){playFeedbackTone(true);flash(chosenBtn,'correct');goNextAfter(2000,run);return}playFeedbackTone(false);flash(chosenBtn,'incorrect');if(previewEntry.config?.mode==='assessment'){goNextAfter(2000,run);return}previewTimer=setTimeout(()=>{if(run!==previewRun||!preview.classList.contains('open'))return;const correctIndices=(q.options||[]).map((o,i)=>o.correct?i:-1).filter(i=>i>=0);const correctButtons=correctIndices.map(i=>[...options.querySelectorAll('button.ll-preview-option')].find(btn=>Number(btn.dataset.originalIndex)===i)).filter(Boolean);correctButtons.forEach(btn=>flash(btn,'correct'));goNextAfter(2000,run)},2000)}
+ opts.forEach((o,displayIndex)=>{const wrap=document.createElement('div');wrap.className='ll-preview-option-wrap';const b=document.createElement('button');b.type='button';b.className='ll-preview-option';b.style.setProperty('--answer-pastel',answerPastels[displayIndex%answerPastels.length]);b.dataset.originalIndex=String(o._i);const hasAnswerImage=!!(o.image&&o.image.startsWith('data:image/'));if(hasAnswerImage){b.classList.add('has-answer-image');const img=document.createElement('img');img.src=o.image;img.alt=o.text||'Imagen de respuesta';b.append(img)}if(o.text){const tx=document.createElement('span');tx.textContent=o.text;b.append(tx)}if((o.audioMode==='file'&&o.audio)||o.audioMode==='voice'){const sound=document.createElement('button');sound.type='button';sound.className='ll-preview-answer-audio';sound.textContent='🔊';sound.title='Escuchar respuesta sin seleccionarla';sound.setAttribute('aria-label','Escuchar respuesta');sound.onclick=e=>{e.preventDefault();e.stopPropagation();if(o.audioMode==='file'&&o.audio){const a=new Audio(o.audio);a.play().catch(()=>{});}else speak(o.readTextEnabled&&o.readText?o.readText:o.text,previewEntry.config?.lang)};b.append(sound)}b.onclick=()=>{if(previewAnswered)return;previewSelected.add(o._i);b.classList.add('selected');const selectedBtns=[...options.querySelectorAll('button.ll-preview-option.selected')];if(previewSelected.size>=correctCount)submitAnswer(new Set([...previewSelected]),selectedBtns[selectedBtns.length-1]||b)};wrap.append(b);options.append(wrap)});body.append(options);
+ // Reducir el tamaño únicamente en las respuestas cuyo texto exceda el espacio vertical u horizontal.
+ const fitAnswerText=()=>{options.querySelectorAll('button.ll-preview-option > span:not(.ll-preview-mark)').forEach(tx=>{
+   const original=parseFloat(getComputedStyle(tx).fontSize)||32;
+   tx.style.fontSize=original+'px';
+   if(tx.scrollHeight<=tx.clientHeight+1 && tx.scrollWidth<=tx.clientWidth+1)return;
+   let size=original;
+   while(size>12 && (tx.scrollHeight>tx.clientHeight+1 || tx.scrollWidth>tx.clientWidth+1)){
+     size=Math.max(12,size-1);tx.style.fontSize=size+'px';
+   }
+ });};
+ requestAnimationFrame(()=>{fitAnswerText();requestAnimationFrame(fitAnswerText);});
+ if(q.audioMode==='voice'){setTimeout(()=>{if(preview.classList.contains('open'))speak(q.readTextEnabled&&q.readText?q.readText:q.text,previewEntry.config?.lang)},180)}}
+ function openPreview(entry){clearPreviewTimer();previewEntry=entry;previewQuestions=(entry.config?.questions||[]).map(q=>({...q,options:(q.options||[]).map(o=>({...o}))}));if(entry.config?.questionOrder==='random')previewQuestions.sort(()=>Math.random()-.5);previewIndex=0;preview.classList.add('open');renderPreview()}
+ byId('llPreviewClose').onclick=()=>{clearPreviewTimer();if('speechSynthesis'in window)speechSynthesis.cancel();preview.classList.remove('open')};
+ function paint(){cards.replaceChildren();const folders=readFolders(),allEntries=latestEntries(),studentMode=!!window.__llStudentMode,entries=studentMode?allEntries.filter(isReadyForStudents):allEntries;byId('folderUp').hidden=true;byId('folderPath').textContent='Ubicación: '+(currentFolder?folderName(currentFolder):'Mis actividades');const visibleFolders=folders.filter(f=>(f.parentId||null)===(currentFolder||null)&&(!studentMode||folderHasReady(f.id,folders,entries))).sort((a,b)=>a.name.localeCompare(b.name,'es',{sensitivity:'base'}));const visibleEntries=entries.filter(t=>(t.folderId||null)===(currentFolder||null)).sort((a,b)=>a.name.localeCompare(b.name,'es',{sensitivity:'base'}));byId('hubEmpty').textContent=(visibleFolders.length||visibleEntries.length)?'':(studentMode?'Todavía no hay actividades disponibles.':'Esta carpeta está vacía. Crea una carpeta o una actividad aquí.');
+  if(currentFolder){const up=document.createElement('button');up.type='button';up.className='quizCard parentNavCard';up.setAttribute('aria-label','Carpeta anterior');const ico=document.createElement('span');ico.className='folderIcon';ico.textContent='↑';const name=document.createElement('span');name.className='cardName';name.textContent='Carpeta anterior';const meta=document.createElement('span');meta.className='cardMeta';meta.textContent='Volver a la carpeta superior';up.append(ico,name,meta);up.onclick=()=>{const f=folders.find(x=>x.id===currentFolder);currentFolder=f?.parentId||null;paint()};cards.append(up)}
+  for(const f of visibleFolders){const b=document.createElement('button');b.type='button';b.className='quizCard folderCard';const col=f.color||'#F8EDB8';b.style.setProperty('--folder-bg',col);b.style.setProperty('--folder-border',col);const ico=document.createElement('span');ico.className='folderIcon';ico.textContent='📁';ico.style.filter='drop-shadow(0 1px 0 #ffffffaa)';const name=document.createElement('span');name.className='cardName';name.textContent=f.name;const count=document.createElement('span');count.className='cardMeta';count.textContent=(studentMode?folders.filter(x=>x.parentId===f.id&&folderHasReady(x.id,folders,entries)).length:folders.filter(x=>x.parentId===f.id).length)+' subcarpeta(s) · '+entries.filter(t=>t.folderId===f.id).length+' actividad(es)';b.append(ico,name,count);b.onclick=()=>{currentFolder=f.id;paint()};b.addEventListener('contextmenu',e=>{e.preventDefault();e.stopPropagation();contextFolder=f;contextEntry=null;closeMenus();placeMenu(folderMenu,e.clientX,e.clientY)});cards.append(b)}
+  for(const t of visibleEntries){const b=document.createElement('button');b.type='button';b.className='quizCard';const cover=t.config?.coverImage||'';if(cover.startsWith('data:image/')){const img=document.createElement('img');img.className='cardCover';img.alt='Imagen de '+t.name;img.src=cover;b.append(img)}else{const symbol=document.createElement('span');symbol.className='cardPlaceholder';symbol.textContent='❓';symbol.setAttribute('aria-label','Actividad sin imagen');b.append(symbol)}const name=document.createElement('span');name.className='cardName';name.textContent=t.name;const meta=document.createElement('span');meta.className='cardMeta';meta.textContent='Quiz · '+(t.config?.questions?.length||0)+' pregunta(s)';b.append(name,meta);b.dataset.quizId=t.id;b.onclick=()=>openPreview(t);b.addEventListener('contextmenu',e=>{e.preventDefault();e.stopPropagation();if(window.__llStudentMode)return;contextEntry=t;contextFolder=null;closeMenus();placeMenu(activityMenu,e.clientX,e.clientY)});cards.append(b)}
+ }
+ activityMenu.addEventListener('click',e=>{const action=e.target.closest('button')?.dataset.action;const entry=contextEntry;closeMenus();if(!entry||!action)return;if(action==='open')openPreview(entry);if(action==='edit')openQuiz(entry.id);if(action==='move')openMove(entry)});
+ document.addEventListener('pointerdown',e=>{if(!folderMenu.contains(e.target)&&!activityMenu.contains(e.target))closeMenus()});document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeMenus();folderModal.classList.remove('open');moveModal.classList.remove('open');clearPreviewTimer();preview.classList.remove('open');return}if(!preview.classList.contains('open'))return;if(e.target&&(['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)||e.target.isContentEditable))return;if(['ArrowRight','ArrowDown'].includes(e.key)){e.preventDefault();if(previewIndex<previewQuestions.length-1){clearPreviewTimer();previewIndex++;renderPreview()}return}if(['ArrowLeft','ArrowUp'].includes(e.key)){e.preventDefault();if(previewIndex>0){clearPreviewTimer();previewIndex--;renderPreview()}return}});
+ byId('folderCreate').onclick=()=>openFolderDialog();byId('folderUp').onclick=()=>{const f=readFolders().find(x=>x.id===currentFolder);currentFolder=f?.parentId||null;paint()};
+ function showHub(){editor.classList.add('hidden');hub.classList.remove('hidden');byId('hubChoose').classList.add('hidden');paint()};function showEditor(){hub.classList.add('hidden');editor.classList.remove('hidden')};function openQuiz(id){const sel=byId('qLibrary');sel.value=id;sel.dispatchEvent(new Event('change',{bubbles:true}));showEditor()}
+ byId('hubCreate').onclick=()=>byId('hubChoose').classList.remove('hidden');byId('hubCancelCreate').onclick=()=>byId('hubChoose').classList.add('hidden');
+ byId('hubChooseQuiz').onclick=()=>{if(byId('qNew').disabled){const d=JSON.parse(localStorage.getItem('ll-activities-v14-workdraft')||'null');if(d&&d.questions&&d.questions.length&&!confirm('Hay preguntas grabadas en un borrador sin finalizar. Puedes volver más tarde para recuperarlas. ¿Volver a Mis actividades?'))return;}byId('qNew').click();showEditor()};
+ byId('quizBack').onclick=()=>{if(!byId('qNew').disabled&&byId('qQuestionForm').classList.contains('hidden')===false){if(!confirm('¿Volver a Mis actividades? Los cambios que no hayas grabado podrían perderse.'))return}showHub()};
+ const observer=new MutationObserver(()=>{if(!hub.classList.contains('hidden'))paint()});observer.observe(hub,{attributes:true,attributeFilter:['class']});
+ byId('hubStudents').onclick=()=>{window.__llStudentMode=false;document.body.classList.remove('ll-student-mode');show('studentsScreen');hub.classList.add('hidden');editor.classList.add('hidden')};
+ document.addEventListener('ll-open-student-library',()=>{currentFolder=null;hub.classList.remove('hidden');editor.classList.add('hidden');byId('hubChoose').classList.add('hidden');show('teacherScreen');paint()});
+ // Teacher mode keeps all existing management controls available.
+ byId('teacherBtn').addEventListener('click',()=>{window.__llStudentMode=false;document.body.classList.remove('ll-student-mode');hub.classList.remove('hidden');editor.classList.add('hidden');byId('hubChoose').classList.add('hidden');paint()});
+ paint();
+})();</script>
+</body></html>
