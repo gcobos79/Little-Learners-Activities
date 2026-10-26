@@ -1,6 +1,9 @@
 # Changelog
 
 ## V125 — October 2026 (voice type, storage)
+- Player (students): to leave an activity, hold ↩️ for 3 seconds; a ring fills up around it. A quick
+  tap, Esc, or letting go early keeps the activity open (a short message explains how to leave).
+  The teacher's preview still closes with a normal click.
 - Mis actividades (teacher): drag an activity card onto a folder to move it there; onto «Carpeta
   anterior» to move it one level up; or onto a folder name at the top (e.g. «Mis actividades»).
   Mouse: drag the card. Touch: press and hold, then move (hold without moving still opens ⋯).

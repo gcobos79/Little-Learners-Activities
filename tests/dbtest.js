@@ -74,7 +74,7 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
   ok(imgs.length >= 2 && imgs.every((i) => i.src === 'blob:'), 'player shows pictures downloaded from storage (' + imgs.length + ')');
   ok(await B.isVisible('#playerStudent .avatar-img'), 'player shows Valentina’s picture next to her name');
   await B.screenshot({ path: (process.argv[3] || '/tmp') + '/db-player.png' });
-  await B.click('#playerExit');
+  await B.evaluate(() => LL.player.close());
 
   // Delete on A reaches B; backup from B has pictures inside
   await A.click('button:has-text("Mis actividades")'); await A.waitForTimeout(400);

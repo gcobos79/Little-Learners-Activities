@@ -62,7 +62,7 @@ const folderOf = (p, id) => p.evaluate((id) => (JSON.parse(localStorage.getItem(
   // 6) A plain click still opens the preview
   await p.click('.card.quiz:has-text("Colores") .card-main'); await p.waitForTimeout(500);
   assert(await p.isVisible('#player'), 'a normal click still opens the activity');
-  await p.click('#playerExit'); await p.waitForTimeout(300);
+  await p.evaluate(() => LL.player.close()); await p.waitForTimeout(300);
   // 7) Students cannot drag
   assert(!errs.length, 'no page errors ' + errs.join(' | '));
 

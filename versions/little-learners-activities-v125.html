@@ -737,6 +737,17 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 .voice-pick { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
 .voice-pick .field .btn { justify-self: start; }
 
+/* Player exit: hold for 3 seconds (students) */
+#playerExit { position: relative; -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; touch-action: none; }
+#playerExit .exit-icon { position: relative; z-index: 1; pointer-events: none; }
+#playerExit .hold-ring { position: absolute; inset: -5px; width: calc(100% + 10px); height: calc(100% + 10px); transform: rotate(-90deg); pointer-events: none; }
+#playerExit .hold-ring circle { fill: none; stroke: var(--primary); stroke-width: 8; stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 100; opacity: 0; }
+#playerExit.holding .hold-ring circle { opacity: 1; stroke-dashoffset: 0; transition: stroke-dashoffset 3s linear; }
+#playerExit.holding { background: var(--primary-soft); transform: scale(1.06); }
+#playerExit.nudge { animation: exit-nudge .45s ease; }
+@keyframes exit-nudge { 20%, 60% { transform: translateX(-4px); } 40%, 80% { transform: translateX(4px); } }
+@media (prefers-reduced-motion: reduce) { #playerExit.nudge { animation: none; } }
+
 </style>
 </head>
 <body class="mode-home">
@@ -822,7 +833,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
     <div class="player-shell">
       <div class="player-top">
         <div class="player-left">
-          <button type="button" class="icon-btn big" id="playerExit" aria-label="Volver a las actividades">↩️</button>
+          <button type="button" class="icon-btn big" id="playerExit" aria-label="Volver a las actividades"><svg class="hold-ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" pathLength="100"/></svg><span class="exit-icon">↩️</span></button>
           <div class="student-chip player-student" id="playerStudent" hidden></div>
         </div>
         <div class="player-progress" id="playerProgress" aria-label="Progreso"></div>
@@ -2425,7 +2436,7 @@ F:[['🐟','fish'],['🦊','fox'],['🐸','frog'],['🌸','flower'],['🔥','fir
  */
 window.LL = window.LL || {};
 (function () {
-  const { el, $, speak, playAudio, stopSound, feedbackTone, shuffle, confetti } = LL.ui;
+  const { el, $, toast, speak, playAudio, stopSound, feedbackTone, shuffle, confetti } = LL.ui;
   const PASTELS = ['#F8DDE3', '#FBE4D0', '#FFF1BD', '#DDF2D7', '#D8F0EC', '#DCE8FC'];
 
   let quiz = null, questions = [], index = 0, opts = {}, timer = null, run = 0, answered = false, selected = new Set();
@@ -2707,10 +2718,52 @@ window.LL = window.LL || {};
 
   // Wire fixed controls once.
   document.addEventListener('DOMContentLoaded', () => {
-    $('#playerExit').addEventListener('click', () => close());
+    // Exit: students must hold the button for 3 seconds (a ring fills up), so a stray tap
+    // doesn't end the activity. In the teacher's preview a normal click is enough.
+    const exitBtn = $('#playerExit');
+    const HOLD_MS = 3000;
+    let holdTimer = null, held = false;
+    const studentMode = () => !opts.preview;
+    const hint = () => {
+      exitBtn.classList.remove('nudge'); void exitBtn.offsetWidth; exitBtn.classList.add('nudge');
+      toast('Para salir, deja el dedo sobre ↩️ hasta que se llene el círculo.');
+    };
+    const stopHold = (showHint) => {
+      if (!holdTimer) return;
+      clearTimeout(holdTimer); holdTimer = null;
+      exitBtn.classList.remove('holding');
+      if (showHint) hint();
+    };
+    exitBtn.addEventListener('pointerdown', (e) => {
+      if (!studentMode() || e.button > 0) return;
+      e.preventDefault();
+      held = false;
+      exitBtn.classList.add('holding');
+      holdTimer = setTimeout(() => {
+        holdTimer = null; held = true; exitBtn.classList.remove('holding');
+        // When the finger lifts, the browser "taps" whatever is now under it (e.g. the logo). Ignore that tap.
+        const swallow = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
+        document.addEventListener('click', swallow, true);
+        const release = () => setTimeout(() => document.removeEventListener('click', swallow, true), 300);
+        window.addEventListener('pointerup', release, { once: true });
+        setTimeout(() => document.removeEventListener('click', swallow, true), 8000); // safety net
+        close();
+      }, HOLD_MS);
+    });
+    exitBtn.addEventListener('pointerup', () => stopHold(true));
+    exitBtn.addEventListener('pointerleave', () => stopHold(true));
+    exitBtn.addEventListener('pointercancel', () => stopHold(false));
+    exitBtn.addEventListener('contextmenu', (e) => e.preventDefault());
+    exitBtn.addEventListener('click', (e) => {
+      if (!studentMode()) { close(); return; }
+      e.preventDefault();
+      // Keyboard (Enter/Space) or a click that didn't come from a hold: just explain.
+      if (!held && e.detail === 0) hint();
+      held = false;
+    });
     document.addEventListener('keydown', (e) => {
       if (root().hidden) return;
-      if (e.key === 'Escape') { close(); return; }
+      if (e.key === 'Escape') { if (opts.preview) close(); return; } // students exit only by holding ↩️
       if (!opts.preview) return; // arrow-key navigation is for the teacher's preview only
       if (['ArrowRight', 'ArrowDown'].includes(e.key) && index < questions.length - 1) { e.preventDefault(); index++; render(); }
       if (['ArrowLeft', 'ArrowUp'].includes(e.key) && index > 0) { e.preventDefault(); index--; render(); }

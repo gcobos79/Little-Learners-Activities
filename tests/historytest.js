@@ -30,7 +30,7 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
   await back(); w = await where();
   ok(!w.player && w.screen === 'library' && w.crumbs.includes('Español'), 'Back closes the quiz and stays in the folder');
   await p.click('#cardGrid >> text=Animales'); await p.waitForTimeout(600);
-  await p.click('#playerExit'); await p.waitForTimeout(500);
+  await p.evaluate(() => LL.player.close()); await p.waitForTimeout(500);
   await back(); w = await where();
   ok(!w.player && w.folder === null, 'after closing a quiz with ↩️, Back goes to the previous folder (quiz not reopened)');
   await back(); w = await where();

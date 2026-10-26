@@ -39,7 +39,7 @@ const devices={
     await shot('1home');
     await p.click('.student-card >> nth=0'); await p.waitForTimeout(400); await shot('2slib');
     await p.click('#cardGrid >> text=Colores'); await p.waitForTimeout(500); await shot('3player6');
-    await p.click('#playerExit'); await p.waitForTimeout(200);
+    await p.evaluate(() => LL.player.close()); await p.waitForTimeout(200);
     await p.click('#cardGrid >> text=Español'); await p.waitForTimeout(300);
     await p.click('#cardGrid >> text=Letras'); await p.waitForTimeout(300);
     await p.click('#cardGrid >> text=Vocales'); await p.waitForTimeout(500); await shot('4player5');

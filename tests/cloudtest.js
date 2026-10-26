@@ -56,7 +56,7 @@ const shots=process.argv[3]||'/tmp';
   await B.click('#cardGrid >> text=Gatos'); await B.waitForTimeout(1200);
   ok(audioReq>0,'B: player downloads ElevenLabs audio ('+audioReq+' requests)');
   await B.screenshot({path:shots+'/c3-tablet-player.png'});
-  await B.click('#playerExit'); await B.click('.appbar-right .icon-btn'); await B.waitForTimeout(300);
+  await B.evaluate(() => LL.player.close()); await B.click('.appbar-right .icon-btn'); await B.waitForTimeout(300);
   await B.focus('.teacher-gate'); await B.keyboard.press('Enter'); await B.waitForTimeout(300);
   ok(await B.isVisible('.pin-pad'),'B: PIN pad shown on tablet');
   await B.screenshot({path:shots+'/c4-pin.png'});

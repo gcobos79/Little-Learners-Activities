@@ -5,7 +5,7 @@
  */
 window.LL = window.LL || {};
 (function () {
-  const { el, $, speak, playAudio, stopSound, feedbackTone, shuffle, confetti } = LL.ui;
+  const { el, $, toast, speak, playAudio, stopSound, feedbackTone, shuffle, confetti } = LL.ui;
   const PASTELS = ['#F8DDE3', '#FBE4D0', '#FFF1BD', '#DDF2D7', '#D8F0EC', '#DCE8FC'];
 
   let quiz = null, questions = [], index = 0, opts = {}, timer = null, run = 0, answered = false, selected = new Set();
@@ -287,10 +287,52 @@ window.LL = window.LL || {};
 
   // Wire fixed controls once.
   document.addEventListener('DOMContentLoaded', () => {
-    $('#playerExit').addEventListener('click', () => close());
+    // Exit: students must hold the button for 3 seconds (a ring fills up), so a stray tap
+    // doesn't end the activity. In the teacher's preview a normal click is enough.
+    const exitBtn = $('#playerExit');
+    const HOLD_MS = 3000;
+    let holdTimer = null, held = false;
+    const studentMode = () => !opts.preview;
+    const hint = () => {
+      exitBtn.classList.remove('nudge'); void exitBtn.offsetWidth; exitBtn.classList.add('nudge');
+      toast('Para salir, deja el dedo sobre ↩️ hasta que se llene el círculo.');
+    };
+    const stopHold = (showHint) => {
+      if (!holdTimer) return;
+      clearTimeout(holdTimer); holdTimer = null;
+      exitBtn.classList.remove('holding');
+      if (showHint) hint();
+    };
+    exitBtn.addEventListener('pointerdown', (e) => {
+      if (!studentMode() || e.button > 0) return;
+      e.preventDefault();
+      held = false;
+      exitBtn.classList.add('holding');
+      holdTimer = setTimeout(() => {
+        holdTimer = null; held = true; exitBtn.classList.remove('holding');
+        // When the finger lifts, the browser "taps" whatever is now under it (e.g. the logo). Ignore that tap.
+        const swallow = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
+        document.addEventListener('click', swallow, true);
+        const release = () => setTimeout(() => document.removeEventListener('click', swallow, true), 300);
+        window.addEventListener('pointerup', release, { once: true });
+        setTimeout(() => document.removeEventListener('click', swallow, true), 8000); // safety net
+        close();
+      }, HOLD_MS);
+    });
+    exitBtn.addEventListener('pointerup', () => stopHold(true));
+    exitBtn.addEventListener('pointerleave', () => stopHold(true));
+    exitBtn.addEventListener('pointercancel', () => stopHold(false));
+    exitBtn.addEventListener('contextmenu', (e) => e.preventDefault());
+    exitBtn.addEventListener('click', (e) => {
+      if (!studentMode()) { close(); return; }
+      e.preventDefault();
+      // Keyboard (Enter/Space) or a click that didn't come from a hold: just explain.
+      if (!held && e.detail === 0) hint();
+      held = false;
+    });
     document.addEventListener('keydown', (e) => {
       if (root().hidden) return;
-      if (e.key === 'Escape') { close(); return; }
+      if (e.key === 'Escape') { if (opts.preview) close(); return; } // students exit only by holding ↩️
       if (!opts.preview) return; // arrow-key navigation is for the teacher's preview only
       if (['ArrowRight', 'ArrowDown'].includes(e.key) && index < questions.length - 1) { e.preventDefault(); index++; render(); }
       if (['ArrowLeft', 'ArrowUp'].includes(e.key) && index > 0) { e.preventDefault(); index--; render(); }

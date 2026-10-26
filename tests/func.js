@@ -19,7 +19,7 @@ const assert=(c,m)=>{console.log((c?'PASS ':'FAIL ')+m)};
   assert((await p.$$('.card-tools')).length===0,'student: no edit/menu tools on cards');
   await p.click('.card.quiz:has-text("Colores")',{button:'right'}); await p.waitForTimeout(200);
   assert((await p.$$('.menu')).length===0,'student: right-click opens no admin menu');
-  await p.keyboard.press('Escape'); if(await p.isVisible('#player')) await p.click('#playerExit');
+  await p.keyboard.press('Escape'); if(await p.isVisible('#player')) await p.evaluate(() => LL.player.close());
   await p.click('#cardGrid >> text=Español'); await p.waitForTimeout(400);
   await p.click('.appbar-right .icon-btn'); await p.waitForTimeout(300);
   await p.click('.student-card >> nth=1'); await p.waitForTimeout(500);
