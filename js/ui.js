@@ -134,33 +134,49 @@ window.LL = window.LL || {};
    * voices, so we pick the best one it has: Latin-American / US Spanish first, female
    * voices preferred; if the device has no voice in that language, its default voice
    * still reads the text, so there is always sound. */
-  const FEMALE = /sabina|paulina|m[oó]nica|helena|laura|elvira|dalia|lupe|pe[nñ]elope|marisol|camila|valentina|francisca|zira|samantha|jenny|aria|susan|karen|female|mujer|google espa|google us english|google uk english female/i;
-  const MALE = /david|mark|pablo|ra[uú]l|jorge|juan|diego|alvaro|jos[eé]|male\b|hombre/i;
+  // Voice names that tell us the kind of voice (Windows, Edge, Chrome, Apple, Android).
+  const FEMALE = /sabina|paulina|m[oó]nica|helena|laura|elvira|dalia|paloma|lupe|pe[nñ]elope|marisol|camila|valentina|francisca|isabela|ang[eé]lica|elena|luc[ií]a|ximena|larissa|renata|beatriz|carmen|marta|sof[ií]a|catalina|abril|estrella|irene|triana|vera|flo\b|sandy|shelley|grandma|zira|samantha|jenny|aria|susan|karen|hazel|female|mujer|femenin|google espa|google us english|google uk english female/i;
+  const MALE = /david|mark|pablo|ra[uú]l|jorge|juan|diego|[aá]lvaro|alonso|gerardo|liberto|dar[ií]o|enrique|emilio|jaime|carlos|andr[eé]s|tom[aá]s|lorenzo|federico|mateo|sergio|eddy|reed|rocko|grandpa|guy\b|daniel|fred|alex\b|male\b|hombre|masculin|google uk english male/i;
   let voiceList = [];
   function loadVoices() { try { voiceList = speechSynthesis.getVoices() || []; } catch { voiceList = []; } }
   if ('speechSynthesis' in window) { loadVoices(); try { speechSynthesis.addEventListener('voiceschanged', loadVoices); } catch { speechSynthesis.onvoiceschanged = loadVoices; } }
 
-  function bestVoice(lang, gender = 'female') {
+  const kindOf = (v) => (FEMALE.test(v.name) ? 'female' : MALE.test(v.name) ? 'male' : '');
+
+  /** Which device voice to use, and how.
+   *  1) A voice in the quiz language of the requested kind (Spanish: US/MX first).
+   *  2) No voice of that kind in the language: use a voice in the language and change its pitch
+   *     (lower for "Hombre", higher for "Mujer") so it sounds closer to what was chosen.
+   *  3) No voice in the language at all: any voice, so there is always sound.
+   *  Returns { voice, pitch, exact } where exact = the voice really is the requested kind. */
+  function voicePlan(lang, gender = 'female') {
     if (!voiceList.length) loadVoices();
     const want = lang === 'en' ? ['en-us', 'en-gb', 'en'] : ['es-us', 'es-mx', 'es-419', 'es-es', 'es'];
-    const score = (v) => {
+    const langRank = (v) => {
       const l = String(v.lang || '').toLowerCase().replace('_', '-');
-      let i = want.findIndex((w) => l === w || l.startsWith(w + '-') || (w.length === 2 && l.startsWith(w)));
+      return want.findIndex((w) => l === w || l.startsWith(w + '-') || (w.length === 2 && l.startsWith(w)));
+    };
+    const score = (v) => {
+      const i = langRank(v);
       if (i < 0) return -1;
       let sc = 100 - i * 10;
-      const f = FEMALE.test(v.name), m = !f && MALE.test(v.name);
-      if (gender === 'male') { if (m) sc += 6; else if (f) sc -= 4; } else { if (f) sc += 6; else if (m) sc -= 4; }
-      if (v.localService) sc += 2; // works without internet
+      const k = kindOf(v);
+      if (k === gender) sc += 1000;          // the kind of voice matters more than the accent
+      else if (k && k !== gender) sc -= 50;
+      if (v.localService) sc += 2;           // works without internet
       return sc;
     };
     let best = null, bestScore = -1;
     for (const v of voiceList) { const sc = score(v); if (sc > bestScore) { best = v; bestScore = sc; } }
-    if (best) return best;
-    // No voice in this language on this device: still read it aloud with the device's own
-    // voice (preferring the requested kind) rather than staying silent.
-    const kind = gender === 'male' ? MALE : FEMALE;
-    return voiceList.find((v) => kind.test(v.name)) || voiceList.find((v) => v.default) || voiceList[0] || null;
+    if (best) {
+      const exact = kindOf(best) === gender;
+      const pitch = exact ? 1 : gender === 'male' ? 0.6 : (kindOf(best) === 'male' ? 1.35 : 1);
+      return { voice: best, pitch, exact };
+    }
+    const fallback = voiceList.find((v) => kindOf(v) === gender) || voiceList.find((v) => v.default) || voiceList[0] || null;
+    return { voice: fallback, pitch: 1, exact: !!fallback && kindOf(fallback) === gender };
   }
+  function bestVoice(lang, gender = 'female') { return voicePlan(lang, gender).voice; }
 
   /** gender is only a preference: any voice is better than silence. */
   function speak(text, lang, gender) {
@@ -168,8 +184,9 @@ window.LL = window.LL || {};
     try {
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(String(text));
-      const v = bestVoice(lang, gender);
-      if (v) { u.voice = v; u.lang = v.lang; } else u.lang = lang === 'en' ? 'en-US' : 'es-US';
+      const plan = voicePlan(lang, gender === 'male' ? 'male' : 'female');
+      if (plan.voice) { u.voice = plan.voice; u.lang = plan.voice.lang; } else u.lang = lang === 'en' ? 'en-US' : 'es-US';
+      u.pitch = plan.pitch;
       u.rate = 0.9;
       speechSynthesis.speak(u);
     } catch (e) { console.warn('speech failed', e); }
@@ -266,5 +283,5 @@ window.LL = window.LL || {};
     container.classList.add('animate-in');
   }
 
-  LL.ui = { $, $$, el, toast, dialog, confirmDialog, readFileAsDataURL, imageFileToDataURL, audioFileToDataURL, pickFile, download, formatBytes, speak, bestVoice, playAudio, stopSound, feedbackTone, shuffle, confetti, stagger };
+  LL.ui = { $, $$, el, toast, dialog, confirmDialog, readFileAsDataURL, imageFileToDataURL, audioFileToDataURL, pickFile, download, formatBytes, speak, bestVoice, voicePlan, playAudio, stopSound, feedbackTone, shuffle, confetti, stagger };
 })();

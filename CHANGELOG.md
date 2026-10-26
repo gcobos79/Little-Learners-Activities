@@ -1,6 +1,11 @@
 # Changelog
 
 ## V125 — October 2026 (voice type, storage)
+- Voice type fix: «Hombre» now picks a man's voice in the quiz language even if its accent is not the
+  preferred one (before, a US-Spanish woman's voice won over a Spain-Spanish man's voice). If the
+  device has no man's voice in that language, the woman's voice is played with a deeper pitch (and a
+  higher pitch for «Mujer» when only a man's voice exists). The editor shows which voice this device
+  will use and plays a sample when you switch.
 - Player (students): to leave an activity, hold ↩️ for 3 seconds; a ring fills up around it. A quick
   tap, Esc, or letting go early keeps the activity open (a short message explains how to leave).
   The teacher's preview still closes with a normal click.

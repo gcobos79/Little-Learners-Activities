@@ -88,9 +88,23 @@ window.LL = window.LL || {};
     vis.addEventListener('change', () => { c.visibility = vis.checked ? 'visible' : 'hidden'; changed(); });
     p.append(el('div.field', el('label.switch', vis, 'Visible para estudiantes'), el('span.hint', 'Déjalo apagado mientras lo preparas. Los estudiantes solo ven los quizzes visibles.')));
 
-    p.append(el('div.field', 'Idioma de la voz', segmented([['es', 'Español'], ['en', 'English']], c.lang, (v) => { c.lang = v; changed(); })));
-    p.append(el('div.field', 'Tipo de voz', segmented([['female', '👩 Mujer'], ['male', '👨 Hombre']], c.voiceGender || 'female', (v) => { c.voiceGender = v; changed(); }),
-      el('span.hint', 'Es una preferencia: si un aparato no tiene ese tipo de voz, se usa otra para que siempre se escuche.')));
+    const voiceNote = el('span.hint.voice-note', { 'aria-live': 'polite' });
+    const drawVoiceNote = () => {
+      const g = c.voiceGender === 'male' ? 'male' : 'female';
+      if (LL.tts && LL.tts.active()) { voiceNote.textContent = '✨ Se usa la voz natural (ElevenLabs) de ' + (g === 'male' ? 'hombre' : 'mujer') + ', igual en todos los aparatos.'; return; }
+      const plan = LL.ui.voicePlan(c.lang, g);
+      if (!plan.voice) { voiceNote.textContent = 'Este aparato no tiene voces; se escuchará en otros aparatos.'; return; }
+      const name = plan.voice.name.replace(/^Microsoft /, '').replace(/ - .*$/, '');
+      const lang = c.lang === 'en' ? 'inglés' : 'español';
+      voiceNote.textContent = plan.exact
+        ? '🔊 En este aparato: ' + name + '.'
+        : '⚠️ Este aparato no tiene voz de ' + (g === 'male' ? 'hombre' : 'mujer') + ' en ' + lang + '. Se usará «' + name + '» con tono ' + (g === 'male' ? 'más grave' : 'más agudo') + '. Para una voz igual en todos los aparatos, activa la voz natural (Ajustes → Voz natural).';
+    };
+    drawVoiceNote();
+    try { speechSynthesis.addEventListener('voiceschanged', () => { if (voiceNote.isConnected) drawVoiceNote(); }); } catch { /* no voices */ }
+    p.append(el('div.field', 'Idioma de la voz', segmented([['es', 'Español'], ['en', 'English']], c.lang, (v) => { c.lang = v; drawVoiceNote(); changed(); })));
+    p.append(el('div.field', 'Tipo de voz', segmented([['female', '👩 Mujer'], ['male', '👨 Hombre']], c.voiceGender || 'female', (v) => { c.voiceGender = v; drawVoiceNote(); changed(); speak(c.lang === 'en' ? 'Hello! This is the voice.' : '¡Hola! Así suena la voz.', c.lang, v); }),
+      voiceNote));
 
     const qr = el('input', { type: 'checkbox', checked: c.questionOrder === 'random' });
     qr.addEventListener('change', () => { c.questionOrder = qr.checked ? 'random' : 'fixed'; changed(); });
