@@ -19,6 +19,8 @@
   first; children who haven't done it yet appear below as “⏳ Pendiente”. The child who just
   finished is highlighted. Buttons “Otra vez” and “Mis actividades” unchanged.
 - Children's screens use Century Gothic when the device has it (closest geometric font otherwise).
+- Device voice: picks the best voice each device has (US/Mexican Spanish first, female preferred);
+  if a device has no voice in that language, its default voice still reads the text.
 - The ✨ Little Learners logo is a home button (teacher: top of Mis actividades; otherwise ¿Quién eres?).
 
 ## V123 — October 2026 (real database)
