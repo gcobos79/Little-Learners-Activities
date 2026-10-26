@@ -62,7 +62,7 @@ window.LL = window.LL || {};
     } catch { return fallback; }
   }
 
-  function writeJSON(key, value) {
+  function writeJSON(key, value, opts) {
     try {
       localStorage.setItem(key, JSON.stringify(value));
       if (!applyingRemote && SYNCED.has(key)) {
@@ -71,7 +71,7 @@ window.LL = window.LL || {};
       }
       return true;
     } catch (e) {
-      LL.ui && LL.ui.toast('No se pudo guardar. El almacenamiento del navegador podría estar lleno.', 'error');
+      if (!(opts && opts.quiet)) LL.ui && LL.ui.toast('No se pudo guardar: el almacenamiento del navegador está lleno. Ve a Maestro → Ajustes → «Liberar espacio».', 'error');
       console.warn('Save failed', key, e);
       return false;
     }
@@ -86,7 +86,7 @@ window.LL = window.LL || {};
     const a = readJSON(KEYS.library, []);
     return Array.isArray(a) ? a : [];
   }
-  function writeLibrary(a) { return writeJSON(KEYS.library, a); }
+  function writeLibrary(a, opts) { return writeJSON(KEYS.library, a, opts); }
 
   /** Latest version of every quiz family (same rule as V121). */
   function quizzes() {
@@ -113,7 +113,7 @@ window.LL = window.LL || {};
   }
 
   /** Create or update a quiz in place (V121 behavior: same id, same version). */
-  function saveQuiz(quiz) {
+  function saveQuiz(quiz, opts) {
     const all = readLibrary();
     const now = new Date().toISOString();
     const idx = quiz.id ? all.findIndex((x) => x.id === quiz.id && x.type === 'quiz') : -1;
@@ -124,7 +124,7 @@ window.LL = window.LL || {};
       quiz.id = id;
       all.push({ id, familyId: id, type: 'quiz', name: quiz.name, version: 1, folderId: quiz.folderId || null, config: clone(quiz.config), createdAt: now, updatedAt: now });
     }
-    return writeLibrary(all) ? quiz.id : null;
+    return writeLibrary(all, opts) ? quiz.id : null;
   }
 
   function duplicateQuiz(id) {
@@ -285,6 +285,25 @@ window.LL = window.LL || {};
   function sonidosScores(c) { return readJSON(sonidosScoreKey(c), {}); }
   function saveSonidosScores(c, data) { return writeJSON(sonidosScoreKey(c), data); }
 
+  /** Make room in the browser's storage without losing anything:
+   *  - older saved versions of the same quiz (only the newest is ever shown),
+   *  - the copy of the activity being edited that is kept for recovery (optional). */
+  function freeSpace(opts = {}) {
+    const before = storageUsed();
+    const lib = readLibrary();
+    const newest = new Map();
+    for (const t of lib) {
+      if (t.type !== 'quiz') continue;
+      const fam = t.familyId || t.id, old = newest.get(fam);
+      if (!old || Number(t.version) > Number(old.version)) newest.set(fam, t);
+    }
+    for (const t of lib) { const n = newest.get(t.familyId || t.id); if (n && n !== t && !n.folderId && t.folderId) n.folderId = t.folderId; }
+    const keep = lib.filter((t) => t.type !== 'quiz' || newest.get(t.familyId || t.id) === t);
+    if (keep.length !== lib.length) quietly(() => writeLibrary(keep, { quiet: true }));
+    if (opts.draft) clearDraft();
+    return before - storageUsed();
+  }
+
   /* ---------- Teacher PIN and voice ---------- */
   function pinHash() { return readJSON(KEYS.pin, null); }
   function savePinHash(h) { return writeJSON(KEYS.pin, h || null); }
@@ -408,7 +427,7 @@ window.LL = window.LL || {};
     folders, getFolder, saveFolder, deleteFolder, moveFolder, folderNameTaken, mergeDuplicateFolders, folderTrail, folderPathLabel, folderHas,
     roster, saveRoster, sonidos, saveSonidos, pinHash, savePinHash, voice, saveVoice, settingsAt, quietly, readJSON, writeJSON, writeLibrary, writeFolders, sonidosScores, saveSonidosScores, todayChicago,
     readDraft, writeDraft, clearDraft,
-    exportBackup, importBackup, validateBackup, storageUsed, deleteAllData,
+    exportBackup, importBackup, validateBackup, storageUsed, deleteAllData, freeSpace,
     newOption, newQuestion, newQuiz, questionProblem,
   };
 })();

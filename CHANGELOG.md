@@ -1,6 +1,10 @@
 # Changelog
 
-## V125 — October 2026 (voice type)
+## V125 — October 2026 (voice type, storage)
+- Storage: when signed in, pictures and audio go to the cloud as soon as they are chosen, so the
+  browser's ~5 MB storage doesn't fill up. If storage is full when saving, the app removes old quiz
+  versions and the editing backup, uploads the pictures, and saves anyway. New “🧹 Liberar espacio”
+  button in Ajustes.
 - Each quiz has “Tipo de voz: 👩 Mujer / 👨 Hombre” (column `quizzes.voice_gender`). It is a preference:
   the device voice uses that kind when the device has it, otherwise any available voice, so there is
   always sound. If a device has no voice in the quiz language, its own voice still reads the text.

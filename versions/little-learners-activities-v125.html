@@ -892,7 +892,7 @@ window.LL = window.LL || {};
     } catch { return fallback; }
   }
 
-  function writeJSON(key, value) {
+  function writeJSON(key, value, opts) {
     try {
       localStorage.setItem(key, JSON.stringify(value));
       if (!applyingRemote && SYNCED.has(key)) {
@@ -901,7 +901,7 @@ window.LL = window.LL || {};
       }
       return true;
     } catch (e) {
-      LL.ui && LL.ui.toast('No se pudo guardar. El almacenamiento del navegador podría estar lleno.', 'error');
+      if (!(opts && opts.quiet)) LL.ui && LL.ui.toast('No se pudo guardar: el almacenamiento del navegador está lleno. Ve a Maestro → Ajustes → «Liberar espacio».', 'error');
       console.warn('Save failed', key, e);
       return false;
     }
@@ -916,7 +916,7 @@ window.LL = window.LL || {};
     const a = readJSON(KEYS.library, []);
     return Array.isArray(a) ? a : [];
   }
-  function writeLibrary(a) { return writeJSON(KEYS.library, a); }
+  function writeLibrary(a, opts) { return writeJSON(KEYS.library, a, opts); }
 
   /** Latest version of every quiz family (same rule as V121). */
   function quizzes() {
@@ -943,7 +943,7 @@ window.LL = window.LL || {};
   }
 
   /** Create or update a quiz in place (V121 behavior: same id, same version). */
-  function saveQuiz(quiz) {
+  function saveQuiz(quiz, opts) {
     const all = readLibrary();
     const now = new Date().toISOString();
     const idx = quiz.id ? all.findIndex((x) => x.id === quiz.id && x.type === 'quiz') : -1;
@@ -954,7 +954,7 @@ window.LL = window.LL || {};
       quiz.id = id;
       all.push({ id, familyId: id, type: 'quiz', name: quiz.name, version: 1, folderId: quiz.folderId || null, config: clone(quiz.config), createdAt: now, updatedAt: now });
     }
-    return writeLibrary(all) ? quiz.id : null;
+    return writeLibrary(all, opts) ? quiz.id : null;
   }
 
   function duplicateQuiz(id) {
@@ -1115,6 +1115,25 @@ window.LL = window.LL || {};
   function sonidosScores(c) { return readJSON(sonidosScoreKey(c), {}); }
   function saveSonidosScores(c, data) { return writeJSON(sonidosScoreKey(c), data); }
 
+  /** Make room in the browser's storage without losing anything:
+   *  - older saved versions of the same quiz (only the newest is ever shown),
+   *  - the copy of the activity being edited that is kept for recovery (optional). */
+  function freeSpace(opts = {}) {
+    const before = storageUsed();
+    const lib = readLibrary();
+    const newest = new Map();
+    for (const t of lib) {
+      if (t.type !== 'quiz') continue;
+      const fam = t.familyId || t.id, old = newest.get(fam);
+      if (!old || Number(t.version) > Number(old.version)) newest.set(fam, t);
+    }
+    for (const t of lib) { const n = newest.get(t.familyId || t.id); if (n && n !== t && !n.folderId && t.folderId) n.folderId = t.folderId; }
+    const keep = lib.filter((t) => t.type !== 'quiz' || newest.get(t.familyId || t.id) === t);
+    if (keep.length !== lib.length) quietly(() => writeLibrary(keep, { quiet: true }));
+    if (opts.draft) clearDraft();
+    return before - storageUsed();
+  }
+
   /* ---------- Teacher PIN and voice ---------- */
   function pinHash() { return readJSON(KEYS.pin, null); }
   function savePinHash(h) { return writeJSON(KEYS.pin, h || null); }
@@ -1238,7 +1257,7 @@ window.LL = window.LL || {};
     folders, getFolder, saveFolder, deleteFolder, moveFolder, folderNameTaken, mergeDuplicateFolders, folderTrail, folderPathLabel, folderHas,
     roster, saveRoster, sonidos, saveSonidos, pinHash, savePinHash, voice, saveVoice, settingsAt, quietly, readJSON, writeJSON, writeLibrary, writeFolders, sonidosScores, saveSonidosScores, todayChicago,
     readDraft, writeDraft, clearDraft,
-    exportBackup, importBackup, validateBackup, storageUsed, deleteAllData,
+    exportBackup, importBackup, validateBackup, storageUsed, deleteAllData, freeSpace,
     newOption, newQuestion, newQuiz, questionProblem,
   };
 })();
@@ -2229,7 +2248,7 @@ window.LL = window.LL || {};
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') run(); });
   setInterval(() => { if (document.visibilityState === 'visible' && !LL.player?.isOpen?.()) run(); }, 120000);
 
-  LL.sync = { schedule, run, status, onChange, owner, reset, localHasData, clearLocalLibrary, deleteCloudData, students, refreshStudents };
+  LL.sync = { uploadMedia, schedule, run, status, onChange, owner, reset, localHasData, clearLocalLibrary, deleteCloudData, students, refreshStudents };
 })();
 
 </script>
@@ -3173,6 +3192,13 @@ window.LL = window.LL || {};
   const root = () => $('#screen-editor');
   const isDirty = () => quiz && JSON.stringify(quiz) !== snapshot;
 
+  /** Signed in: send a picture/audio to the cloud right away and keep only its short reference,
+   *  so the browser's limited storage (about 5 MB) doesn't fill up with pictures. */
+  async function store(dataUrl, folder) {
+    if (!LL.cloud.signedIn() || !String(dataUrl).startsWith('data:')) return dataUrl;
+    try { return await LL.media.upload(dataUrl, folder); } catch { return dataUrl; } // offline: upload later
+  }
+
   async function open(id, folderId) {
     if (id) {
       const q = S.getQuiz(id);
@@ -3257,7 +3283,7 @@ window.LL = window.LL || {};
       if (c.coverImage) coverBox.append(el('img.thumb', { src: c.coverImage, alt: 'Portada' }));
       coverBox.append(el('button.btn.sm.ghost', { type: 'button', onclick: async () => {
         const f = await pickFile('image/*'); if (!f) return;
-        try { c.coverImage = await imageFileToDataURL(f, 480, 0.76); drawCover(); changed(); } catch (e) { toast(e.message, 'error'); }
+        try { c.coverImage = await store(await imageFileToDataURL(f, 480, 0.76), 'covers'); drawCover(); changed(); } catch (e) { toast(e.message, 'error'); }
       } }, c.coverImage ? '🖼️ Cambiar' : '🖼️ Elegir imagen'));
       if (c.coverImage) coverBox.append(el('button.btn.sm.danger-ghost', { type: 'button', onclick: () => { c.coverImage = ''; drawCover(); changed(); } }, 'Quitar'));
     };
@@ -3338,7 +3364,7 @@ window.LL = window.LL || {};
       if (q.image) imgRow.append(el('img.thumb', { src: q.image, alt: 'Imagen de la pregunta' }));
       imgRow.append(el('button.btn.sm.ghost', { type: 'button', onclick: async () => {
         const f = await pickFile('image/*'); if (!f) return;
-        try { q.image = await imageFileToDataURL(f, 1000, 0.8); drawImg(); onEdit(); } catch (e) { toast(e.message, 'error'); }
+        try { q.image = await store(await imageFileToDataURL(f, 1000, 0.8), 'images'); drawImg(); onEdit(); } catch (e) { toast(e.message, 'error'); }
       } }, q.image ? '🖼️ Cambiar imagen' : '🖼️ Agregar imagen'));
       if (q.image) imgRow.append(el('button.btn.sm.danger-ghost', { type: 'button', onclick: () => { q.image = ''; drawImg(); onEdit(); } }, 'Quitar'));
     };
@@ -3389,7 +3415,7 @@ window.LL = window.LL || {};
         if (item.audio) row.append(el('audio', { controls: true, src: item.audio, preload: 'metadata', style: { maxWidth: '100%' } }));
         row.append(el('button.btn.sm.ghost', { type: 'button', onclick: async () => {
           const f = await pickFile('audio/*'); if (!f) return;
-          try { item.audio = await audioFileToDataURL(f); draw(); onEdit(); } catch (e) { toast(e.message, 'error'); }
+          try { item.audio = await store(await audioFileToDataURL(f), 'audio'); draw(); onEdit(); } catch (e) { toast(e.message, 'error'); }
         } }, item.audio ? '🎵 Cambiar audio' : '🎵 Elegir archivo de audio'));
         if (item.audio) row.append(el('button.btn.sm.danger-ghost', { type: 'button', onclick: () => { stopSound(); item.audio = ''; draw(); onEdit(); } }, 'Quitar'));
         detail.append(row);
@@ -3429,7 +3455,7 @@ window.LL = window.LL || {};
       if (o.image) imgRow.append(el('img.thumb', { src: o.image, alt: '' }));
       imgRow.append(el('button.btn.sm.ghost', { type: 'button', onclick: async () => {
         const f = await pickFile('image/*'); if (!f) return;
-        try { o.image = await imageFileToDataURL(f, 600, 0.8); drawImg(); onEdit(); } catch (e) { toast(e.message, 'error'); }
+        try { o.image = await store(await imageFileToDataURL(f, 600, 0.8), 'images'); drawImg(); onEdit(); } catch (e) { toast(e.message, 'error'); }
       } }, o.image ? '🖼️ Cambiar' : '🖼️ Imagen'));
       if (o.image) imgRow.append(el('button.btn.sm.danger-ghost', { type: 'button', onclick: () => { o.image = ''; drawImg(); onEdit(); } }, 'Quitar'));
     };
@@ -3498,8 +3524,18 @@ window.LL = window.LL || {};
       toast('Para que los estudiantes lo vean, completa la pregunta ' + (problems[0].i + 1) + ': ' + problems[0].msg, 'error');
       return false;
     }
-    const id = S.saveQuiz(quiz);
-    if (!id) return false;
+    let id = S.saveQuiz(quiz, { quiet: true });
+    if (!id) {
+      // Browser storage full: drop the draft copy (this quiz is still open here) and try again.
+      S.clearDraft();
+      S.freeSpace();
+      id = S.saveQuiz(quiz, { quiet: true });
+    }
+    if (!id) {
+      if (LL.cloud.signedIn()) { saveViaCloud(); return false; }
+      toast('El almacenamiento de este navegador está lleno. Quita algunas imágenes o audios, o entra con tu cuenta para guardarlos en la nube.', 'error');
+      return false;
+    }
     quiz.id = id;
     snapshot = JSON.stringify(quiz);
     S.clearDraft();
@@ -3508,6 +3544,21 @@ window.LL = window.LL || {};
     else toast(quiz.config.visibility === 'visible' ? '✓ Guardado. Los estudiantes ya pueden verlo.' : '✓ Guardado (en preparación).', 'success');
     prepareVoices(id);
     return true;
+  }
+
+  /** Storage still full: upload this quiz's pictures/audio first (so the device copy only keeps
+   *  short references), then save again. */
+  async function saveViaCloud() {
+    const st = $('#edState');
+    if (st) st.textContent = '☁️ Subiendo imágenes y audios para liberar espacio…';
+    try {
+      await LL.sync.uploadMedia(quiz);
+      S.clearDraft();
+      if (save()) toast('✓ Guardado. Las imágenes y audios quedaron en la nube.', 'success');
+    } catch (e) {
+      toast('No se pudo guardar: ' + LL.auth.friendly(e) + '. No cierres esta página e inténtalo de nuevo.', 'error');
+      changed();
+    }
   }
 
   /** Copy ElevenLabs file info from `source` into `target`, matching questions/answers by id and text. */
@@ -3813,7 +3864,8 @@ window.LL = window.LL || {};
       el('div.panel', { style: { display: 'grid', gap: '8px' } },
         el('h3', 'Espacio usado en este navegador'),
         el('div.meter', el('div', { style: { width: pct + '%', background: pct > 80 ? 'var(--bad)' : 'var(--primary)' } })),
-        el('p.small.muted', 'Aproximadamente ' + formatBytes(used) + ' de ~5 MB. Las imágenes y los audios ocupan más espacio; las imágenes nuevas se reducen automáticamente.')),
+        el('p.small.muted', 'Aproximadamente ' + formatBytes(used) + ' de ~5 MB. Las imágenes y los audios ocupan más espacio; las imágenes nuevas se reducen automáticamente.'),
+        el('button.btn.soft', { type: 'button', style: { justifySelf: 'start' }, onclick: freeSpaceFlow }, '🧹 Liberar espacio')),
       el('div.panel', { style: { display: 'grid', gap: '10px', borderColor: '#F3C3C3' } },
         el('h2', '🗑️ Borrar datos'),
         el('p', el('strong', 'Este dispositivo: '), 'borra de este navegador todos los quizzes, carpetas, estudiantes, ajustes y resultados' + (signed ? ', y cierra la sesión. Tu copia en la nube no se toca.' : '. No afecta a otros dispositivos ni a los respaldos descargados.')),
@@ -3822,6 +3874,20 @@ window.LL = window.LL || {};
         signed ? el('button.btn.danger-ghost', { type: 'button', style: { justifySelf: 'start' }, onclick: deleteCloud }, 'Borrar mis datos de la nube…') : null,
         signed ? el('p.small.muted', 'Para cerrar la cuenta por completo, pídeselo a quien administra esta página.') : null),
       el('p.small', el('button.link-btn', { type: 'button', onclick: () => LL.app.openInfo('privacidad') }, 'Política de privacidad'), ' · ', el('button.link-btn', { type: 'button', onclick: () => LL.app.openInfo('terminos') }, 'Términos de uso'))));
+  }
+
+  async function freeSpaceFlow() {
+    const ok = await confirmDialog('¿Liberar espacio en este navegador?',
+      'Se quitan las versiones antiguas de los quizzes y la copia de respaldo del quiz que se está editando' +
+      (LL.cloud.signedIn() ? ', y las imágenes y audios pasan a la nube. ' : '. ') +
+      'No se borra ningún quiz. Si tienes un quiz abierto en otra pestaña, no la cierres: después pulsa «Guardar» allí.', 'Liberar espacio');
+    if (!ok) return;
+    const before = S.storageUsed();
+    S.freeSpace({ draft: true });
+    if (LL.cloud.signedIn()) { toast('☁️ Pasando imágenes y audios a la nube…'); await LL.sync.run(); }
+    const freed = Math.max(0, before - S.storageUsed());
+    toast('Listo: se liberaron ' + formatBytes(freed) + '. Ahora usas ' + formatBytes(S.storageUsed()) + '.', 'success');
+    renderBackup();
   }
 
   async function deleteCloud() {

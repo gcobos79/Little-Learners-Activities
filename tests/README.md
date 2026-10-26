@@ -10,6 +10,7 @@ node resultstest.js ../index.html  /tmp/shots  # results: one per month, offline
 node historytest.js ../index.html          # browser Back/Forward and the logo home button
 node boardtest.js  ../index.html  /tmp/shots  # end-of-quiz class results
 node voicetest.js  ../index.html            # voice type per quiz, always some voice
+node storagetest.js ../index.html           # saving when browser storage is full
 node duplicates.js                       # duplicate folders are merged
 node layout.js    ../index.html  /tmp/shots  # screenshots + overlap checks on 10 screen sizes
 ```

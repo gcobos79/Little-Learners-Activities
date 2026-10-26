@@ -13,6 +13,13 @@ window.LL = window.LL || {};
   const root = () => $('#screen-editor');
   const isDirty = () => quiz && JSON.stringify(quiz) !== snapshot;
 
+  /** Signed in: send a picture/audio to the cloud right away and keep only its short reference,
+   *  so the browser's limited storage (about 5 MB) doesn't fill up with pictures. */
+  async function store(dataUrl, folder) {
+    if (!LL.cloud.signedIn() || !String(dataUrl).startsWith('data:')) return dataUrl;
+    try { return await LL.media.upload(dataUrl, folder); } catch { return dataUrl; } // offline: upload later
+  }
+
   async function open(id, folderId) {
     if (id) {
       const q = S.getQuiz(id);
@@ -97,7 +104,7 @@ window.LL = window.LL || {};
       if (c.coverImage) coverBox.append(el('img.thumb', { src: c.coverImage, alt: 'Portada' }));
       coverBox.append(el('button.btn.sm.ghost', { type: 'button', onclick: async () => {
         const f = await pickFile('image/*'); if (!f) return;
-        try { c.coverImage = await imageFileToDataURL(f, 480, 0.76); drawCover(); changed(); } catch (e) { toast(e.message, 'error'); }
+        try { c.coverImage = await store(await imageFileToDataURL(f, 480, 0.76), 'covers'); drawCover(); changed(); } catch (e) { toast(e.message, 'error'); }
       } }, c.coverImage ? '🖼️ Cambiar' : '🖼️ Elegir imagen'));
       if (c.coverImage) coverBox.append(el('button.btn.sm.danger-ghost', { type: 'button', onclick: () => { c.coverImage = ''; drawCover(); changed(); } }, 'Quitar'));
     };
@@ -178,7 +185,7 @@ window.LL = window.LL || {};
       if (q.image) imgRow.append(el('img.thumb', { src: q.image, alt: 'Imagen de la pregunta' }));
       imgRow.append(el('button.btn.sm.ghost', { type: 'button', onclick: async () => {
         const f = await pickFile('image/*'); if (!f) return;
-        try { q.image = await imageFileToDataURL(f, 1000, 0.8); drawImg(); onEdit(); } catch (e) { toast(e.message, 'error'); }
+        try { q.image = await store(await imageFileToDataURL(f, 1000, 0.8), 'images'); drawImg(); onEdit(); } catch (e) { toast(e.message, 'error'); }
       } }, q.image ? '🖼️ Cambiar imagen' : '🖼️ Agregar imagen'));
       if (q.image) imgRow.append(el('button.btn.sm.danger-ghost', { type: 'button', onclick: () => { q.image = ''; drawImg(); onEdit(); } }, 'Quitar'));
     };
@@ -229,7 +236,7 @@ window.LL = window.LL || {};
         if (item.audio) row.append(el('audio', { controls: true, src: item.audio, preload: 'metadata', style: { maxWidth: '100%' } }));
         row.append(el('button.btn.sm.ghost', { type: 'button', onclick: async () => {
           const f = await pickFile('audio/*'); if (!f) return;
-          try { item.audio = await audioFileToDataURL(f); draw(); onEdit(); } catch (e) { toast(e.message, 'error'); }
+          try { item.audio = await store(await audioFileToDataURL(f), 'audio'); draw(); onEdit(); } catch (e) { toast(e.message, 'error'); }
         } }, item.audio ? '🎵 Cambiar audio' : '🎵 Elegir archivo de audio'));
         if (item.audio) row.append(el('button.btn.sm.danger-ghost', { type: 'button', onclick: () => { stopSound(); item.audio = ''; draw(); onEdit(); } }, 'Quitar'));
         detail.append(row);
@@ -269,7 +276,7 @@ window.LL = window.LL || {};
       if (o.image) imgRow.append(el('img.thumb', { src: o.image, alt: '' }));
       imgRow.append(el('button.btn.sm.ghost', { type: 'button', onclick: async () => {
         const f = await pickFile('image/*'); if (!f) return;
-        try { o.image = await imageFileToDataURL(f, 600, 0.8); drawImg(); onEdit(); } catch (e) { toast(e.message, 'error'); }
+        try { o.image = await store(await imageFileToDataURL(f, 600, 0.8), 'images'); drawImg(); onEdit(); } catch (e) { toast(e.message, 'error'); }
       } }, o.image ? '🖼️ Cambiar' : '🖼️ Imagen'));
       if (o.image) imgRow.append(el('button.btn.sm.danger-ghost', { type: 'button', onclick: () => { o.image = ''; drawImg(); onEdit(); } }, 'Quitar'));
     };
@@ -338,8 +345,18 @@ window.LL = window.LL || {};
       toast('Para que los estudiantes lo vean, completa la pregunta ' + (problems[0].i + 1) + ': ' + problems[0].msg, 'error');
       return false;
     }
-    const id = S.saveQuiz(quiz);
-    if (!id) return false;
+    let id = S.saveQuiz(quiz, { quiet: true });
+    if (!id) {
+      // Browser storage full: drop the draft copy (this quiz is still open here) and try again.
+      S.clearDraft();
+      S.freeSpace();
+      id = S.saveQuiz(quiz, { quiet: true });
+    }
+    if (!id) {
+      if (LL.cloud.signedIn()) { saveViaCloud(); return false; }
+      toast('El almacenamiento de este navegador está lleno. Quita algunas imágenes o audios, o entra con tu cuenta para guardarlos en la nube.', 'error');
+      return false;
+    }
     quiz.id = id;
     snapshot = JSON.stringify(quiz);
     S.clearDraft();
@@ -348,6 +365,21 @@ window.LL = window.LL || {};
     else toast(quiz.config.visibility === 'visible' ? '✓ Guardado. Los estudiantes ya pueden verlo.' : '✓ Guardado (en preparación).', 'success');
     prepareVoices(id);
     return true;
+  }
+
+  /** Storage still full: upload this quiz's pictures/audio first (so the device copy only keeps
+   *  short references), then save again. */
+  async function saveViaCloud() {
+    const st = $('#edState');
+    if (st) st.textContent = '☁️ Subiendo imágenes y audios para liberar espacio…';
+    try {
+      await LL.sync.uploadMedia(quiz);
+      S.clearDraft();
+      if (save()) toast('✓ Guardado. Las imágenes y audios quedaron en la nube.', 'success');
+    } catch (e) {
+      toast('No se pudo guardar: ' + LL.auth.friendly(e) + '. No cierres esta página e inténtalo de nuevo.', 'error');
+      changed();
+    }
   }
 
   /** Copy ElevenLabs file info from `source` into `target`, matching questions/answers by id and text. */

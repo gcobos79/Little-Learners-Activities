@@ -248,7 +248,8 @@ window.LL = window.LL || {};
       el('div.panel', { style: { display: 'grid', gap: '8px' } },
         el('h3', 'Espacio usado en este navegador'),
         el('div.meter', el('div', { style: { width: pct + '%', background: pct > 80 ? 'var(--bad)' : 'var(--primary)' } })),
-        el('p.small.muted', 'Aproximadamente ' + formatBytes(used) + ' de ~5 MB. Las imágenes y los audios ocupan más espacio; las imágenes nuevas se reducen automáticamente.')),
+        el('p.small.muted', 'Aproximadamente ' + formatBytes(used) + ' de ~5 MB. Las imágenes y los audios ocupan más espacio; las imágenes nuevas se reducen automáticamente.'),
+        el('button.btn.soft', { type: 'button', style: { justifySelf: 'start' }, onclick: freeSpaceFlow }, '🧹 Liberar espacio')),
       el('div.panel', { style: { display: 'grid', gap: '10px', borderColor: '#F3C3C3' } },
         el('h2', '🗑️ Borrar datos'),
         el('p', el('strong', 'Este dispositivo: '), 'borra de este navegador todos los quizzes, carpetas, estudiantes, ajustes y resultados' + (signed ? ', y cierra la sesión. Tu copia en la nube no se toca.' : '. No afecta a otros dispositivos ni a los respaldos descargados.')),
@@ -257,6 +258,20 @@ window.LL = window.LL || {};
         signed ? el('button.btn.danger-ghost', { type: 'button', style: { justifySelf: 'start' }, onclick: deleteCloud }, 'Borrar mis datos de la nube…') : null,
         signed ? el('p.small.muted', 'Para cerrar la cuenta por completo, pídeselo a quien administra esta página.') : null),
       el('p.small', el('button.link-btn', { type: 'button', onclick: () => LL.app.openInfo('privacidad') }, 'Política de privacidad'), ' · ', el('button.link-btn', { type: 'button', onclick: () => LL.app.openInfo('terminos') }, 'Términos de uso'))));
+  }
+
+  async function freeSpaceFlow() {
+    const ok = await confirmDialog('¿Liberar espacio en este navegador?',
+      'Se quitan las versiones antiguas de los quizzes y la copia de respaldo del quiz que se está editando' +
+      (LL.cloud.signedIn() ? ', y las imágenes y audios pasan a la nube. ' : '. ') +
+      'No se borra ningún quiz. Si tienes un quiz abierto en otra pestaña, no la cierres: después pulsa «Guardar» allí.', 'Liberar espacio');
+    if (!ok) return;
+    const before = S.storageUsed();
+    S.freeSpace({ draft: true });
+    if (LL.cloud.signedIn()) { toast('☁️ Pasando imágenes y audios a la nube…'); await LL.sync.run(); }
+    const freed = Math.max(0, before - S.storageUsed());
+    toast('Listo: se liberaron ' + formatBytes(freed) + '. Ahora usas ' + formatBytes(S.storageUsed()) + '.', 'success');
+    renderBackup();
   }
 
   async function deleteCloud() {

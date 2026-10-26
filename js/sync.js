@@ -419,5 +419,5 @@ window.LL = window.LL || {};
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') run(); });
   setInterval(() => { if (document.visibilityState === 'visible' && !LL.player?.isOpen?.()) run(); }, 120000);
 
-  LL.sync = { schedule, run, status, onChange, owner, reset, localHasData, clearLocalLibrary, deleteCloudData, students, refreshStudents };
+  LL.sync = { uploadMedia, schedule, run, status, onChange, owner, reset, localHasData, clearLocalLibrary, deleteCloudData, students, refreshStudents };
 })();
