@@ -45,8 +45,7 @@ const devices={
     await p.click('#cardGrid >> text=Vocales'); await p.waitForTimeout(500); await shot('4player5');
     await p.click('.option >> nth=0'); await p.waitForTimeout(250); await shot('5correct');
     await p.waitForTimeout(2200); await shot('6finish');
-    await p.click('text=Mis actividades'); await p.waitForTimeout(200);
-    await p.click('.appbar-right .icon-btn'); await p.waitForTimeout(400);
+    await p.click('.finish button:has-text("Salir")'); await p.waitForTimeout(400);
     await p.evaluate(()=>{document.querySelector('.teacher-gate').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}))}); await p.waitForTimeout(300);
     await shot('7tlib');
     await p.click('.card.quiz:has-text("Animales") >> text=Editar').catch(async()=>{await p.click('#cardGrid >> text=Español'); await p.waitForTimeout(300); await p.click('.card.quiz:has-text("Animales") >> text=Editar');});

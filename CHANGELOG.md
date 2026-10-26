@@ -1,6 +1,9 @@
 # Changelog
 
 ## V125 — October 2026 (voice type, storage)
+- End-of-quiz screen (students): the «📚 Mis actividades» button is now «👋 Salir» and goes back to
+  «¿Quién eres?» so the next child can pick their animal. «🔁 Otra vez» is unchanged; the teacher's
+  preview still shows «Cerrar vista previa».
 - End-of-quiz board: new «Tiempo» column (m:ss) and column headings. Ranking: best score first;
   with the same score, the child who finished faster goes first. Only the same score and the same
   time share a place. The teacher's results page uses the same order.

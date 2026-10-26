@@ -23,8 +23,7 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
     await p.click('#cardGrid >> text=Colores'); await p.waitForTimeout(500);
     for (const pick of picks) { await p.click('.option:has-text("' + pick + '")'); await p.waitForTimeout(pick === 'rojo' || pick === 'azul' && picks.indexOf(pick) === 1 ? 2300 : 4300); }
     await p.waitForTimeout(800);
-    await p.click('.finish button:has-text("Mis actividades")'); await p.waitForTimeout(300);
-    await p.click('.appbar-right .icon-btn'); await p.waitForTimeout(300);
+    await p.click('.finish button:has-text("Salir")'); await p.waitForTimeout(400);
   };
   // The quiz was saved as "assessment" before: it must now behave as practice (shows the correct answer after a mistake).
   await play('Sofía', ['azul', 'azul']); // 1st wrong, 2nd right -> 1/2

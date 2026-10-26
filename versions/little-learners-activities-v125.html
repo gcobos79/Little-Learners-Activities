@@ -2707,7 +2707,10 @@ window.LL = window.LL || {};
       board,
       el('div.finish-buttons',
         el('button.btn.ghost.big', { type: 'button', onclick: () => { index = 0; newAttempt(); render(); } }, '🔁 Otra vez'),
-        el('button.btn.primary.big', { type: 'button', onclick: () => close() }, opts.preview ? 'Cerrar vista previa' : '📚 Mis actividades')),
+        // Students: «Salir» goes back to «¿Quién eres?» so the next child can pick their animal.
+        opts.preview
+          ? el('button.btn.primary.big', { type: 'button', onclick: () => close() }, 'Cerrar vista previa')
+          : el('button.btn.primary.big', { type: 'button', onclick: () => LL.app.goHome() }, '👋 Salir')),
     ));
     if (showBoard) fillBoard(board, quiz, who);
   }

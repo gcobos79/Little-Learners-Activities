@@ -28,12 +28,13 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
     console.log(tag, rows1);
     if (tag === 'tab') {
       ok(rows1.length === 3 && rows1[0].includes('me') && rows1[0].includes('Diego') && rows1[0].includes('0 / 1') && rows1.filter((r) => r.includes('Pendiente')).length === 2, 'Diego sees himself plus Sofía and Lucía as pending');
-      await p.click('.finish button:has-text("Mis actividades")'); await p.waitForTimeout(300); await p.click('.appbar-right .icon-btn'); await p.waitForTimeout(300);
+      await p.click('.finish button:has-text("Salir")'); await p.waitForTimeout(400);
+      ok(await p.isVisible('#screen-students') && !(await p.isVisible('#player')), '«Salir» goes back to «¿Quién eres?»');
       await play('Sofía', 'rojo');
       const rows2 = await p.$$eval('.board-list li', (a) => a.map((x) => x.className + ':' + x.innerText.replace(/\s+/g, ' ')));
       console.log(tag, rows2);
       ok(rows2[0].includes('Sofía') && rows2[0].includes('1 / 1') && rows2[0].includes('me') && rows2[1].includes('Diego') && rows2[2].includes('Lucía') && rows2[2].includes('Pendiente'), 'best score on top, then lower, then pending');
-      ok(await p.isVisible('.finish button:has-text("Otra vez")') && await p.isVisible('.finish button:has-text("Mis actividades")'), 'buttons Otra vez and Mis actividades kept');
+      ok(await p.isVisible('.finish button:has-text("Otra vez")') && await p.isVisible('.finish button:has-text("Salir")') && !(await p.isVisible('.finish button:has-text("Mis actividades")')), 'buttons: Otra vez and Salir');
       const font = await p.evaluate(() => getComputedStyle(document.querySelector('#player')).fontFamily);
       ok(font.startsWith('"Century Gothic"'), 'player uses Century Gothic first: ' + font.slice(0, 40));
     }
