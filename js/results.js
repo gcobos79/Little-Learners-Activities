@@ -76,12 +76,30 @@ window.LL = window.LL || {};
   window.addEventListener('online', () => flush());
 
   /* ---------- Teacher view ---------- */
-  let current = { quiz: null, month: monthOf() };
+  /** 'YYYY-MM-DD' of a date in the school's time zone. */
+  function dayOf(d = new Date()) {
+    const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date(d)).map((x) => [x.type, x.value]));
+    return `${p.year}-${p.month}-${p.day}`;
+  }
+  const shiftDay = (day, d) => { const t = new Date(day + 'T12:00:00Z'); t.setUTCDate(t.getUTCDate() + d); return t.toISOString().slice(0, 10); };
+  const dayLabel = (day) => {
+    const t = new Date(day + 'T12:00:00Z');
+    const txt = t.toLocaleDateString('es-US', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
+    return (day === dayOf() ? 'Hoy · ' : day === shiftDay(dayOf(), -1) ? 'Ayer · ' : '') + txt;
+  };
+  const VIEW_KEY = 'll-v124-results-view';
+  const savedView = () => { try { return localStorage.getItem(VIEW_KEY) === 'month' ? 'month' : 'day'; } catch { return 'day'; } };
 
-  function open(quiz, month) {
-    current = { quiz, month: month || monthOf() };
+  // view 'day': only children who did the activity that day (default, for day-to-day work); 'month': the whole month.
+  let current = { quiz: null, month: monthOf(), day: dayOf(), view: 'day' };
+
+  function open(quiz, month, view, day) {
+    const d = day || (month && month !== monthOf() ? month : dayOf());
+    current = { quiz, view: view || (month ? 'month' : savedView()), day: d, month: month || monthOf(new Date(d + 'T12:00:00Z')) };
     LL.app.go('results');
   }
+  function setView(v) { current.view = v; try { localStorage.setItem(VIEW_KEY, v); } catch { /* ignore */ } render(); LL.app.replaceRoute(); }
+  function setDay(day) { current.day = day; current.month = monthOf(new Date(day + 'T12:00:00Z')); render(); LL.app.replaceRoute(); }
 
   async function load(quiz, month) {
     const local = Object.values(readAll()).filter((r) => r.quiz_id === quiz.id && r.month === month);
@@ -120,32 +138,45 @@ window.LL = window.LL || {};
 
   async function render() {
     const page = $('#screen-results');
-    const { quiz, month } = current;
+    const { quiz, month, view, day } = current;
     if (!quiz) { LL.app.go('library'); return; }
     const isThisMonth = month === monthOf();
+    const isDay = view === 'day';
+    const isToday = day === dayOf();
+    const periodLabel = isDay ? dayLabel(day) : monthLabel(month);
+    const toggle = el('div.segmented.view-toggle', { role: 'group', 'aria-label': 'Ver resultados por' },
+      el('button', { type: 'button', 'aria-pressed': String(isDay), onclick: () => setView('day') }, '📅 Por día'),
+      el('button', { type: 'button', 'aria-pressed': String(!isDay), onclick: () => setView('month') }, '🗓️ Por mes'));
+    const nav = isDay
+      ? el('div.month-nav',
+        el('button.btn.soft', { type: 'button', 'aria-label': 'Día anterior', onclick: () => setDay(shiftDay(day, -1)) }, '‹'),
+        el('div.nav-center', el('h2', periodLabel), isToday ? null : el('button.link-btn', { type: 'button', onclick: () => setDay(dayOf()) }, 'Ir a hoy')),
+        el('button.btn.soft', { type: 'button', 'aria-label': 'Día siguiente', disabled: isToday, onclick: () => setDay(shiftDay(day, 1)) }, '›'))
+      : el('div.month-nav',
+        el('button.btn.soft', { type: 'button', 'aria-label': 'Mes anterior', onclick: () => { current.month = shiftMonth(month, -1); render(); LL.app.replaceRoute(); } }, '‹'),
+        el('h2', periodLabel),
+        el('button.btn.soft', { type: 'button', 'aria-label': 'Mes siguiente', disabled: isThisMonth, onclick: () => { current.month = shiftMonth(month, 1); render(); LL.app.replaceRoute(); } }, '›'));
     page.replaceChildren(el('div.tool-page.results-page',
       el('div.results-head',
         el('button.btn.ghost', { type: 'button', onclick: () => LL.app.go('library') }, '⬅️ Mis actividades'),
-        el('div', el('h1', '📊 ' + quiz.name), el('p.lead', 'Un resultado por estudiante cada mes: queda el último intento.'))),
-      el('div.month-nav',
-        el('button.btn.soft', { type: 'button', 'aria-label': 'Mes anterior', onclick: () => { current.month = shiftMonth(month, -1); render(); LL.app.replaceRoute(); } }, '‹'),
-        el('h2', monthLabel(month)),
-        el('button.btn.soft', { type: 'button', 'aria-label': 'Mes siguiente', disabled: isThisMonth, onclick: () => { current.month = shiftMonth(month, 1); render(); LL.app.replaceRoute(); } }, '›')),
+        el('div', el('h1', '📊 ' + quiz.name), el('p.lead', isDay ? 'Quiénes trabajaron este día y quiénes faltan.' : 'Un resultado por estudiante cada mes: queda el último intento.'))),
+      toggle, nav,
       el('div.panel', el('p.muted', 'Cargando resultados…'))));
 
-    const { rows, offline } = await load(quiz, month);
-    if (current.quiz !== quiz || current.month !== month) return; // the teacher moved on
+    let { rows, offline } = await load(quiz, month);
+    if (current.quiz !== quiz || current.month !== month || current.view !== view || current.day !== day) return; // the teacher moved on
+    if (isDay) rows = rows.filter((r) => dayOf(r.finished_at) === day);
     rank(rows);
     const panel = page.querySelector('.panel');
     panel.replaceChildren();
     if (offline) panel.append(el('p.problem-box', '📴 Sin conexión: se muestran solo los resultados guardados en este dispositivo.'));
 
     if (!rows.length) {
-      panel.append(el('div.empty', el('div.big-emoji', '🗓️'), el('div', 'Nadie ha hecho esta actividad en ' + monthLabel(month) + '.')));
+      panel.append(el('div.empty', el('div.big-emoji', isDay ? '📅' : '🗓️'), el('div', isDay ? (isToday ? 'Nadie ha hecho esta actividad hoy.' : 'Nadie hizo esta actividad ese día.') : 'Nadie ha hecho esta actividad en ' + monthLabel(month) + '.')));
     } else {
       const avg = Math.round(rows.reduce((s, r) => s + r.score / Math.max(1, r.total), 0) / rows.length * 100);
       panel.append(el('p.small.muted', rows.length + (rows.length === 1 ? ' estudiante' : ' estudiantes') + ' · promedio de la clase: ' + avg + ' %'));
-      const table = el('div.results-table', { role: 'table', 'aria-label': 'Resultados de ' + monthLabel(month) },
+      const table = el('div.results-table', { role: 'table', 'aria-label': 'Resultados: ' + periodLabel },
         el('div.rt-row.rt-head', { role: 'row' }, el('span', { role: 'columnheader' }, 'Puesto'), el('span', { role: 'columnheader' }, 'Estudiante'), el('span', { role: 'columnheader' }, 'Puntaje'), el('span.rt-date', { role: 'columnheader' }, 'Fecha'), el('span', { role: 'columnheader' }, 'Tiempo')));
       for (const r of rows) {
         const pct = Math.round(r.score / Math.max(1, r.total) * 100);
@@ -163,9 +194,14 @@ window.LL = window.LL || {};
     const done = new Set(rows.map((r) => (r.student_id != null ? 'id:' + r.student_id : 'n:' + r.student_name)));
     const missing = S.roster().filter((s) => !done.has(s.id != null ? 'id:' + s.id : 'n:' + s.name));
     if (missing.length) {
-      panel.append(el('div.missing', el('strong', isThisMonth ? 'Todavía no lo hacen este mes:' : 'No lo hicieron en ' + monthLabel(month) + ':'),
+      const title = isDay ? (isToday ? 'Todavía no lo hacen hoy (' + missing.length + '):' : 'No lo hicieron ese día (' + missing.length + '):')
+        : (isThisMonth ? 'Todavía no lo hacen este mes (' + missing.length + '):' : 'No lo hicieron en ' + monthLabel(month) + ' (' + missing.length + '):');
+      panel.append(el('div.missing', el('strong', title),
         el('div.missing-list', missing.map((s) => el('span.missing-chip', LL.teacher.avatar(s), s.name)))));
+    } else if (S.roster().length) {
+      panel.append(el('div.missing', el('strong', isDay ? '🎉 ¡Todos lo hicieron ' + (isToday ? 'hoy' : 'ese día') + '!' : '🎉 ¡Todos lo hicieron este mes!')));
     }
+    if (isDay) panel.append(el('p.small.muted', 'Cada mes se guarda solo el último intento de cada niño. Si alguien la repitió otro día de este mes, aparece en el día de su último intento.'));
   }
 
   function detail(r) {
@@ -186,5 +222,5 @@ window.LL = window.LL || {};
     });
   }
 
-  LL.results = { record, flush, open, render, monthOf, current: () => current };
+  LL.results = { record, flush, open, render, monthOf, dayOf, current: () => current };
 })();

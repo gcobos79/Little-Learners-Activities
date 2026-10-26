@@ -13,6 +13,8 @@
 - Chrome's Back / Forward buttons now move inside the site (folders, quizzes, editor, tabs, results)
   instead of leaving it. Back never reopens the teacher area after “Salir” and never switches
   to another child after 🏠. Unsaved quiz changes are protected.
+- Results “📅 Por día” view (default): who did the activity on a given day and who is still missing;
+  ‹ › to move between days, “Ir a hoy”. “🗓️ Por mes” keeps the monthly view.
 - The ✨ Little Learners logo is a home button (teacher: top of Mis actividades; otherwise ¿Quién eres?).
 
 ## V123 — October 2026 (real database)

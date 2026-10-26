@@ -617,7 +617,7 @@ img.missing-media { visibility: hidden; }
 .results-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .results-head h1 { overflow-wrap: anywhere; }
 .month-nav { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; padding: 8px; border-radius: 16px; background: var(--primary-soft); }
-.month-nav h2 { text-align: center; text-transform: capitalize; }
+.month-nav h2 { text-align: center; }
 .month-nav .btn { min-width: 56px; font-size: 24px; }
 .results-table { display: grid; gap: 6px; }
 .rt-row { display: grid; grid-template-columns: 76px minmax(0, 1.6fr) minmax(0, 1.2fr) minmax(0, 1fr) 96px; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; border: 2px solid var(--line); background: var(--surface); text-align: left; font-weight: 700; width: 100%; }
@@ -662,3 +662,8 @@ button.brand:active { transform: translateY(1px); }
 html, body, body * { caret-color: transparent; }
 input, textarea, select, [contenteditable="true"], [contenteditable=""] { caret-color: var(--primary); }
 h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, main:focus { outline: none; }
+
+.view-toggle { justify-self: center; }
+.view-toggle button { min-width: 130px; font-size: 16px; }
+.nav-center { display: grid; justify-items: center; gap: 2px; }
+.nav-center h2::first-letter, .month-nav h2::first-letter { text-transform: uppercase; }

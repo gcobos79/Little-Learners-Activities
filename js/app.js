@@ -205,7 +205,7 @@ window.LL = window.LL || {};
     const r = { screen: state.screen, mode: state.mode || null, student: studentKey(state.student) };
     if (state.screen === 'library') r.folder = LL.library.current() || null;
     if (state.screen === 'editor') r.quiz = LL.editor.currentId();
-    if (state.screen === 'results') { const c = LL.results.current(); r.quiz = c.quiz && c.quiz.id; r.month = c.month; }
+    if (state.screen === 'results') { const c = LL.results.current(); r.quiz = c.quiz && c.quiz.id; r.month = c.month; r.view = c.view; r.day = c.day; }
     if (state.screen === 'info') r.info = state.infoSection || 'acerca';
     if (LL.player.isOpen() && LL.player.quizId()) r.player = LL.player.quizId();
     return r;
@@ -270,7 +270,7 @@ window.LL = window.LL || {};
         await LL.editor.open(target.quiz && target.quiz !== 'nuevo' ? target.quiz : null, LL.library.current());
       } else if (target.screen === 'results') {
         const q = S.getQuiz(target.quiz);
-        if (q) LL.results.open(q, target.month); else await go('library');
+        if (q) LL.results.open(q, target.month, target.view, target.day); else await go('library');
       } else if (target.screen === 'info') {
         state.infoSection = target.info; await go('info');
       } else if (['sonidos', 'result'].includes(target.screen)) {

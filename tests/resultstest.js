@@ -44,6 +44,14 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
   // Teacher view
   await p.focus('.teacher-gate'); await p.keyboard.press('Enter'); await p.waitForTimeout(400);
   await p.click('.card.quiz:has-text("Colores") .icon-btn[title="Ver resultados"]'); await p.waitForTimeout(1200);
+  ok((await p.textContent('.view-toggle button[aria-pressed="true"]')).includes('día') && (await p.textContent('.month-nav h2')).startsWith('Hoy'), 'opens on today by default');
+  ok((await p.$$('.rt-row:not(.rt-head)')).length === 2 && (await p.textContent('.missing')).includes('hoy') && (await p.textContent('.missing')).includes('Lucía'), 'day view: who worked today and who is missing today');
+  await p.screenshot({ path: shots + '/results-day.png' });
+  await p.click('.month-nav button[aria-label="Día anterior"]'); await p.waitForTimeout(700);
+  ok((await p.textContent('#screen-results')).includes('Nadie hizo esta actividad ese día') && (await p.textContent('.missing')).includes('Sofía'), 'yesterday: nobody, everyone listed as missing');
+  await p.click('button:has-text("Ir a hoy")'); await p.waitForTimeout(700);
+  ok((await p.$$('.rt-row:not(.rt-head)')).length === 2, '“Ir a hoy” returns to today');
+  await p.click('.view-toggle button:has-text("Por mes")'); await p.waitForTimeout(800);
   const rows = await p.$$eval('.rt-row:not(.rt-head)', (a) => a.map((x) => x.innerText.replace(/\s+/g, ' ')));
   console.log(rows);
   ok(rows.length === 2 && rows[0].includes('1') && rows[0].includes('Sofía') && rows[0].includes('2 / 2') && rows[1].includes('Diego') && rows[1].includes('0 / 2'), 'ranking: highest score first with place numbers');
