@@ -66,6 +66,13 @@ folder with any static host. To rebuild the single-file version after changing t
 python3 tools/build_single_file.py
 ```
 
+Before publishing, stamp a new build number so browsers pick up the change instead of a cached copy
+(the app also reloads itself at a safe moment when `version.json` says a newer build exists):
+
+```
+python3 tools/stamp_version.py
+```
+
 ## What has and hasn't been tested
 
 - ✅ Automated browser tests (Chromium) of the student flow, teacher editor, folders, backup,

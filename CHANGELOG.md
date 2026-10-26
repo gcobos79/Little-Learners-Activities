@@ -1,6 +1,10 @@
 # Changelog
 
 ## V125 — October 2026 (voice type, storage)
+- Always up to date: every publish gets a build number (`tools/stamp_version.py`): scripts and styles
+  load as `file.js?v=<build>` and `version.json` holds the newest build. The app checks it on start,
+  when the tab comes back, and every 5 minutes, and reloads itself at a safe moment (never during an
+  activity or while editing — e.g. right after a child taps «Salir»).
 - End-of-quiz screen (students): the «📚 Mis actividades» button is now «👋 Salir» and goes back to
   «¿Quién eres?» so the next child can pick their animal. «🔁 Otra vez» is unchanged; the teacher's
   preview still shows «Cerrar vista previa».

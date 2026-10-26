@@ -26,8 +26,8 @@ def main() -> None:
         code = code.replace("</script", "<\\/script")
         return "<script>\n/* " + m.group(1) + " */\n" + code + "\n</script>"
 
-    html = re.sub(r'<link rel="stylesheet" href="([^"]+)">', css, html)
-    html = re.sub(r'<script src="([^"]+)"></script>', js, html)
+    html = re.sub(r'<link rel="stylesheet" href="([^"?]+)(?:\?[^"]*)?">', css, html)
+    html = re.sub(r'<script src="([^"?]+)(?:\?[^"]*)?"></script>', js, html)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(html, encoding="utf-8")
     print(f"Wrote {out.relative_to(ROOT) if out.is_relative_to(ROOT) else out} ({out.stat().st_size // 1024} KB)")

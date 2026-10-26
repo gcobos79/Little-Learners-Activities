@@ -107,6 +107,7 @@ window.LL = window.LL || {};
     state.mode = null; state.student = null; state.teacherUnlocked = false; state.screen = 'editor-left';
     if (LL.auth.needsLogin()) { go('login'); return; }
     go('students');
+    if (applyUpdate()) return;
     LL.sync.run();
   }
 
@@ -306,7 +307,34 @@ window.LL = window.LL || {};
     if (LL.auth.needsLogin()) { go('login'); return; }
     go('students');
     if (LL.cloud.signedIn()) LL.sync.run();
+    checkUpdate();
   }
+
+  /* ---------- Stay up to date ----------
+   * Browsers keep a copy of the site for a while. The server has version.json with the newest
+   * build number; when it differs from the one running, the page reloads itself — but only at a
+   * safe moment (no activity open, not editing), never in the middle of a child's quiz. */
+  let updateReady = false;
+  const safeToReload = () => !LL.player.isOpen() && !document.querySelector('.modal')
+    && ['students', 'login', 'library', 'results', 'info'].includes(state.screen);
+  function applyUpdate() {
+    if (!updateReady || !safeToReload()) return false;
+    const b = updateReady;
+    try { if (sessionStorage.getItem('ll-reloaded-for') === b) return false; sessionStorage.setItem('ll-reloaded-for', b); } catch { /* ignore */ }
+    location.reload();
+    return true;
+  }
+  async function checkUpdate() {
+    if (location.protocol === 'file:' || !LL.config.build || !navigator.onLine) return;
+    try {
+      const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
+      if (!r.ok) return;
+      const { build } = await r.json();
+      if (build && build !== LL.config.build && build > LL.config.build) { updateReady = build; applyUpdate(); }
+    } catch { /* offline: try later */ }
+  }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkUpdate(); });
+  setInterval(checkUpdate, 5 * 60 * 1000);
 
   // Refresh what's on screen when new activities arrive from the cloud.
   document.addEventListener('ll-synced', () => {
@@ -322,5 +350,5 @@ window.LL = window.LL || {};
     if (!LL.player.isOpen() && state.screen !== 'editor' && !state.mode) go('login');
   });
 
-  LL.app = { state, go, goHome, openSonidos, openInfo, pushRoute, replaceRoute };
+  LL.app = { state, go, goHome, openSonidos, openInfo, pushRoute, replaceRoute, checkUpdate };
 })();
