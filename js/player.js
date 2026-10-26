@@ -266,21 +266,26 @@ window.LL = window.LL || {};
     if (!data) { board.replaceChildren(el('p.muted', 'No se pudieron cargar los resultados de hoy.')); return; }
     const me = (r) => (who.id != null ? r.student_id === who.id || r.id === who.id : (r.student_name || r.name) === who.name);
     const list = el('ol.board-list');
+    const clock = LL.results.clock;
     for (const r of data.rows) {
       list.append(el('li' + (me(r) ? '.me' : ''),
         el('span.b-place', r.place <= 3 ? ['🥇', '🥈', '🥉'][r.place - 1] : String(r.place)),
         LL.teacher.avatar({ animal: r.student_animal, avatar: r.student_avatar }),
         el('span.b-name', r.student_name),
-        el('span.b-score', r.score + ' / ' + r.total)));
+        el('span.b-score', r.score + ' / ' + r.total),
+        el('span.b-time', { 'aria-label': 'Tiempo ' + clock(r.duration_seconds) }, clock(r.duration_seconds))));
     }
     for (const s of data.missing) {
       list.append(el('li.pending' + (me(s) ? '.me' : ''),
         el('span.b-place', '·'),
         LL.teacher.avatar(s),
         el('span.b-name', s.name),
-        el('span.b-score.b-pending', '⏳ Pendiente')));
+        el('span.b-score.b-pending', '⏳ Pendiente'),
+        el('span.b-time')));
     }
-    board.replaceChildren(el('h2', '🏆 Resultados de hoy'), list);
+    const head = el('div.board-head', { 'aria-hidden': 'true' },
+      el('span', 'Puesto'), el('span'), el('span', 'Nombre'), el('span', 'Puntos'), el('span', 'Tiempo'));
+    board.replaceChildren(el('h2', '🏆 Resultados de hoy'), head, list);
     const mine = list.querySelector('li.me');
     if (mine) setTimeout(() => mine.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 300);
   }

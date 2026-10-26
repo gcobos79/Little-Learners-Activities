@@ -716,16 +716,22 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 .board { width: min(560px, 100%); background: var(--surface); border: 3px solid var(--line); border-radius: 24px; padding: 12px; display: grid; gap: 8px; box-shadow: var(--shadow); }
 .board h2 { font-size: clamp(20px, 3.2vh, 26px); text-align: center; }
 .board-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-height: 38vh; max-height: 38dvh; overflow: auto; }
-.board-list li { display: grid; grid-template-columns: 44px 40px 1fr auto; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 14px; background: var(--surface-2); font-weight: 900; font-size: clamp(17px, 2.6vh, 22px); text-align: left; }
+.board-head, .board-list li { display: grid; grid-template-columns: 44px 40px 1fr auto 76px; align-items: center; gap: 8px; }
+.board-head { padding: 0 12px; text-align: left; font-size: 13px; font-weight: 900; color: var(--muted); text-transform: uppercase; letter-spacing: .02em; }
+.board-head span:nth-child(4), .board-head span:nth-child(5) { text-align: right; }
+.board-head span:first-child { text-align: center; }
+.board-list .b-time { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); opacity: .8; }
+.board-list li { padding: 8px 12px; border-radius: 14px; background: var(--surface-2); font-weight: 900; font-size: clamp(17px, 2.6vh, 22px); text-align: left; }
 .board-list li .animal { font-size: 30px; line-height: 1; }
 .board-list li .avatar-img { width: 34px; height: 34px; }
 .board-list .b-place { text-align: center; font-size: 22px; }
 .board-list .b-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.board-list .b-score { color: var(--primary); }
+.board-list .b-score { color: var(--primary); text-align: right; font-variant-numeric: tabular-nums; }
 .board-list li.pending { background: transparent; border: 2px dashed var(--line); color: var(--muted); }
 .board-list .b-pending { color: var(--muted); font-size: .85em; }
 .board-list li.me { background: var(--warn-soft); outline: 3px solid var(--sun); }
 @media (max-height: 560px) { .finish.with-board .stars { display: none; } .board-list { max-height: 46vh; } }
+@media (max-width: 420px) { .board-head, .board-list li { grid-template-columns: 30px 34px 1fr auto 52px; gap: 6px; } .board-list li { padding: 8px; } .board-head { padding: 0 8px; font-size: 11px; } }
 
 /* ---------- Font for children: Century Gothic ----------
  * Century Gothic is a commercial font, so it can't be included with the site; it is used
@@ -2714,21 +2720,26 @@ window.LL = window.LL || {};
     if (!data) { board.replaceChildren(el('p.muted', 'No se pudieron cargar los resultados de hoy.')); return; }
     const me = (r) => (who.id != null ? r.student_id === who.id || r.id === who.id : (r.student_name || r.name) === who.name);
     const list = el('ol.board-list');
+    const clock = LL.results.clock;
     for (const r of data.rows) {
       list.append(el('li' + (me(r) ? '.me' : ''),
         el('span.b-place', r.place <= 3 ? ['🥇', '🥈', '🥉'][r.place - 1] : String(r.place)),
         LL.teacher.avatar({ animal: r.student_animal, avatar: r.student_avatar }),
         el('span.b-name', r.student_name),
-        el('span.b-score', r.score + ' / ' + r.total)));
+        el('span.b-score', r.score + ' / ' + r.total),
+        el('span.b-time', { 'aria-label': 'Tiempo ' + clock(r.duration_seconds) }, clock(r.duration_seconds))));
     }
     for (const s of data.missing) {
       list.append(el('li.pending' + (me(s) ? '.me' : ''),
         el('span.b-place', '·'),
         LL.teacher.avatar(s),
         el('span.b-name', s.name),
-        el('span.b-score.b-pending', '⏳ Pendiente')));
+        el('span.b-score.b-pending', '⏳ Pendiente'),
+        el('span.b-time')));
     }
-    board.replaceChildren(el('h2', '🏆 Resultados de hoy'), list);
+    const head = el('div.board-head', { 'aria-hidden': 'true' },
+      el('span', 'Puesto'), el('span'), el('span', 'Nombre'), el('span', 'Puntos'), el('span', 'Tiempo'));
+    board.replaceChildren(el('h2', '🏆 Resultados de hoy'), head, list);
     const mine = list.querySelector('li.me');
     if (mine) setTimeout(() => mine.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 300);
   }
@@ -2924,16 +2935,19 @@ window.LL = window.LL || {};
     return { rows, offline };
   }
 
-  /** 1, 2, 2, 4… : the same score shares the same place. */
+  /** Best score first; with the same score, the one who finished faster goes first.
+   *  Only the same score AND the same time share a place (1, 2, 2, 4…). */
   function rank(rows) {
     rows.sort((a, b) => (b.score / Math.max(1, b.total)) - (a.score / Math.max(1, a.total)) || b.score - a.score || (a.duration_seconds ?? 1e9) - (b.duration_seconds ?? 1e9) || a.student_name.localeCompare(b.student_name, 'es'));
     let place = 0, prev = null;
-    rows.forEach((r, i) => { const key = r.score + '/' + r.total; if (key !== prev) { place = i + 1; prev = key; } r.place = place; });
+    rows.forEach((r, i) => { const key = r.score + '/' + r.total + '/' + (r.duration_seconds ?? ''); if (key !== prev) { place = i + 1; prev = key; } r.place = place; });
     return rows;
   }
 
   const fmtTime = (s) => (s == null ? '—' : s < 60 ? s + ' s' : Math.floor(s / 60) + ' min ' + String(s % 60).padStart(2, '0') + ' s');
   const fmtDate = (iso) => new Date(iso).toLocaleDateString('es-US', { day: 'numeric', month: 'short', timeZone: 'America/Chicago' }) + ' · ' + new Date(iso).toLocaleTimeString('es-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Chicago' });
+  /** Short time for the children's board: 45 s → 0:45, 125 s → 2:05. */
+  const clock = (s) => (s == null ? '—' : Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'));
   const medal = (p) => (p === 1 ? '🥇' : p === 2 ? '🥈' : p === 3 ? '🥉' : '');
 
   async function render() {
@@ -3031,7 +3045,7 @@ window.LL = window.LL || {};
     return { rows: today, missing };
   }
 
-  LL.results = { record, flush, open, render, monthOf, dayOf, dayBoard, current: () => current };
+  LL.results = { record, flush, open, render, monthOf, dayOf, dayBoard, clock, current: () => current };
 })();
 
 </script>

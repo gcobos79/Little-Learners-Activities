@@ -708,16 +708,22 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 .board { width: min(560px, 100%); background: var(--surface); border: 3px solid var(--line); border-radius: 24px; padding: 12px; display: grid; gap: 8px; box-shadow: var(--shadow); }
 .board h2 { font-size: clamp(20px, 3.2vh, 26px); text-align: center; }
 .board-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-height: 38vh; max-height: 38dvh; overflow: auto; }
-.board-list li { display: grid; grid-template-columns: 44px 40px 1fr auto; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 14px; background: var(--surface-2); font-weight: 900; font-size: clamp(17px, 2.6vh, 22px); text-align: left; }
+.board-head, .board-list li { display: grid; grid-template-columns: 44px 40px 1fr auto 76px; align-items: center; gap: 8px; }
+.board-head { padding: 0 12px; text-align: left; font-size: 13px; font-weight: 900; color: var(--muted); text-transform: uppercase; letter-spacing: .02em; }
+.board-head span:nth-child(4), .board-head span:nth-child(5) { text-align: right; }
+.board-head span:first-child { text-align: center; }
+.board-list .b-time { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); opacity: .8; }
+.board-list li { padding: 8px 12px; border-radius: 14px; background: var(--surface-2); font-weight: 900; font-size: clamp(17px, 2.6vh, 22px); text-align: left; }
 .board-list li .animal { font-size: 30px; line-height: 1; }
 .board-list li .avatar-img { width: 34px; height: 34px; }
 .board-list .b-place { text-align: center; font-size: 22px; }
 .board-list .b-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.board-list .b-score { color: var(--primary); }
+.board-list .b-score { color: var(--primary); text-align: right; font-variant-numeric: tabular-nums; }
 .board-list li.pending { background: transparent; border: 2px dashed var(--line); color: var(--muted); }
 .board-list .b-pending { color: var(--muted); font-size: .85em; }
 .board-list li.me { background: var(--warn-soft); outline: 3px solid var(--sun); }
 @media (max-height: 560px) { .finish.with-board .stars { display: none; } .board-list { max-height: 46vh; } }
+@media (max-width: 420px) { .board-head, .board-list li { grid-template-columns: 30px 34px 1fr auto 52px; gap: 6px; } .board-list li { padding: 8px; } .board-head { padding: 0 8px; font-size: 11px; } }
 
 /* ---------- Font for children: Century Gothic ----------
  * Century Gothic is a commercial font, so it can't be included with the site; it is used

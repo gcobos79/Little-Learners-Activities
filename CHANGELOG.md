@@ -1,6 +1,9 @@
 # Changelog
 
 ## V125 — October 2026 (voice type, storage)
+- End-of-quiz board: new «Tiempo» column (m:ss) and column headings. Ranking: best score first;
+  with the same score, the child who finished faster goes first. Only the same score and the same
+  time share a place. The teacher's results page uses the same order.
 - Voice type fix: «Hombre» now picks a man's voice in the quiz language even if its accent is not the
   preferred one (before, a US-Spanish woman's voice won over a Spain-Spanish man's voice). If the
   device has no man's voice in that language, the woman's voice is played with a deeper pitch (and a

@@ -124,16 +124,19 @@ window.LL = window.LL || {};
     return { rows, offline };
   }
 
-  /** 1, 2, 2, 4… : the same score shares the same place. */
+  /** Best score first; with the same score, the one who finished faster goes first.
+   *  Only the same score AND the same time share a place (1, 2, 2, 4…). */
   function rank(rows) {
     rows.sort((a, b) => (b.score / Math.max(1, b.total)) - (a.score / Math.max(1, a.total)) || b.score - a.score || (a.duration_seconds ?? 1e9) - (b.duration_seconds ?? 1e9) || a.student_name.localeCompare(b.student_name, 'es'));
     let place = 0, prev = null;
-    rows.forEach((r, i) => { const key = r.score + '/' + r.total; if (key !== prev) { place = i + 1; prev = key; } r.place = place; });
+    rows.forEach((r, i) => { const key = r.score + '/' + r.total + '/' + (r.duration_seconds ?? ''); if (key !== prev) { place = i + 1; prev = key; } r.place = place; });
     return rows;
   }
 
   const fmtTime = (s) => (s == null ? '—' : s < 60 ? s + ' s' : Math.floor(s / 60) + ' min ' + String(s % 60).padStart(2, '0') + ' s');
   const fmtDate = (iso) => new Date(iso).toLocaleDateString('es-US', { day: 'numeric', month: 'short', timeZone: 'America/Chicago' }) + ' · ' + new Date(iso).toLocaleTimeString('es-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Chicago' });
+  /** Short time for the children's board: 45 s → 0:45, 125 s → 2:05. */
+  const clock = (s) => (s == null ? '—' : Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'));
   const medal = (p) => (p === 1 ? '🥇' : p === 2 ? '🥈' : p === 3 ? '🥉' : '');
 
   async function render() {
@@ -231,5 +234,5 @@ window.LL = window.LL || {};
     return { rows: today, missing };
   }
 
-  LL.results = { record, flush, open, render, monthOf, dayOf, dayBoard, current: () => current };
+  LL.results = { record, flush, open, render, monthOf, dayOf, dayBoard, clock, current: () => current };
 })();
