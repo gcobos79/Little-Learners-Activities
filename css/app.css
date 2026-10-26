@@ -283,6 +283,11 @@ body.q-sorting, body.q-sorting * { cursor: grabbing !important; user-select: non
 .question-text { font-weight: 900; text-align: center; font-size: clamp(24px, 6vh, 64px); line-height: 1.1; white-space: pre-wrap; overflow-wrap: anywhere; max-width: 100%; }
 .question.has-image .question-text { font-size: clamp(20px, 4.2vh, 44px); }
 .question-image { flex: 1 1 auto; min-height: 0; max-width: 100%; object-fit: contain; border-radius: 16px; }
+.question-image.tap-speak { cursor: pointer; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.question-image.tap-speak:focus-visible { outline: 4px solid var(--primary); outline-offset: 4px; }
+.question-image.pop { animation: img-pop .35s ease; }
+@keyframes img-pop { 40% { transform: scale(1.05); } }
+@media (prefers-reduced-motion: reduce) { .question-image.pop { animation: none; } }
 .options { flex: 0 0 44%; min-height: 0; display: grid; gap: clamp(8px, 1.2vw, 14px); grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr)); grid-template-rows: repeat(var(--rows, 1), minmax(0, 1fr)); }
 .options.five { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 .options.five .option:nth-child(-n+3) { grid-column: span 2; }

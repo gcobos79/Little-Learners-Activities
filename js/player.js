@@ -99,7 +99,23 @@ window.LL = window.LL || {};
     const hasImg = LL.media.isImage(q.image);
     const qa = el('div.question.enter' + (hasImg ? '.has-image' : ''));
     if (q.text) qa.append(el('div.question-text', q.text));
-    if (hasImg) qa.append(el('img.question-image', { src: q.image, alt: 'Imagen de la pregunta' }));
+    if (hasImg) {
+      const img = el('img.question-image', { src: q.image, alt: 'Imagen de la pregunta' });
+      // Tapping the picture also reads the question (same as the 🔊 button).
+      if (hasPromptSound(q)) {
+        Object.assign(img, { tabIndex: 0, title: 'Toca para escuchar' });
+        img.setAttribute('role', 'button');
+        img.setAttribute('aria-label', 'Escuchar la pregunta');
+        img.classList.add('tap-speak');
+        const say = () => {
+          playPrompt(q);
+          img.classList.remove('pop'); void img.offsetWidth; img.classList.add('pop');
+        };
+        img.addEventListener('click', say);
+        img.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); say(); } });
+      }
+      qa.append(img);
+    }
     if (!q.text && !hasImg && q.emoji) qa.append(el('div.question-text', q.emoji));
     b.append(qa);
 

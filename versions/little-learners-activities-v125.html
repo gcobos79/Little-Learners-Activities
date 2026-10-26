@@ -291,6 +291,11 @@ body.q-sorting, body.q-sorting * { cursor: grabbing !important; user-select: non
 .question-text { font-weight: 900; text-align: center; font-size: clamp(24px, 6vh, 64px); line-height: 1.1; white-space: pre-wrap; overflow-wrap: anywhere; max-width: 100%; }
 .question.has-image .question-text { font-size: clamp(20px, 4.2vh, 44px); }
 .question-image { flex: 1 1 auto; min-height: 0; max-width: 100%; object-fit: contain; border-radius: 16px; }
+.question-image.tap-speak { cursor: pointer; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.question-image.tap-speak:focus-visible { outline: 4px solid var(--primary); outline-offset: 4px; }
+.question-image.pop { animation: img-pop .35s ease; }
+@keyframes img-pop { 40% { transform: scale(1.05); } }
+@media (prefers-reduced-motion: reduce) { .question-image.pop { animation: none; } }
 .options { flex: 0 0 44%; min-height: 0; display: grid; gap: clamp(8px, 1.2vw, 14px); grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr)); grid-template-rows: repeat(var(--rows, 1), minmax(0, 1fr)); }
 .options.five { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 .options.five .option:nth-child(-n+3) { grid-column: span 2; }
@@ -2501,7 +2506,23 @@ window.LL = window.LL || {};
     const hasImg = LL.media.isImage(q.image);
     const qa = el('div.question.enter' + (hasImg ? '.has-image' : ''));
     if (q.text) qa.append(el('div.question-text', q.text));
-    if (hasImg) qa.append(el('img.question-image', { src: q.image, alt: 'Imagen de la pregunta' }));
+    if (hasImg) {
+      const img = el('img.question-image', { src: q.image, alt: 'Imagen de la pregunta' });
+      // Tapping the picture also reads the question (same as the 🔊 button).
+      if (hasPromptSound(q)) {
+        Object.assign(img, { tabIndex: 0, title: 'Toca para escuchar' });
+        img.setAttribute('role', 'button');
+        img.setAttribute('aria-label', 'Escuchar la pregunta');
+        img.classList.add('tap-speak');
+        const say = () => {
+          playPrompt(q);
+          img.classList.remove('pop'); void img.offsetWidth; img.classList.add('pop');
+        };
+        img.addEventListener('click', say);
+        img.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); say(); } });
+      }
+      qa.append(img);
+    }
     if (!q.text && !hasImg && q.emoji) qa.append(el('div.question-text', q.emoji));
     b.append(qa);
 
