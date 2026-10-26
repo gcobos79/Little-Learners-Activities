@@ -154,6 +154,19 @@ main { padding: clamp(14px, 2.5vw, 28px); max-width: 1240px; margin: 0 auto; }
 .card.folder .folder-icon { font-size: 58px; line-height: 1; filter: drop-shadow(0 2px 0 rgba(255,255,255,.6)); }
 .card.up { background: var(--surface-2); border-style: dashed; }
 .card.up .folder-icon { font-size: 44px; }
+/* Drag an activity onto a folder (teacher) */
+.card.quiz.draggable { -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
+@media (hover: hover) and (pointer: fine) { .card.quiz.draggable .card-main { cursor: grab; } }
+.card.quiz.armed { transform: scale(.97); box-shadow: 0 0 0 4px var(--primary-soft); transition: transform .15s ease; }
+.card.quiz.dragging { opacity: .4 !important; transform: scale(.96) !important; animation: none !important; }
+.drag-chip { position: fixed; left: 0; top: 0; z-index: 1000; pointer-events: none; display: flex; align-items: center; gap: 10px; max-width: 260px; padding: 8px 14px 8px 8px; border-radius: 16px; background: var(--surface); border: 3px solid var(--primary); box-shadow: 0 14px 30px rgba(30, 30, 60, .28); font-weight: 900; font-size: 16px; }
+.drag-chip img, .drag-chip .chip-emoji { width: 48px; height: 48px; border-radius: 10px; object-fit: contain; background: #fff; display: grid; place-items: center; font-size: 26px; flex: 0 0 auto; }
+.drag-chip span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card.drop-ok { outline: 3px dashed rgba(47, 91, 211, .35); outline-offset: 3px; }
+.card.drop-target { outline: 4px solid var(--primary); outline-offset: 3px; transform: scale(1.04); box-shadow: 0 12px 26px rgba(47, 91, 211, .25); transition: transform .12s ease; }
+.crumbs .drop-ok { outline: 2px dashed rgba(47, 91, 211, .35); outline-offset: 2px; border-radius: 10px; }
+.crumbs .drop-target { outline: 3px solid var(--primary); background: var(--primary-soft); border-radius: 10px; }
+body.card-sorting, body.card-sorting * { cursor: grabbing !important; user-select: none !important; }
 .badge { display: inline-flex; align-items: center; gap: 5px; align-self: flex-start; padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 900; }
 .badge.visible { background: var(--good-soft); color: #13753A; }
 .badge.hidden { background: var(--warn-soft); color: #8A5B08; }

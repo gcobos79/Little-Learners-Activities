@@ -60,21 +60,21 @@ window.LL = window.LL || {};
     const trail = S.folderTrail(currentFolder);
     if (currentFolder) {
       const parent = trail.length > 1 ? trail[trail.length - 2].id : null;
-      c.append(el('button.icon-btn.back-btn' + (isStudent() ? '.big' : ''), { type: 'button', 'aria-label': 'Volver a la carpeta anterior', onclick: () => setFolder(parent) }, '⬅️'));
+      c.append(el('button.icon-btn.back-btn' + (isStudent() ? '.big' : ''), { type: 'button', 'aria-label': 'Volver a la carpeta anterior', dataset: { drop: parent || '' }, onclick: () => setFolder(parent) }, '⬅️'));
     }
     const rootLabel = isStudent() ? '📚 Actividades' : '📚 Mis actividades';
     if (!trail.length) { c.append(el('span.here', rootLabel)); return; }
-    c.append(el('button', { type: 'button', onclick: () => setFolder(null) }, rootLabel));
+    c.append(el('button', { type: 'button', dataset: { drop: '' }, onclick: () => setFolder(null) }, rootLabel));
     trail.forEach((f, i) => {
       c.append(el('span.sep', '›'));
       if (i === trail.length - 1) c.append(el('span.here', f.name));
-      else c.append(el('button', { type: 'button', onclick: () => setFolder(f.id) }, f.name));
+      else c.append(el('button', { type: 'button', dataset: { drop: f.id }, onclick: () => setFolder(f.id) }, f.name));
     });
   }
 
   function upCard(folders) {
     const f = folders.find((x) => x.id === currentFolder);
-    return el('div.card.up',
+    return el('div.card.up', { dataset: { drop: (f && f.parentId) || '' } },
       el('button.card-main', { type: 'button', onclick: () => setFolder(f ? f.parentId : null), 'aria-label': 'Carpeta anterior' },
         el('span.folder-icon', '⬆️'),
         el('span.name', 'Carpeta anterior'),
@@ -92,6 +92,7 @@ window.LL = window.LL || {};
         el('span.meta', meta)));
     card.style.setProperty('--folder', f.color || '#F8EDB8');
     if (!student) {
+      card.dataset.drop = f.id;
       card.append(el('div.card-tools',
         el('button.btn.sm.ghost', { type: 'button', onclick: () => editFolder(f) }, '✏️ Editar'),
         el('button.icon-btn', { type: 'button', 'aria-label': 'Más opciones de la carpeta', onclick: (e) => folderMenu(e, f) }, '⋯')));
@@ -109,6 +110,8 @@ window.LL = window.LL || {};
       el('span.meta', 'Quiz · ' + n + (n === 1 ? ' pregunta' : ' preguntas')));
     const card = el('div.card.quiz', { dataset: { quizId: t.id } }, main);
     if (!student) {
+      card.classList.add('draggable');
+      card.title = 'Arrastra la tarjeta a una carpeta para moverla';
       const ready = S.isReady(t);
       main.append(el('span.badge.' + (ready ? 'visible' : 'hidden'), ready ? '👀 Visible para estudiantes' : '🛠️ En preparación'));
       card.append(el('div.card-tools',
@@ -129,6 +132,114 @@ window.LL = window.LL || {};
     const card = el('div.card.quiz', main);
     if (!student) card.append(el('div.card-tools', el('button.btn.sm.soft', { type: 'button', onclick: () => LL.app.go('sonidos-admin') }, '⚙️ Configurar')));
     return card;
+  }
+
+  /* ---------- Drag an activity onto a folder (teacher only) ----------
+   * Drop targets: folder cards, «Carpeta anterior», and the folder names at the top.
+   * Mouse: drag the card. Touch: press and hold the card, then move the finger
+   * (holding without moving still opens the ⋯ menu). */
+  let drag = null, dragJustEnded = false;
+  const DRAG_PX = 8, HOLD_MS = 420;
+
+  function folderLabel(id) {
+    if (!id) return 'Mis actividades';
+    const f = S.folders().find((x) => x.id === id);
+    return f ? f.name : 'la carpeta';
+  }
+  function dragStart() {
+    const d = drag;
+    d.on = true;
+    clearTimeout(d.hold);
+    const t = S.getQuiz(d.id);
+    const cover = t && t.config && t.config.coverImage;
+    d.ghost = el('div.drag-chip',
+      LL.media.isImage(cover) ? el('img', { src: d.card.querySelector('img.cover') ? d.card.querySelector('img.cover').src : cover, alt: '' }) : el('span.chip-emoji', '❓'),
+      el('span', t ? t.name : ''));
+    document.body.append(d.ghost);
+    d.card.classList.add('dragging');
+    document.body.classList.add('card-sorting');
+    document.querySelectorAll('[data-drop]').forEach((x) => x.classList.add('drop-ok'));
+    d.timer = setInterval(autoScroll, 30);
+    if (d.touch && navigator.vibrate) try { navigator.vibrate(15); } catch { /* ignore */ }
+    dragMove();
+  }
+  function dragMove() {
+    const d = drag;
+    d.ghost.style.transform = 'translate(' + (d.x + 12) + 'px,' + (d.y + 12) + 'px)';
+    const under = document.elementFromPoint(d.x, d.y);
+    const target = under && under.closest('[data-drop]');
+    if (target !== d.target) {
+      if (d.target) d.target.classList.remove('drop-target');
+      d.target = target || null;
+      if (d.target) d.target.classList.add('drop-target');
+    }
+  }
+  function autoScroll() {
+    if (!drag || !drag.on) return;
+    const edge = 60, top = (LL.ui && document.querySelector('.appbar') ? document.querySelector('.appbar').getBoundingClientRect().bottom : 0);
+    if (drag.y < top + edge) window.scrollBy(0, -14);
+    else if (drag.y > innerHeight - edge) window.scrollBy(0, 14);
+    else return;
+    dragMove();
+  }
+  function dragEnd(commit) {
+    const d = drag;
+    if (!d) return;
+    drag = null;
+    clearTimeout(d.hold);
+    if (!d.on) {
+      // Touch: held without moving -> the usual options menu.
+      if (d.held) { const t = S.getQuiz(d.id); if (t) { dragJustEnded = true; setTimeout(() => { dragJustEnded = false; }, 350); quizMenu({ clientX: d.x, clientY: d.y, target: d.card }, t); } }
+      return;
+    }
+    clearInterval(d.timer);
+    d.ghost.remove();
+    d.card.classList.remove('dragging');
+    document.body.classList.remove('card-sorting');
+    document.querySelectorAll('.drop-ok, .drop-target').forEach((x) => x.classList.remove('drop-ok', 'drop-target'));
+    // Swallow only the click that comes with this release (touch browsers may send it a little later).
+    dragJustEnded = true; setTimeout(() => { dragJustEnded = false; }, d.touch ? 400 : 0);
+    if (!commit || !d.target) return;
+    const dest = d.target.dataset.drop || null;
+    const t = S.getQuiz(d.id);
+    if (!t || (t.folderId || null) === dest) return;
+    if (S.moveQuiz(d.id, dest)) {
+      toast('«' + t.name + '» se movió a «' + folderLabel(dest) + '».', 'success');
+      render();
+    }
+  }
+  function initDrag() {
+    const grid = $('#cardGrid');
+    grid.addEventListener('pointerdown', (e) => {
+      const card = e.target.closest('.card.quiz.draggable');
+      if (!card || isStudent() || e.button > 0 || e.target.closest('.card-tools')) return;
+      const touch = e.pointerType !== 'mouse';
+      drag = { card, id: card.dataset.quizId, x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, pid: e.pointerId, touch, on: false, held: false, target: null };
+      if (touch) drag.hold = setTimeout(() => { if (drag && !drag.on) { drag.held = true; drag.card.classList.add('armed'); if (navigator.vibrate) try { navigator.vibrate(10); } catch { /* ignore */ } } }, HOLD_MS);
+    });
+    window.addEventListener('pointermove', (e) => {
+      const d = drag;
+      if (!d || e.pointerId !== d.pid) return;
+      d.x = e.clientX; d.y = e.clientY;
+      if (!d.on) {
+        const far = Math.hypot(d.x - d.sx, d.y - d.sy) > DRAG_PX;
+        if (!far) return;
+        if (d.touch && !d.held) { clearTimeout(d.hold); drag = null; return; } // the finger is scrolling the page
+        d.card.classList.remove('armed');
+        dragStart();
+        return;
+      }
+      e.preventDefault();
+      dragMove();
+    }, { passive: false });
+    window.addEventListener('touchmove', (e) => { if (drag && (drag.on || drag.held)) e.preventDefault(); }, { passive: false });
+    window.addEventListener('pointerup', (e) => { if (drag && e.pointerId === drag.pid) { drag.card.classList.remove('armed'); dragEnd(true); } });
+    window.addEventListener('pointercancel', (e) => { if (drag && e.pointerId === drag.pid) { drag.card.classList.remove('armed'); dragEnd(false); } });
+    window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && drag && drag.on) dragEnd(false); });
+    // A click right after a drag must not open the quiz; a touch long-press must not open the menu twice.
+    grid.addEventListener('click', (e) => { if (dragJustEnded) { e.stopPropagation(); e.preventDefault(); } }, true);
+    grid.addEventListener('dragstart', (e) => { if (!isStudent()) e.preventDefault(); }); // no browser image drag
+    grid.addEventListener('contextmenu', (e) => { if (drag || dragJustEnded) { e.preventDefault(); e.stopPropagation(); } }, true);
   }
 
   function play(t) {
@@ -248,6 +359,7 @@ window.LL = window.LL || {};
   document.addEventListener('DOMContentLoaded', () => {
     $('#newFolderBtn').addEventListener('click', () => editFolder(null));
     $('#newQuizBtn').addEventListener('click', () => LL.editor.open(null, currentFolder));
+    initDrag();
   });
 
   LL.library = { render, setFolder, setFolderQuiet, resetToRoot, play, current: () => currentFolder };

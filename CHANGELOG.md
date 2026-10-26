@@ -1,6 +1,10 @@
 # Changelog
 
 ## V125 — October 2026 (voice type, storage)
+- Mis actividades (teacher): drag an activity card onto a folder to move it there; onto «Carpeta
+  anterior» to move it one level up; or onto a folder name at the top (e.g. «Mis actividades»).
+  Mouse: drag the card. Touch: press and hold, then move (hold without moving still opens ⋯).
+  Esc cancels. «⋯ → Mover a otra carpeta» still works.
 - Player: tapping the question's picture reads the question, same as the 🔊 button (only when the
   question has sound). Works with the keyboard too.
 - Editor: drag a question in the list to change the order (4 dropped on 2 becomes 2, the old 2
