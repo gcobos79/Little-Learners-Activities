@@ -1,5 +1,12 @@
 # Changelog
 
+## V125 — October 2026 (voice type)
+- Each quiz has “Tipo de voz: 👩 Mujer / 👨 Hombre” (column `quizzes.voice_gender`). It is a preference:
+  the device voice uses that kind when the device has it, otherwise any available voice, so there is
+  always sound. If a device has no voice in the quiz language, its own voice still reads the text.
+- Settings → Voz natural: choose one ElevenLabs voice for women and one for men (`ll_settings.male_voice_id`);
+  without a choice, the server picks a default of each kind. Audio made with the other kind isn't reused.
+
 ## V124 — October 2026 (results)
 - Quiz results are saved: one per student, per quiz, per month; a newer attempt in the same month
   replaces the older one (total and question-by-question detail). Tables `quiz_results` and

@@ -18,9 +18,10 @@ window.LL = window.LL || {};
   }
 
   /** Is there a saved ElevenLabs file for exactly this text? */
-  function ready(item) {
+  function ready(item, gender) {
     const t = speechText(item);
-    return !!(t && item.tts && item.tts.path && item.tts.text === t);
+    // An audio made with the other type of voice (before the teacher switched) is not used.
+    return !!(t && item.tts && item.tts.path && item.tts.text === t && (!gender || (item.tts.gender || 'female') === gender));
   }
 
   async function url(path) {
@@ -42,14 +43,14 @@ window.LL = window.LL || {};
   }
 
   /** Download ahead of time so playback is instant when a child taps. */
-  function prefetch(items) {
+  function prefetch(items, gender) {
     if (!LL.cloud.signedIn()) return;
-    for (const it of items) if (it && ready(it)) url(it.tts.path).catch(() => {});
+    for (const it of items) if (it && ready(it, gender)) url(it.tts.path).catch(() => {});
   }
 
   /** Play the ElevenLabs file; resolves false if it could not (caller uses the device voice). */
-  async function play(item) {
-    if (!ready(item) || !LL.cloud.signedIn()) return false;
+  async function play(item, gender) {
+    if (!ready(item, gender) || !LL.cloud.signedIn()) return false;
     try {
       LL.ui.playAudio(await url(item.tts.path));
       return true;
@@ -64,13 +65,14 @@ window.LL = window.LL || {};
   async function prepareQuiz(quiz, onProgress) {
     if (!active()) return { made: 0, skipped: 0 };
     warned = false;
-    const voiceId = S.voice().voiceId || '';
+    const gender = quiz.config.voiceGender === 'male' ? 'male' : 'female';
+    const voiceId = (gender === 'male' ? S.voice().maleVoiceId : S.voice().voiceId) || '';
     const jobs = [];
     for (const q of quiz.config.questions || []) {
       for (const it of [q, ...(q.options || [])]) {
         const t = speechText(it);
         if (!t || !hasWords(t)) continue;
-        if (it.tts && it.tts.text === t && (it.tts.voice || '') === voiceId) continue;
+        if (it.tts && it.tts.text === t && (it.tts.voice || '') === voiceId && (it.tts.gender || 'female') === gender) continue;
         jobs.push({ it, t });
       }
     }
@@ -78,9 +80,9 @@ window.LL = window.LL || {};
     for (const job of jobs) {
       onProgress && onProgress(++i, jobs.length);
       let r;
-      try { r = await LL.cloud.invoke('ll-tts', { action: 'speak', text: job.t, lang: quiz.config.lang, voiceId }); }
+      try { r = await LL.cloud.invoke('ll-tts', { action: 'speak', text: job.t, lang: quiz.config.lang, voiceId, gender }); }
       catch (e) { if (!warned) { warned = true; LL.ui.toast('No se pudo crear la voz ahora (' + e.message + '). Se usará la voz del dispositivo.', 'error'); } break; }
-      if (r && r.path) { job.it.tts = { path: r.path, text: job.t, voice: voiceId }; made++; continue; }
+      if (r && r.path) { job.it.tts = { path: r.path, text: job.t, voice: voiceId, gender }; made++; continue; }
       if (r && r.fallback) {
         const why = r.reason === 'no_api_key' ? 'falta la clave de ElevenLabs en Supabase'
           : /elevenlabs_(402|429)/.test(r.reason) ? 'se acabaron los créditos de ElevenLabs de este mes'

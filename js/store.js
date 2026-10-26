@@ -288,7 +288,7 @@ window.LL = window.LL || {};
   /* ---------- Teacher PIN and voice ---------- */
   function pinHash() { return readJSON(KEYS.pin, null); }
   function savePinHash(h) { return writeJSON(KEYS.pin, h || null); }
-  function voice() { return { enabled: true, voiceId: '', ...readJSON(KEYS.voice, {}) }; }
+  function voice() { return { enabled: true, voiceId: '', maleVoiceId: '', ...readJSON(KEYS.voice, {}) }; }
   function saveVoice(v) { return writeJSON(KEYS.voice, v); }
   function settingsAt() { return readJSON(KEYS.settingsAt, null); }
 
@@ -383,7 +383,7 @@ window.LL = window.LL || {};
     return { id: uid('quiz'), text: '', readTextEnabled: false, readText: '', audioMode: 'voice', emoji: '', image: '', audio: '', correctCount: 1, options: Array.from({ length: optionCount }, newOption) };
   }
   function newQuiz(folderId) {
-    return { id: null, name: '', folderId: folderId || null, config: { lang: 'es', mode: 'practice', questionOrder: 'fixed', answerOrder: 'fixed', visibility: 'hidden', coverImage: '', questions: [newQuestion()] } };
+    return { id: null, name: '', folderId: folderId || null, config: { lang: 'es', voiceGender: 'female', mode: 'practice', questionOrder: 'fixed', answerOrder: 'fixed', visibility: 'hidden', coverImage: '', questions: [newQuestion()] } };
   }
 
   /** Returns '' when the question is complete, otherwise a short message. Same rules as V121. */

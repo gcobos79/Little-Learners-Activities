@@ -115,6 +115,7 @@ module.exports = function makeMock() {
     }
     if (p === '/functions/v1/ll-tts') {
       const b = JSON.parse(req.postData());
+      if (api.noTtsKey) return json(route, { fallback: true, reason: 'no_api_key' });
       if (b.action === 'voices') return json(route, { voices: [{ id: 'VoiceAAAAAAAAAA', name: 'Sarah', gender: 'female', accent: 'american' }], defaultVoice: 'VoiceAAAAAAAAAA' });
       if (b.action === 'usage') return json(route, { used: 1234, limit: 10000, resetsAt: Math.floor(Date.now() / 1000) + 86400 });
       ttsCalls++;
@@ -140,5 +141,6 @@ module.exports = function makeMock() {
     }
     return json(route, { message: 'unhandled ' + m + ' ' + p }, 404);
   }
-  return { handler, db, files, stats: () => ({ ttsCalls, uploads }) };
+  const api = { handler, db, files, noTtsKey: false, stats: () => ({ ttsCalls, uploads }) };
+  return api;
 };

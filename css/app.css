@@ -693,3 +693,6 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
  * geometric font is used. */
 :root { --font-kids: 'Century Gothic', CenturyGothic, 'URW Gothic', 'URW Gothic L', 'TeX Gyre Adventor', AppleGothic, Futura, 'Trebuchet MS', var(--font); }
 .mode-home #screen-students, .mode-student main, .mode-student .appbar, #player { font-family: var(--font-kids); }
+
+.voice-pick { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.voice-pick .field .btn { justify-self: start; }

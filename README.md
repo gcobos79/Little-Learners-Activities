@@ -38,7 +38,7 @@ Browsers keep each site's saved data separately, so quizzes made in the old file
 on the new website by themselves. Easiest way:
 
 1. On the **same computer** where you used the old version, open
-   `versions/little-learners-activities-v124.html` in **Chrome** (double-click it).
+   `versions/little-learners-activities-v125.html` in **Chrome** (double-click it).
    It sees the quizzes and folders saved by the old file.
 2. Sign in with your teacher account and choose **“Subir a mi cuenta”**.
 3. Open the website on any device and sign in — everything is there.

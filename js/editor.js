@@ -19,7 +19,7 @@ window.LL = window.LL || {};
       if (!q) { toast('No se encontró ese quiz.', 'error'); return; }
       quiz = { id: q.id, name: q.name, folderId: q.folderId || null, config: S.clone(q.config) };
       if (!Array.isArray(quiz.config.questions)) quiz.config.questions = [];
-      quiz.config = { lang: 'es', mode: 'practice', questionOrder: 'fixed', answerOrder: 'fixed', visibility: 'hidden', coverImage: '', ...quiz.config };
+      quiz.config = { lang: 'es', voiceGender: 'female', mode: 'practice', questionOrder: 'fixed', answerOrder: 'fixed', visibility: 'hidden', coverImage: '', ...quiz.config };
     } else {
       quiz = S.newQuiz(folderId);
     }
@@ -82,6 +82,8 @@ window.LL = window.LL || {};
     p.append(el('div.field', el('label.switch', vis, 'Visible para estudiantes'), el('span.hint', 'Déjalo apagado mientras lo preparas. Los estudiantes solo ven los quizzes visibles.')));
 
     p.append(el('div.field', 'Idioma de la voz', segmented([['es', 'Español'], ['en', 'English']], c.lang, (v) => { c.lang = v; changed(); })));
+    p.append(el('div.field', 'Tipo de voz', segmented([['female', '👩 Mujer'], ['male', '👨 Hombre']], c.voiceGender || 'female', (v) => { c.voiceGender = v; changed(); }),
+      el('span.hint', 'Es una preferencia: si un aparato no tiene ese tipo de voz, se usa otra para que siempre se escuche.')));
 
     const qr = el('input', { type: 'checkbox', checked: c.questionOrder === 'random' });
     qr.addEventListener('change', () => { c.questionOrder = qr.checked ? 'random' : 'fixed'; changed(); });
@@ -220,7 +222,7 @@ window.LL = window.LL || {};
           el('button.btn.sm.ghost', { type: 'button', style: { justifySelf: 'start' }, onclick: () => {
             const t = item.readTextEnabled && item.readText ? item.readText : item.text;
             if (!String(t || '').trim()) { toast('Escribe primero el texto.', 'error'); return; }
-            speak(t, quiz.config.lang);
+            speak(t, quiz.config.lang, quiz.config.voiceGender);
           } }, '🔊 Escuchar'));
       } else if (mode === 'file') {
         const row = el('div.media-row');

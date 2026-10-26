@@ -5,7 +5,7 @@
 // (voice, model, text) and stored in the private "ll-tts" bucket under the
 // teacher's own folder, so children replaying a question costs no credits.
 //
-// POST body: { action: "speak", text, lang?, voiceId? } -> { path } | { fallback: true, reason }
+// POST body: { action: "speak", text, lang?, voiceId?, gender? } -> { path } | { fallback: true, reason }
 //            { action: "voices" }                        -> { voices: [{ id, name, accent, gender }] }
 //            { action: "usage" }                         -> { used, limit, resetsAt }
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
@@ -19,9 +19,26 @@ const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
 
 const ELEVEN = "https://api.elevenlabs.io/v1";
-const DEFAULT_VOICE = Deno.env.get("ELEVENLABS_VOICE_ID") ?? "EXAVITQu4vr4xnSDxMaL"; // "Sarah", a premade voice
+const DEFAULT_VOICE = Deno.env.get("ELEVENLABS_VOICE_ID") ?? "EXAVITQu4vr4xnSDxMaL"; // "Sarah", a premade female voice
+const DEFAULT_MALE_VOICE = Deno.env.get("ELEVENLABS_MALE_VOICE_ID") ?? ""; // empty: the first male voice of the account
 const MODEL = Deno.env.get("ELEVENLABS_MODEL_ID") ?? "eleven_multilingual_v2"; // speaks Spanish and English
 const MAX_CHARS = 400;
+
+let maleVoiceCache = "";
+/** A male voice from the account's voice list (cached while this function instance is warm). */
+async function defaultMaleVoice(key: string) {
+  if (DEFAULT_MALE_VOICE) return DEFAULT_MALE_VOICE;
+  if (maleVoiceCache) return maleVoiceCache;
+  try {
+    const r = await fetch(`${ELEVEN}/voices`, { headers: { "xi-api-key": key } });
+    if (r.ok) {
+      const v = await r.json();
+      const male = (v.voices ?? []).find((x: Record<string, any>) => x.labels?.gender === "male");
+      if (male) maleVoiceCache = male.voice_id;
+    }
+  } catch { /* use the default voice */ }
+  return maleVoiceCache || DEFAULT_VOICE;
+}
 
 async function sha256(s: string) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
@@ -70,7 +87,9 @@ Deno.serve(async (req) => {
 
   const text = String(body.text ?? "").trim().slice(0, MAX_CHARS);
   if (!text) return json({ error: "empty_text" }, 400);
-  const voiceId = /^[A-Za-z0-9]{10,40}$/.test(String(body.voiceId ?? "")) ? String(body.voiceId) : DEFAULT_VOICE;
+  const voiceId = /^[A-Za-z0-9]{10,40}$/.test(String(body.voiceId ?? ""))
+    ? String(body.voiceId)
+    : body.gender === "male" ? await defaultMaleVoice(key) : DEFAULT_VOICE;
   const hash = await sha256(`${MODEL}|${voiceId}|${text}`);
   const path = `${uid}/${hash}.mp3`;
 

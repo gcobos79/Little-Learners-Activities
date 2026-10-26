@@ -140,7 +140,7 @@ window.LL = window.LL || {};
   function loadVoices() { try { voiceList = speechSynthesis.getVoices() || []; } catch { voiceList = []; } }
   if ('speechSynthesis' in window) { loadVoices(); try { speechSynthesis.addEventListener('voiceschanged', loadVoices); } catch { speechSynthesis.onvoiceschanged = loadVoices; } }
 
-  function bestVoice(lang) {
+  function bestVoice(lang, gender = 'female') {
     if (!voiceList.length) loadVoices();
     const want = lang === 'en' ? ['en-us', 'en-gb', 'en'] : ['es-us', 'es-mx', 'es-419', 'es-es', 'es'];
     const score = (v) => {
@@ -148,21 +148,27 @@ window.LL = window.LL || {};
       let i = want.findIndex((w) => l === w || l.startsWith(w + '-') || (w.length === 2 && l.startsWith(w)));
       if (i < 0) return -1;
       let sc = 100 - i * 10;
-      if (FEMALE.test(v.name)) sc += 6; else if (MALE.test(v.name)) sc -= 4;
+      const f = FEMALE.test(v.name), m = !f && MALE.test(v.name);
+      if (gender === 'male') { if (m) sc += 6; else if (f) sc -= 4; } else { if (f) sc += 6; else if (m) sc -= 4; }
       if (v.localService) sc += 2; // works without internet
       return sc;
     };
     let best = null, bestScore = -1;
     for (const v of voiceList) { const sc = score(v); if (sc > bestScore) { best = v; bestScore = sc; } }
-    return best;
+    if (best) return best;
+    // No voice in this language on this device: still read it aloud with the device's own
+    // voice (preferring the requested kind) rather than staying silent.
+    const kind = gender === 'male' ? MALE : FEMALE;
+    return voiceList.find((v) => kind.test(v.name)) || voiceList.find((v) => v.default) || voiceList[0] || null;
   }
 
-  function speak(text, lang) {
+  /** gender is only a preference: any voice is better than silence. */
+  function speak(text, lang, gender) {
     if (!text || !('speechSynthesis' in window)) return;
     try {
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(String(text));
-      const v = bestVoice(lang);
+      const v = bestVoice(lang, gender);
       if (v) { u.voice = v; u.lang = v.lang; } else u.lang = lang === 'en' ? 'en-US' : 'es-US';
       u.rate = 0.9;
       speechSynthesis.speak(u);

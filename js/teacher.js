@@ -146,27 +146,40 @@ window.LL = window.LL || {};
     const v = S.voice();
     const on = el('input', { type: 'checkbox', checked: v.enabled });
     on.addEventListener('change', () => { S.saveVoice({ ...S.voice(), enabled: on.checked }); renderBackup(); });
-    const sel = el('select', { 'aria-label': 'Voz', disabled: !v.enabled });
-    sel.append(new Option('Cargando voces…', v.voiceId || ''));
+    const selF = el('select', { 'aria-label': 'Voz de mujer', disabled: true }, new Option('Cargando voces…', v.voiceId || ''));
+    const selM = el('select', { 'aria-label': 'Voz de hombre', disabled: true }, new Option('Cargando voces…', v.maleVoiceId || ''));
     const usage = el('div', { style: { display: 'grid', gap: '6px' } });
     const panel = box(el('h2', '🗣️ Voz natural (ElevenLabs)'),
       el('label.switch', on, 'Usar voz natural en los quizzes'),
-      el('p.small.muted', 'Al guardar un quiz, cada texto con «Voz automática» se convierte una vez en audio natural. Si no hay internet o se acaban los créditos, se usa la voz del dispositivo.'),
-      el('label.field', 'Voz', sel),
+      el('p.small.muted', 'Al guardar un quiz, cada texto con «Voz automática» se convierte una vez en audio natural con la voz de mujer o de hombre que elegiste en ese quiz. Si no hay internet o se acaban los créditos, se usa la voz del dispositivo.'),
+      el('div.voice-pick',
+        el('label.field', '👩 Voz de mujer', selF, el('button.btn.sm.ghost', { type: 'button', disabled: !v.enabled, onclick: () => testVoice('female') }, '🔊 Probar')),
+        el('label.field', '👨 Voz de hombre', selM, el('button.btn.sm.ghost', { type: 'button', disabled: !v.enabled, onclick: () => testVoice('male') }, '🔊 Probar'))),
       el('div.media-row',
-        el('button.btn.ghost', { type: 'button', disabled: !v.enabled, onclick: testVoice }, '🔊 Probar voz'),
         el('button.btn.soft', { type: 'button', disabled: !v.enabled, onclick: prepareAll }, '🗣️ Preparar voces de todos los quizzes')),
       usage,
       el('p.small.muted', 'Voces creadas con ElevenLabs (elevenlabs.io). Con el plan gratuito: solo uso no comercial y se debe mencionar a ElevenLabs.'));
     if (v.enabled) {
       LL.tts.voices().then((r) => {
-        sel.replaceChildren();
-        if (!r || !r.voices) { sel.append(new Option(r && r.reason === 'no_api_key' ? 'Falta la clave de ElevenLabs en Supabase' : 'No se pudieron cargar las voces', '')); return; }
-        const current = v.voiceId || r.defaultVoice;
-        r.voices.sort((a, b) => a.name.localeCompare(b.name)).forEach((x) => sel.add(new Option(x.name + (x.gender ? ' · ' + (x.gender === 'female' ? 'mujer' : x.gender === 'male' ? 'hombre' : x.gender) : '') + (x.accent ? ' · ' + x.accent : ''), x.id, false, x.id === current)));
-        sel.disabled = false;
-      }).catch((e) => { sel.replaceChildren(new Option('Sin conexión', '')); console.warn(e); });
-      sel.addEventListener('change', () => { S.saveVoice({ ...S.voice(), voiceId: sel.value }); toast('Voz cambiada. Usa «Preparar voces» para actualizar los quizzes.'); });
+        selF.replaceChildren(); selM.replaceChildren();
+        if (!r || !r.voices) {
+          const msg = r && r.reason === 'no_api_key' ? 'Falta la clave de ElevenLabs en Supabase' : 'No se pudieron cargar las voces';
+          selF.append(new Option(msg, '')); selM.append(new Option(msg, '')); return;
+        }
+        const label = (x) => x.name + (x.accent ? ' · ' + x.accent : '') + (x.age ? ' · ' + x.age : '');
+        const fill = (sel, gender, current) => {
+          const list = r.voices.filter((x) => x.gender === gender).sort((a, b) => a.name.localeCompare(b.name));
+          const others = r.voices.filter((x) => x.gender !== gender).sort((a, b) => a.name.localeCompare(b.name));
+          sel.add(new Option('Automática (' + (gender === 'female' ? 'mujer' : 'hombre') + ')', ''));
+          list.forEach((x) => sel.add(new Option(label(x), x.id, false, x.id === current)));
+          if (others.length) { const g = document.createElement('optgroup'); g.label = 'Otras voces'; others.forEach((x) => g.append(new Option(label(x), x.id, false, x.id === current))); sel.append(g); }
+          sel.value = current || '';
+          sel.disabled = false;
+        };
+        fill(selF, 'female', v.voiceId); fill(selM, 'male', v.maleVoiceId);
+      }).catch((e) => { selF.replaceChildren(new Option('Sin conexión', '')); selM.replaceChildren(new Option('Sin conexión', '')); console.warn(e); });
+      selF.addEventListener('change', () => { S.saveVoice({ ...S.voice(), voiceId: selF.value }); toast('Voz de mujer cambiada. Usa «Preparar voces» para actualizar los quizzes.'); });
+      selM.addEventListener('change', () => { S.saveVoice({ ...S.voice(), maleVoiceId: selM.value }); toast('Voz de hombre cambiada. Usa «Preparar voces» para actualizar los quizzes.'); });
       LL.tts.usage().then((u) => {
         if (!u || u.used == null) return;
         const pct = Math.min(100, Math.round((u.used / Math.max(1, u.limit)) * 100));
@@ -177,14 +190,15 @@ window.LL = window.LL || {};
     return panel;
   }
 
-  async function testVoice() {
-    const text = S.voice().voiceId ? '¡Hola! Vamos a aprender juntos.' : '¡Hola! Vamos a aprender juntos.';
+  async function testVoice(gender) {
+    const text = '¡Hola! Vamos a aprender juntos.';
+    const voiceId = (gender === 'male' ? S.voice().maleVoiceId : S.voice().voiceId) || '';
     try {
-      const r = await LL.cloud.invoke('ll-tts', { action: 'speak', text, voiceId: S.voice().voiceId || '' });
-      if (r && r.path) { await LL.tts.play({ audioMode: 'voice', text, tts: { path: r.path, text } }); return; }
+      const r = await LL.cloud.invoke('ll-tts', { action: 'speak', text, voiceId, gender });
+      if (r && r.path) { await LL.tts.play({ audioMode: 'voice', text, tts: { path: r.path, text, gender } }, gender); return; }
       toast('Voz natural no disponible (' + (r && r.reason) + '). Se usa la voz del dispositivo.', 'error');
-      LL.ui.speak(text, 'es');
-    } catch (e) { toast(LL.auth.friendly(e), 'error'); }
+      LL.ui.speak(text, 'es', gender);
+    } catch (e) { toast(LL.auth.friendly(e), 'error'); LL.ui.speak(text, 'es', gender); }
   }
 
   async function prepareAll() {

@@ -109,7 +109,7 @@ window.LL = window.LL || {};
     return {
       id: r.id, familyId: r.id, type: 'quiz', name: r.name, version: 1, folderId: r.folder_id || null,
       createdAt: iso(r.created_at), updatedAt: iso(r.updated_at),
-      config: { lang: r.language, mode: r.mode, questionOrder: r.question_order, answerOrder: r.answer_order, visibility: r.visible ? 'visible' : 'hidden', coverImage: ref(r.cover_path), questions },
+      config: { lang: r.language, voiceGender: r.voice_gender === 'male' ? 'male' : 'female', mode: 'practice', questionOrder: r.question_order, answerOrder: r.answer_order, visibility: r.visible ? 'visible' : 'hidden', coverImage: ref(r.cover_path), questions },
     };
   }
 
@@ -145,7 +145,7 @@ window.LL = window.LL || {};
       });
     });
     return {
-      p_quiz: { id: entry.id, folder_id: entry.folderId && folderIds.has(entry.folderId) ? entry.folderId : null, name: String(entry.name || '').slice(0, 200), language: c.lang, mode: c.mode, question_order: c.questionOrder, answer_order: c.answerOrder, visible: c.visibility === 'visible', cover_path: path(c.coverImage), created_at: entry.createdAt || entry.updatedAt, updated_at: entry.updatedAt },
+      p_quiz: { id: entry.id, folder_id: entry.folderId && folderIds.has(entry.folderId) ? entry.folderId : null, name: String(entry.name || '').slice(0, 200), language: c.lang, voice_gender: c.voiceGender === 'male' ? 'male' : 'female', mode: 'practice', question_order: c.questionOrder, answer_order: c.answerOrder, visible: c.visibility === 'visible', cover_path: path(c.coverImage), created_at: entry.createdAt || entry.updatedAt, updated_at: entry.updatedAt },
       p_questions: questions,
       p_options: options,
     };
@@ -206,7 +206,7 @@ window.LL = window.LL || {};
     changed += await refreshStudents();
 
     // Settings (PIN, voice, Sonidos iniciales)
-    const ss = await LL.cloud.select('ll_settings', 'select=sonidos,pin_hash,voice_id,updated_at,server_updated_at&server_updated_at=gt.' + encodeURIComponent(st.pulledS));
+    const ss = await LL.cloud.select('ll_settings', 'select=sonidos,pin_hash,voice_id,male_voice_id,updated_at,server_updated_at&server_updated_at=gt.' + encodeURIComponent(st.pulledS));
     if (ss && ss.length) {
       const r = ss[0];
       if (ts(r.updated_at) > ts(S.settingsAt())) {
@@ -214,8 +214,8 @@ window.LL = window.LL || {};
           if (r.sonidos && typeof r.sonidos === 'object') S.saveSonidos(r.sonidos);
           S.savePinHash(r.pin_hash || null);
           const v = S.voice();
-          if (r.voice_id === 'off') S.saveVoice({ ...v, enabled: false });
-          else S.saveVoice({ ...v, enabled: true, voiceId: r.voice_id || '' });
+          if (r.voice_id === 'off') S.saveVoice({ ...v, enabled: false, maleVoiceId: r.male_voice_id || '' });
+          else S.saveVoice({ ...v, enabled: true, voiceId: r.voice_id || '', maleVoiceId: r.male_voice_id || '' });
           localStorage.setItem(S.KEYS.settingsAt, JSON.stringify(iso(r.updated_at)));
         });
         st.settings = iso(r.updated_at);
@@ -331,7 +331,7 @@ window.LL = window.LL || {};
     const sAt = S.settingsAt();
     if (sAt && sAt !== st.settings) {
       const v = S.voice();
-      await LL.cloud.upsert('ll_settings', [{ owner_id: me.id, sonidos: S.sonidos(), pin_hash: S.pinHash(), voice_id: v.enabled ? (v.voiceId || null) : 'off', updated_at: sAt }], 'owner_id');
+      await LL.cloud.upsert('ll_settings', [{ owner_id: me.id, sonidos: S.sonidos(), pin_hash: S.pinHash(), voice_id: v.enabled ? (v.voiceId || null) : 'off', male_voice_id: v.maleVoiceId || null, updated_at: sAt }], 'owner_id');
       st.settings = sAt;
     }
     saveState(st);

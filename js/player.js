@@ -58,8 +58,9 @@ window.LL = window.LL || {};
   }
   /** Natural ElevenLabs voice when it was prepared, otherwise the device voice. */
   async function sayItem(item, fallbackText) {
-    if (LL.tts && (await LL.tts.play(item))) return;
-    speak(fallbackText, quiz && quiz.config?.lang);
+    const gender = (quiz && quiz.config?.voiceGender) || 'female';
+    if (LL.tts && (await LL.tts.play(item, gender))) return;
+    speak(fallbackText, quiz && quiz.config?.lang, gender);
   }
   function playPrompt(q) {
     if (q.audioMode === 'file' && q.audio) playAudio(q.audio);
@@ -144,7 +145,7 @@ window.LL = window.LL || {};
     setTimeout(() => { qa.classList.remove('enter'); grid.classList.remove('enter'); }, 120 + n * 70 + 450);
     requestAnimationFrame(() => { fitLabels(grid); requestAnimationFrame(() => fitLabels(grid)); });
 
-    if (LL.tts) LL.tts.prefetch([q, ...(q.options || [])]);
+    if (LL.tts) LL.tts.prefetch([q, ...(q.options || [])], quiz.config?.voiceGender || 'female');
     // Read the question aloud automatically (needs a tap first, which the child just did).
     const myRun = run;
     timer = setTimeout(() => { if (myRun === run && !root().hidden) playPrompt(q); }, 250);
