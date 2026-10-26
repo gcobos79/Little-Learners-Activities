@@ -78,7 +78,7 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
 
   // Delete on A reaches B; backup from B has pictures inside
   await A.click('button:has-text("Mis actividades")'); await A.waitForTimeout(400);
-  await A.click('.card.quiz:has-text("Colores") .icon-btn'); await A.click('.menu >> text=Eliminar'); await A.click('.modal button:has-text("Eliminar")'); await A.waitForTimeout(2500);
+  await A.click('.card.quiz:has-text("Colores") .icon-btn[aria-label^="Más opciones"]'); await A.click('.menu >> text=Eliminar'); await A.click('.modal button:has-text("Eliminar")'); await A.waitForTimeout(2500);
   ok(mock.db.quizzes.find((q) => q.name === 'Colores').deleted_at, 'deleting marks the quiz deleted in the database');
   await B.evaluate(() => LL.sync.run()); await B.waitForTimeout(1000);
   ok(!(await B.evaluate(() => LL.store.quizzes().some((q) => q.name === 'Colores'))), 'deletion reaches the tablet');

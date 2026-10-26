@@ -14,7 +14,7 @@ Created by Geovanny Cobos.
 | **Children** | Tap their animal → open a folder → tap a quiz. Big buttons, read-aloud questions, a magic chime for right answers and a buzzer for wrong ones. They can't change anything. |
 | **Teacher** | Press and **hold 🔒 Maestro** for one second (plus a PIN, if set). Create folders and quizzes, mark a quiz *Visible* when it's ready, manage the student list, and back up or share activities. |
 
-- **Práctica** shows the correct answer after a mistake; **Evaluación** does not.
+- After a mistake, the correct answer is shown. Each child's result is saved once per month (latest attempt) and the teacher sees a ranking per quiz (📊).
 - Only quizzes marked **Visible para estudiantes** that have at least one question appear for children. Empty folders are hidden from them.
 - The original **Sonidos iniciales** drag-and-drop activity is kept unchanged and can be turned on for students in the teacher area.
 
@@ -38,7 +38,7 @@ Browsers keep each site's saved data separately, so quizzes made in the old file
 on the new website by themselves. Easiest way:
 
 1. On the **same computer** where you used the old version, open
-   `versions/little-learners-activities-v123.html` in **Chrome** (double-click it).
+   `versions/little-learners-activities-v124.html` in **Chrome** (double-click it).
    It sees the quizzes and folders saved by the old file.
 2. Sign in with your teacher account and choose **“Subir a mi cuenta”**.
 3. Open the website on any device and sign in — everything is there.

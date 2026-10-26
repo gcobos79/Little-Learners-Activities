@@ -60,7 +60,7 @@ const assert=(c,m)=>{console.log((c?'PASS ':'FAIL ')+m)};
   await p.click('text=💾 Guardar'); await p.waitForTimeout(300);
   await p.click('text=⬅️ Mis actividades'); await p.waitForTimeout(300);
   // Move quiz to folder via menu
-  await p.click('.card.quiz:has-text("Prueba nueva 2") .icon-btn'); await p.click('.menu >> text=Mover'); await p.waitForTimeout(200);
+  await p.click('.card.quiz:has-text("Prueba nueva 2") .icon-btn[aria-label^="Más opciones"]'); await p.click('.menu >> text=Mover'); await p.waitForTimeout(200);
   await p.selectOption('.modal select',{label:'📁 Matemáticas'}); await p.click('.modal button:has-text("Mover")'); await p.waitForTimeout(300);
   const moved=await p.evaluate(()=>JSON.parse(localStorage.getItem('ll-activities-v10-templates')).find(x=>x.name==='Prueba nueva 2').folderId);
   assert(moved==='folder-2','teacher: move quiz into folder');

@@ -112,6 +112,7 @@ window.LL = window.LL || {};
       main.append(el('span.badge.' + (ready ? 'visible' : 'hidden'), ready ? '👀 Visible para estudiantes' : '🛠️ En preparación'));
       card.append(el('div.card-tools',
         el('button.btn.sm.soft', { type: 'button', onclick: () => LL.editor.open(t.id) }, '✏️ Editar'),
+        el('button.icon-btn', { type: 'button', 'aria-label': 'Ver resultados de ' + t.name, title: 'Ver resultados', onclick: () => LL.results.open(t) }, '📊'),
         el('button.icon-btn', { type: 'button', 'aria-label': 'Más opciones del quiz', onclick: (e) => quizMenu(e, t) }, '⋯')));
       card.addEventListener('contextmenu', (e) => { e.preventDefault(); quizMenu(e, t); });
     }
@@ -163,6 +164,7 @@ window.LL = window.LL || {};
   function quizMenu(e, t) {
     popMenu(e, [
       { label: '▶️ Probar como estudiante', run: () => play(t) },
+      { label: '📊 Ver resultados', run: () => LL.results.open(t) },
       { label: '✏️ Editar', run: () => LL.editor.open(t.id) },
       { label: '📂 Mover a otra carpeta', run: () => moveDialog(t) },
       { label: '📄 Duplicar', run: () => { const id = S.duplicateQuiz(t.id); if (id) { toast('Copia creada (queda «En preparación»).', 'success'); render(); } } },

@@ -1,5 +1,16 @@
 # Changelog
 
+## V124 — October 2026 (results)
+- Quiz results are saved: one per student, per quiz, per month; a newer attempt in the same month
+  replaces the older one (total and question-by-question detail). Tables `quiz_results` and
+  `quiz_result_answers`, function `save_quiz_result` (an older attempt never overwrites a newer one).
+- Without internet, results wait on the tablet and upload when the connection comes back.
+- Teacher: 📊 button / “Ver resultados” on each quiz — ranking for the month (place, student, score,
+  date, minutes), earlier months, detail per question, and who hasn't done it yet.
+- The “Evaluación” mode was removed: every quiz shows the correct answer after a mistake
+  (also in Sonidos iniciales).
+- Editor: clear “‹ Anterior / Siguiente ›” question navigation, separate from reordering.
+
 ## V123 — October 2026 (real database)
 - Students come from the existing `students` table (active students of the signed-in teacher).
   New columns: `animal` (random icon assigned to every student), `avatar_path` (optional picture),

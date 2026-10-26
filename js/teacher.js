@@ -386,7 +386,6 @@ window.LL = window.LL || {};
         el('div.field', 'Letras', letters),
         el('div', { style: { display: 'flex', gap: '18px', flexWrap: 'wrap' } },
           el('div.field', 'Idioma', seg([['es', 'Español'], ['en', 'English']], c.lang, (v) => { c.lang = v; commit(true); })),
-          el('div.field', 'Modalidad', seg([['practice', 'Práctica'], ['assessment', 'Evaluación']], c.mode, (v) => { c.mode = v; commit(false); })),
           el('div.field', 'Velocidad', seg([[28, 'Lenta'], [45, 'Normal'], [70, 'Rápida']], c.speed, (v) => { c.speed = Number(v); commit(false); })),
           el('label.field', 'Imágenes por letra', per)),
         el('button.btn.primary', { type: 'button', style: { justifySelf: 'start' }, onclick: () => LL.app.openSonidos() }, '▶️ Probar')),

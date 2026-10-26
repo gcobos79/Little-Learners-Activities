@@ -36,6 +36,7 @@ window.LL = window.LL || {};
         ul('Del maestro (solo si usa una cuenta): su correo electrónico y una contraseña protegida por Supabase.',
           'Los nombres (o apodos) y el animalito de cada estudiante que el maestro agrega.',
           'Los quizzes y carpetas que crea el maestro: textos, imágenes y audios.',
+          'Los resultados de los quizzes: uno por estudiante, por quiz y por mes (aciertos, total, fecha, minutos y qué respondió en cada pregunta). Si el niño repite el quiz en el mismo mes, se guarda solo el último intento.',
           'Los ajustes de «Sonidos iniciales» y sus resultados del día (nombre y número de aciertos; estos resultados se quedan solo en el dispositivo).',
           'Un PIN del maestro, guardado cifrado (no se guarda el número).',
           'Los audios de voz natural creados para las preguntas.'),

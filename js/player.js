@@ -1,7 +1,7 @@
 /* Quiz player. Same answer rules and timing as V121:
  *  - Correct: magic sound, the answer blinks green, next question after 2 s.
- *  - Wrong (Práctica): buzzer, blinks red, then the correct answer blinks green, next after 2 s more.
- *  - Wrong (Evaluación): buzzer, blinks red, next question after 2 s (correct answer is not shown).
+ *  - Wrong: buzzer, blinks red, then the correct answer blinks green, next after 2 s more.
+ * (V124: the "Evaluación" mode was removed; every quiz works this way.)
  */
 window.LL = window.LL || {};
 (function () {
@@ -9,6 +9,9 @@ window.LL = window.LL || {};
   const PASTELS = ['#F8DDE3', '#FBE4D0', '#FFF1BD', '#DDF2D7', '#D8F0EC', '#DCE8FC'];
 
   let quiz = null, questions = [], index = 0, opts = {}, timer = null, run = 0, answered = false, selected = new Set();
+  // What the child answered in this attempt (first answer of each question), for the results.
+  let attempt = null, shownAt = 0;
+  const newAttempt = () => { attempt = { startedAt: new Date().toISOString(), answers: [] }; };
 
   const root = () => $('#player');
   const body = () => $('#playerBody');
@@ -19,6 +22,7 @@ window.LL = window.LL || {};
     questions = LL.store.clone(entry.config?.questions || []);
     if (entry.config?.questionOrder === 'random' && !options.preview) questions = shuffle(questions);
     index = Math.max(0, Math.min(options.startIndex || 0, questions.length - 1));
+    newAttempt();
     root().hidden = false;
     root().classList.toggle('is-preview', !!options.preview);
     // Show who is playing, so the teacher can check at a glance that each child is on their own name.
@@ -83,6 +87,7 @@ window.LL = window.LL || {};
       return;
     }
     renderProgress();
+    shownAt = Date.now();
 
     // Question
     const hasImg = LL.media.isImage(q.image);
@@ -169,6 +174,16 @@ window.LL = window.LL || {};
     const chosen = buttons.filter((b) => selected.has(Number(b.dataset.index)));
     const correctIdx = q.options.map((o, k) => (o.correct ? k : -1)).filter((k) => k >= 0);
     const isCorrect = selected.size === correctIdx.length && [...selected].every((k) => q.options[k] && q.options[k].correct);
+    if (attempt && !attempt.answers.some((a) => a.question_id === q.id)) {
+      const picked = [...selected].map((k) => q.options[k]).filter(Boolean);
+      const original = (quiz.config?.questions || []).findIndex((x) => x.id === q.id);
+      attempt.answers.push({
+        position: original >= 0 ? original : index, question_id: q.id,
+        prompt: String(q.text || q.readText || q.emoji || '').slice(0, 300),
+        chosen_option_ids: picked.map((o) => o.id), chosen_text: picked.map((o) => o.text || '🖼️').join(', ').slice(0, 200),
+        correct: isCorrect, response_ms: Date.now() - shownAt,
+      });
+    }
     const flash = (b, good) => { b.classList.remove('selected'); b.classList.add(good ? 'flash-correct' : 'flash-incorrect'); };
 
     if (isCorrect) {
@@ -181,7 +196,6 @@ window.LL = window.LL || {};
     }
     feedbackTone(false);
     chosen.forEach((b) => flash(b, !!q.options[Number(b.dataset.index)].correct));
-    if (quiz.config?.mode === 'assessment') { next(2000, myRun); return; }
     timer = setTimeout(() => {
       if (myRun !== run || root().hidden) return;
       buttons.filter((b) => q.options[Number(b.dataset.index)].correct).forEach((b) => { b.classList.remove('flash-correct', 'flash-incorrect'); void b.offsetWidth; flash(b, true); });
@@ -204,12 +218,16 @@ window.LL = window.LL || {};
     feedbackTone(true);
     setTimeout(() => confetti(null, innerHeight * 0.35, 40), 150);
     const who = LL.app.state.student;
+    // Save the result (one per student, quiz and month; the newest replaces older ones).
+    if (!opts.preview && who && quiz.id && attempt && LL.results) {
+      LL.results.record({ quiz, student: who, answers: attempt.answers, total: questions.length, startedAt: attempt.startedAt, finishedAt: new Date().toISOString() });
+    }
     body().replaceChildren(el('div.finish',
       el('div.stars', '⭐🌟⭐'),
       el('h1', who ? `¡Muy bien, ${who.name}!` : '¡Muy bien!'),
       el('p.lead', 'Terminaste «' + quiz.name + '».'),
       el('div', { style: { display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' } },
-        el('button.btn.ghost.big', { type: 'button', onclick: () => { index = 0; render(); } }, '🔁 Otra vez'),
+        el('button.btn.ghost.big', { type: 'button', onclick: () => { index = 0; newAttempt(); render(); } }, '🔁 Otra vez'),
         el('button.btn.primary.big', { type: 'button', onclick: close }, opts.preview ? 'Cerrar vista previa' : '📚 Mis actividades')),
     ));
   }

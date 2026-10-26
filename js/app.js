@@ -5,7 +5,7 @@ window.LL = window.LL || {};
   const S = LL.store;
 
   const state = { screen: 'students', mode: null, student: null };
-  const SCREENS = ['login', 'set-password', 'students', 'library', 'editor', 'students-admin', 'backup', 'sonidos-admin', 'sonidos', 'result', 'info'];
+  const SCREENS = ['login', 'set-password', 'students', 'library', 'editor', 'students-admin', 'backup', 'sonidos-admin', 'sonidos', 'result', 'info', 'results'];
   let infoReturn = 'students';
   const TEACHER_TABS = [
     { id: 'library', icon: '📚', label: 'Actividades' },
@@ -30,6 +30,7 @@ window.LL = window.LL || {};
     if (screen === 'backup') LL.teacher.renderBackup();
     if (screen === 'sonidos-admin') LL.teacher.renderSonidos();
     if (screen === 'info') LL.info.render(state.infoSection);
+    if (screen === 'results') LL.results.render();
     renderAppbar();
     window.scrollTo(0, 0);
     const h = $('#screen-' + screen + ' h1');
@@ -45,7 +46,7 @@ window.LL = window.LL || {};
     } else if (state.mode === 'teacher') {
       const tabs = el('div.tabs', { role: 'tablist' });
       for (const t of TEACHER_TABS) {
-        const active = state.screen === t.id || (t.id === 'library' && state.screen === 'editor');
+        const active = state.screen === t.id || (t.id === 'library' && (state.screen === 'editor' || state.screen === 'results'));
         tabs.append(el('button.tab', { type: 'button', role: 'tab', 'aria-selected': String(active), onclick: () => go(t.id) }, t.icon + ' ', el('span.tab-label', t.label)));
       }
       center.append(tabs);
@@ -143,12 +144,12 @@ window.LL = window.LL || {};
   /* ---------- Sonidos iniciales (original activity) ---------- */
   let sonidosConfig = null;
   function openSonidos() {
-    sonidosConfig = S.sonidos();
+    sonidosConfig = { ...S.sonidos(), mode: 'practice' };
     if (!sonidosConfig.letters.length) { toast('Elige al menos una letra en «Sonidos iniciales».', 'error'); return; }
     go('sonidos');
     $('#sonidosTitle').textContent = '🔤 Sonidos iniciales' + (state.student ? ' · ' + state.student.name : ' · prueba del maestro');
     const f = $('#sonidosFrame');
-    const cfg = { lang: sonidosConfig.lang, per: sonidosConfig.per, speed: sonidosConfig.speed, mode: sonidosConfig.mode, letters: sonidosConfig.letters, fixedImages: sonidosConfig.fixedImages || null };
+    const cfg = { lang: sonidosConfig.lang, per: sonidosConfig.per, speed: sonidosConfig.speed, mode: 'practice', letters: sonidosConfig.letters, fixedImages: sonidosConfig.fixedImages || null };
     f.onload = () => f.contentWindow.postMessage({ type: 'll-start', config: cfg }, '*');
     f.srcdoc = LL.sonidosActivityHTML;
   }

@@ -1,0 +1,190 @@
+/* Quiz results (V124).
+ *
+ * Rule from the teacher: ONE result per student, per quiz, per month. When a
+ * child does the same quiz again in the same month, the newest attempt replaces
+ * the older one (both the total and the question-by-question detail).
+ *
+ * A finished quiz is first stored on the device (so nothing is lost without
+ * internet) and then uploaded with save_quiz_result(), which keeps only the
+ * newest attempt of each month. The teacher sees a ranking per quiz and month. */
+window.LL = window.LL || {};
+(function () {
+  const { el, $, toast, dialog } = LL.ui;
+  const S = LL.store;
+  const KEY = 'll-v124-results';
+  const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+  /** 'YYYY-MM-01' of a date, in the school's time zone (Chicago). */
+  function monthOf(d = new Date()) {
+    const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago', year: 'numeric', month: '2-digit' }).formatToParts(d).map((x) => [x.type, x.value]));
+    return `${p.year}-${p.month}-01`;
+  }
+  const shiftMonth = (m, d) => { const [y, mo] = m.split('-').map(Number); const t = new Date(Date.UTC(y, mo - 1 + d, 1)); return t.toISOString().slice(0, 8) + '01'; };
+  const monthLabel = (m) => { const [y, mo] = m.split('-').map(Number); return MONTHS[mo - 1] + ' ' + y; };
+
+  function readAll() { return S.readJSON(KEY, {}) || {}; }
+  function writeAll(x) { try { localStorage.setItem(KEY, JSON.stringify(x)); } catch (e) { console.warn('results not saved', e); } }
+  const keyOf = (r) => (r.student_id != null ? 'id:' + r.student_id : 'n:' + String(r.student_name).toLowerCase()) + '|' + r.quiz_id + '|' + r.month;
+
+  /** Called by the player when a child finishes a quiz. */
+  function record({ quiz, student, answers, total, startedAt, finishedAt }) {
+    const score = answers.filter((a) => a.correct).length;
+    const r = {
+      student_id: typeof student.id === 'number' || /^\d+$/.test(String(student.id || '')) ? Number(student.id) : null,
+      student_name: student.name, student_animal: student.animal || '', student_avatar: student.avatar || '',
+      quiz_id: quiz.id, quiz_name: quiz.name, month: monthOf(new Date(finishedAt)),
+      score, total, started_at: startedAt, finished_at: finishedAt,
+      duration_seconds: Math.max(0, Math.round((Date.parse(finishedAt) - Date.parse(startedAt)) / 1000)),
+      answers: answers.slice().sort((a, b) => a.position - b.position), uploaded: false,
+    };
+    const all = readAll();
+    const k = keyOf(r);
+    if (all[k] && Date.parse(all[k].finished_at) > Date.parse(r.finished_at)) return;
+    all[k] = r;
+    writeAll(all);
+    flush();
+  }
+
+  let flushing = null;
+  /** Upload results that are waiting on this device. */
+  function flush() {
+    if (!LL.cloud.signedIn()) return Promise.resolve(0);
+    if (flushing) return flushing;
+    flushing = (async () => {
+      const all = readAll();
+      let sent = 0;
+      for (const [k, r] of Object.entries(all)) {
+        if (r.uploaded || r.student_id == null) continue;
+        try {
+          await LL.cloud.rpc('save_quiz_result', {
+            p_result: { student_id: r.student_id, quiz_id: r.quiz_id, month: r.month, score: r.score, total: r.total, started_at: r.started_at, finished_at: r.finished_at, duration_seconds: r.duration_seconds },
+            p_answers: r.answers,
+          });
+          delete all[k]; // safely in the database now
+          sent++;
+        } catch (e) {
+          if (e.code === 'offline' || e.status === 0) break; // try again when back online
+          // e.g. the quiz isn't uploaded yet: keep it and try on the next sync
+          console.warn('result upload postponed', e.message);
+        }
+      }
+      writeAll(all);
+      return sent;
+    })().finally(() => { flushing = null; });
+    return flushing;
+  }
+  window.addEventListener('online', () => flush());
+
+  /* ---------- Teacher view ---------- */
+  let current = { quiz: null, month: monthOf() };
+
+  function open(quiz) {
+    current = { quiz, month: monthOf() };
+    LL.app.go('results');
+  }
+
+  async function load(quiz, month) {
+    const local = Object.values(readAll()).filter((r) => r.quiz_id === quiz.id && r.month === month);
+    let rows = [], offline = false;
+    if (LL.cloud.signedIn()) {
+      try {
+        const data = await LL.cloud.select('quiz_results', 'select=id,student_id,score,total,started_at,finished_at,duration_seconds,students(name,animal,avatar_path),quiz_result_answers(position,prompt,chosen_text,correct,response_ms)&quiz_id=eq.' + encodeURIComponent(quiz.id) + '&month=eq.' + month);
+        rows = (data || []).map((r) => ({
+          student_id: r.student_id, student_name: r.students ? r.students.name : '¿?', student_animal: r.students ? r.students.animal : '', student_avatar: r.students ? LL.media.toRef(r.students.avatar_path) : '',
+          score: r.score, total: r.total, finished_at: r.finished_at, duration_seconds: r.duration_seconds,
+          answers: (r.quiz_result_answers || []).sort((a, b) => a.position - b.position),
+        }));
+      } catch (e) { offline = true; }
+    }
+    // Results still waiting on this device replace older ones from the database.
+    for (const p of local) {
+      const i = rows.findIndex((r) => (p.student_id != null ? r.student_id === p.student_id : r.student_name === p.student_name));
+      const item = { ...p, pending: !!LL.cloud.signedIn() && !p.uploaded };
+      if (i < 0) rows.push(item);
+      else if (Date.parse(p.finished_at) > Date.parse(rows[i].finished_at)) rows[i] = item;
+    }
+    return { rows, offline };
+  }
+
+  /** 1, 2, 2, 4… : the same score shares the same place. */
+  function rank(rows) {
+    rows.sort((a, b) => (b.score / Math.max(1, b.total)) - (a.score / Math.max(1, a.total)) || b.score - a.score || (a.duration_seconds ?? 1e9) - (b.duration_seconds ?? 1e9) || a.student_name.localeCompare(b.student_name, 'es'));
+    let place = 0, prev = null;
+    rows.forEach((r, i) => { const key = r.score + '/' + r.total; if (key !== prev) { place = i + 1; prev = key; } r.place = place; });
+    return rows;
+  }
+
+  const fmtTime = (s) => (s == null ? '—' : s < 60 ? s + ' s' : Math.floor(s / 60) + ' min ' + String(s % 60).padStart(2, '0') + ' s');
+  const fmtDate = (iso) => new Date(iso).toLocaleDateString('es-US', { day: 'numeric', month: 'short', timeZone: 'America/Chicago' }) + ' · ' + new Date(iso).toLocaleTimeString('es-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Chicago' });
+  const medal = (p) => (p === 1 ? '🥇' : p === 2 ? '🥈' : p === 3 ? '🥉' : '');
+
+  async function render() {
+    const page = $('#screen-results');
+    const { quiz, month } = current;
+    if (!quiz) { LL.app.go('library'); return; }
+    const isThisMonth = month === monthOf();
+    page.replaceChildren(el('div.tool-page.results-page',
+      el('div.results-head',
+        el('button.btn.ghost', { type: 'button', onclick: () => LL.app.go('library') }, '⬅️ Mis actividades'),
+        el('div', el('h1', '📊 ' + quiz.name), el('p.lead', 'Un resultado por estudiante cada mes: queda el último intento.'))),
+      el('div.month-nav',
+        el('button.btn.soft', { type: 'button', 'aria-label': 'Mes anterior', onclick: () => { current.month = shiftMonth(month, -1); render(); } }, '‹'),
+        el('h2', monthLabel(month)),
+        el('button.btn.soft', { type: 'button', 'aria-label': 'Mes siguiente', disabled: isThisMonth, onclick: () => { current.month = shiftMonth(month, 1); render(); } }, '›')),
+      el('div.panel', el('p.muted', 'Cargando resultados…'))));
+
+    const { rows, offline } = await load(quiz, month);
+    if (current.quiz !== quiz || current.month !== month) return; // the teacher moved on
+    rank(rows);
+    const panel = page.querySelector('.panel');
+    panel.replaceChildren();
+    if (offline) panel.append(el('p.problem-box', '📴 Sin conexión: se muestran solo los resultados guardados en este dispositivo.'));
+
+    if (!rows.length) {
+      panel.append(el('div.empty', el('div.big-emoji', '🗓️'), el('div', 'Nadie ha hecho esta actividad en ' + monthLabel(month) + '.')));
+    } else {
+      const avg = Math.round(rows.reduce((s, r) => s + r.score / Math.max(1, r.total), 0) / rows.length * 100);
+      panel.append(el('p.small.muted', rows.length + (rows.length === 1 ? ' estudiante' : ' estudiantes') + ' · promedio de la clase: ' + avg + ' %'));
+      const table = el('div.results-table', { role: 'table', 'aria-label': 'Resultados de ' + monthLabel(month) },
+        el('div.rt-row.rt-head', { role: 'row' }, el('span', { role: 'columnheader' }, 'Puesto'), el('span', { role: 'columnheader' }, 'Estudiante'), el('span', { role: 'columnheader' }, 'Puntaje'), el('span.rt-date', { role: 'columnheader' }, 'Fecha'), el('span', { role: 'columnheader' }, 'Tiempo')));
+      for (const r of rows) {
+        const pct = Math.round(r.score / Math.max(1, r.total) * 100);
+        const row = el('button.rt-row', { type: 'button', role: 'row', onclick: () => detail(r), 'aria-label': r.student_name + ': ' + r.score + ' de ' + r.total + '. Ver detalle' },
+          el('span.rt-place', medal(r.place) + ' ' + r.place),
+          el('span.rt-student', LL.teacher.avatar({ animal: r.student_animal, avatar: r.student_avatar }), el('span', r.student_name), r.pending ? el('span.badge.hidden', { title: 'Se subirá cuando haya internet' }, '⏳') : null),
+          el('span.rt-score', el('strong', r.score + ' / ' + r.total), el('span.rt-bar', el('span', { style: { width: pct + '%' } }))),
+          el('span.rt-date', fmtDate(r.finished_at)),
+          el('span.rt-time', fmtTime(r.duration_seconds)));
+        table.append(row);
+      }
+      panel.append(table, el('p.small.muted', 'Toca un estudiante para ver cada pregunta.'));
+    }
+    // Who hasn't done it this month
+    const done = new Set(rows.map((r) => (r.student_id != null ? 'id:' + r.student_id : 'n:' + r.student_name)));
+    const missing = S.roster().filter((s) => !done.has(s.id != null ? 'id:' + s.id : 'n:' + s.name));
+    if (missing.length) {
+      panel.append(el('div.missing', el('strong', isThisMonth ? 'Todavía no lo hacen este mes:' : 'No lo hicieron en ' + monthLabel(month) + ':'),
+        el('div.missing-list', missing.map((s) => el('span.missing-chip', LL.teacher.avatar(s), s.name)))));
+    }
+  }
+
+  function detail(r) {
+    const list = el('ol.answer-list');
+    for (const a of r.answers || []) {
+      list.append(el('li.' + (a.correct ? 'good' : 'bad'),
+        el('span.mark', a.correct ? '✓' : '✗'),
+        el('span.q', a.prompt || '(pregunta sin texto)'),
+        el('span.a', 'Respondió: ' + (a.chosen_text || '—'))));
+    }
+    dialog({
+      title: r.student_name + ' · ' + r.score + ' / ' + r.total,
+      body: el('div', { style: { display: 'grid', gap: '10px' } },
+        el('p.small.muted', fmtDate(r.finished_at) + ' · ' + fmtTime(r.duration_seconds)),
+        (r.answers || []).length ? list : el('p.muted', 'No hay detalle para este resultado.')),
+      actions: [{ label: 'Cerrar', kind: 'primary', value: true }],
+      wide: true,
+    });
+  }
+
+  LL.results = { record, flush, open, render, monthOf };
+})();

@@ -81,10 +81,6 @@ window.LL = window.LL || {};
     vis.addEventListener('change', () => { c.visibility = vis.checked ? 'visible' : 'hidden'; changed(); });
     p.append(el('div.field', el('label.switch', vis, 'Visible para estudiantes'), el('span.hint', 'Déjalo apagado mientras lo preparas. Los estudiantes solo ven los quizzes visibles.')));
 
-    const modeHint = el('span.hint');
-    const setModeHint = () => { modeHint.textContent = c.mode === 'assessment' ? 'Evaluación: si se equivoca, no se muestra la respuesta correcta.' : 'Práctica: si se equivoca, se le muestra la respuesta correcta.'; };
-    setModeHint();
-    p.append(el('div.field', 'Modalidad', segmented([['practice', 'Práctica'], ['assessment', 'Evaluación']], c.mode, (v) => { c.mode = v; setModeHint(); changed(); }), modeHint));
     p.append(el('div.field', 'Idioma de la voz', segmented([['es', 'Español'], ['en', 'English']], c.lang, (v) => { c.lang = v; changed(); })));
 
     const qr = el('input', { type: 'checkbox', checked: c.questionOrder === 'random' });
@@ -324,6 +320,7 @@ window.LL = window.LL || {};
   /* ---------- Save / preview / leave ---------- */
   function save() {
     quiz.name = (quiz.name || '').trim();
+    quiz.config.mode = 'practice'; // only one mode: a wrong answer always shows the right one
     if (!quiz.name) { toast('Escribe un nombre para el quiz.', 'error'); $('#edName').focus(); return false; }
     // A question that was never touched is simply dropped.
     const blank = (q) => !String(q.text || '').trim() && !q.image && !q.audio && !String(q.readText || '').trim() && q.options.every((o) => !String(o.text || '').trim() && !o.image && !o.audio && !o.correct);

@@ -10,6 +10,7 @@ stays in the browser on that device.
 - **Teacher (only with an account):** email address and a password managed by Supabase.
 - First names (or nicknames) and an animal icon for each student the teacher adds.
 - Quizzes and folders the teacher creates: text, pictures and audio.
+- Quiz results: one per student, per quiz, per month (score, total, date, minutes, and the answer to each question). Repeating a quiz in the same month keeps only the latest attempt.
 - Sonidos iniciales settings and that day's results (name and number correct; these results stay on the device only).
 - A teacher PIN, stored as a one-way hash (the number itself is not stored).
 - Natural-voice audio files generated for questions and answers.

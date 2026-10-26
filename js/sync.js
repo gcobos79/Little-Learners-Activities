@@ -68,6 +68,7 @@ window.LL = window.LL || {};
         const merged = S.mergeDuplicateFolders();
         if (merged) { changed += merged; clearTimeout(timer); timer = null; }
         await push(st);
+        if (LL.results) await LL.results.flush().catch(() => 0); // results waiting on this device
         st.migrated = true;
         st.lastOk = new Date().toISOString();
         st.error = null;

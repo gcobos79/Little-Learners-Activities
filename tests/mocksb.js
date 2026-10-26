@@ -2,8 +2,9 @@
 // Row-level security is imitated: every request only sees the signed-in teacher's rows.
 module.exports = function makeMock() {
   const users = { 'teacher@test.org': { id: 'u-1111', password: 'secreto123' }, 'other@test.org': { id: 'u-2222', password: 'otro12345' } };
-  const db = { ll_quizzes: [], ll_folders: [], ll_settings: [], students: [], folders: [], quizzes: [], quiz_questions: [], quiz_options: [] };
-  const owner = { ll_quizzes: 'owner_id', ll_folders: 'owner_id', ll_settings: 'owner_id', students: 'teacher_id', folders: 'teacher_id', quizzes: 'teacher_id', quiz_questions: 'teacher_id', quiz_options: 'teacher_id' };
+  const db = { ll_quizzes: [], ll_folders: [], ll_settings: [], students: [], folders: [], quizzes: [], quiz_questions: [], quiz_options: [], quiz_results: [], quiz_result_answers: [] };
+  let resultSeq = 0;
+  const owner = { ll_quizzes: 'owner_id', ll_folders: 'owner_id', ll_settings: 'owner_id', students: 'teacher_id', folders: 'teacher_id', quizzes: 'teacher_id', quiz_questions: 'teacher_id', quiz_options: 'teacher_id', quiz_results: 'teacher_id', quiz_result_answers: 'teacher_id' };
   const pk = { ll_quizzes: ['owner_id', 'id'], ll_folders: ['owner_id', 'id'], ll_settings: ['owner_id'], students: ['id'], folders: ['id'], quizzes: ['id'] };
   const files = new Map();
   let clock = Date.now(), n = 0, ttsCalls = 0, studentSeq = 100, uploads = 0;
@@ -30,6 +31,9 @@ module.exports = function makeMock() {
     return out;
   }
   function embed(rows, select, uid) {
+    if (select && select.includes('quiz_result_answers(')) {
+      return rows.map((r) => ({ ...r, students: (() => { const s = db.students.find((x) => x.id === r.student_id); return s ? { name: s.name, animal: s.animal, avatar_path: s.avatar_path || null } : null; })(), quiz_result_answers: db.quiz_result_answers.filter((a) => a.result_id === r.id) }));
+    }
     if (!select || !select.includes('quiz_questions(')) return rows;
     return rows.map((q) => ({ ...q, quiz_questions: db.quiz_questions.filter((x) => x.quiz_id === q.id && x.teacher_id === uid).map((x) => ({ ...x, quiz_options: db.quiz_options.filter((o) => o.quiz_id === q.id && o.question_id === x.id && o.teacher_id === uid) })) }));
   }
@@ -62,6 +66,19 @@ module.exports = function makeMock() {
       for (const q of p_questions) { if (qids.has(q.id)) return json(route, { message: 'duplicate key quiz_questions' }, 409); qids.add(q.id); db.quiz_questions.push({ ...q, quiz_id: p_quiz.id, teacher_id: u.id }); }
       const oids = new Set();
       for (const o of p_options) { const k = o.question_id + '|' + o.id; if (oids.has(k) || !qids.has(o.question_id)) return json(route, { message: 'bad option' }, 409); oids.add(k); db.quiz_options.push({ ...o, quiz_id: p_quiz.id, teacher_id: u.id }); }
+      return json(route, null, 204);
+    }
+    if (p === '/rest/v1/rpc/save_quiz_result') {
+      const { p_result: r, p_answers } = JSON.parse(req.postData());
+      const st = db.students.find((x) => x.id === r.student_id && x.teacher_id === u.id);
+      const qz = db.quizzes.find((x) => x.id === r.quiz_id && x.teacher_id === u.id);
+      if (!st || !qz) return json(route, { message: 'violates row-level security policy / foreign key' }, 409);
+      let ex = db.quiz_results.find((x) => x.student_id === r.student_id && x.quiz_id === r.quiz_id && x.month === r.month);
+      if (ex && ex.finished_at >= r.finished_at) return json(route, null, 204);
+      if (!ex) { ex = { id: ++resultSeq, teacher_id: u.id, student_id: r.student_id, quiz_id: r.quiz_id, month: r.month }; db.quiz_results.push(ex); }
+      Object.assign(ex, { score: r.score, total: r.total, started_at: r.started_at, finished_at: r.finished_at, duration_seconds: r.duration_seconds });
+      db.quiz_result_answers = db.quiz_result_answers.filter((a) => a.result_id !== ex.id);
+      for (const a of p_answers) db.quiz_result_answers.push({ ...a, result_id: ex.id, teacher_id: u.id });
       return json(route, null, 204);
     }
     if (p.startsWith('/rest/v1/')) {

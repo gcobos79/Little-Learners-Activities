@@ -14,7 +14,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 
 def main() -> None:
-    out = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "versions" / "little-learners-activities-v123.html"
+    out = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "versions" / "little-learners-activities-v124.html"
     html = (ROOT / "index.html").read_text(encoding="utf-8")
 
     def css(m: re.Match) -> str:

@@ -67,7 +67,7 @@ const shots=process.argv[3]||'/tmp';
   ok(await B.isVisible('#newQuizBtn'),'B: correct PIN opens teacher area');
   // Delete on A propagates to B
   await A.click('.tab >> nth=0'); await A.waitForTimeout(300);
-  await A.click('.card.quiz:has-text("Colores") .icon-btn'); await A.click('.menu >> text=Eliminar'); await A.click('.modal button:has-text("Eliminar")'); await A.waitForTimeout(2500);
+  await A.click('.card.quiz:has-text("Colores") .icon-btn[aria-label^="Más opciones"]'); await A.click('.menu >> text=Eliminar'); await A.click('.modal button:has-text("Eliminar")'); await A.waitForTimeout(2500);
   await B.evaluate(()=>LL.sync.run()); await B.waitForTimeout(800);
   ok(!(await B.evaluate(()=>LL.store.quizzes().some(q=>q.name==='Colores'))),'B: deletion on computer reaches tablet');
   // Another teacher signs in on B
