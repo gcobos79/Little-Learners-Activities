@@ -667,3 +667,29 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 .view-toggle button { min-width: 130px; font-size: 16px; }
 .nav-center { display: grid; justify-items: center; gap: 2px; }
 .nav-center h2::first-letter, .month-nav h2::first-letter { text-transform: uppercase; }
+
+/* ---------- End-of-quiz board (today's results for the class) ---------- */
+.finish.with-board { place-content: start center; align-content: start; overflow: auto; padding: 4px 0 8px; gap: 10px; }
+.finish.with-board .stars { font-size: clamp(44px, 8vh, 80px); }
+.finish.with-board h1 { font-size: clamp(26px, 5vh, 44px); }
+.finish-buttons { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.board { width: min(560px, 100%); background: var(--surface); border: 3px solid var(--line); border-radius: 24px; padding: 12px; display: grid; gap: 8px; box-shadow: var(--shadow); }
+.board h2 { font-size: clamp(20px, 3.2vh, 26px); text-align: center; }
+.board-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-height: 38vh; max-height: 38dvh; overflow: auto; }
+.board-list li { display: grid; grid-template-columns: 44px 40px 1fr auto; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 14px; background: var(--surface-2); font-weight: 900; font-size: clamp(17px, 2.6vh, 22px); text-align: left; }
+.board-list li .animal { font-size: 30px; line-height: 1; }
+.board-list li .avatar-img { width: 34px; height: 34px; }
+.board-list .b-place { text-align: center; font-size: 22px; }
+.board-list .b-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.board-list .b-score { color: var(--primary); }
+.board-list li.pending { background: transparent; border: 2px dashed var(--line); color: var(--muted); }
+.board-list .b-pending { color: var(--muted); font-size: .85em; }
+.board-list li.me { background: var(--warn-soft); outline: 3px solid var(--sun); }
+@media (max-height: 560px) { .finish.with-board .stars { display: none; } .board-list { max-height: 46vh; } }
+
+/* ---------- Font for children: Century Gothic ----------
+ * Century Gothic is a commercial font, so it can't be included with the site; it is used
+ * when the device has it (Windows, Mac with Office). Otherwise the closest available
+ * geometric font is used. */
+:root { --font-kids: 'Century Gothic', CenturyGothic, 'URW Gothic', 'URW Gothic L', 'TeX Gyre Adventor', AppleGothic, Futura, 'Trebuchet MS', var(--font); }
+.mode-home #screen-students, .mode-student main, .mode-student .appbar, #player { font-family: var(--font-kids); }

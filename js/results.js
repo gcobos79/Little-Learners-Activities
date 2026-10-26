@@ -222,5 +222,14 @@ window.LL = window.LL || {};
     });
   }
 
-  LL.results = { record, flush, open, render, monthOf, dayOf, current: () => current };
+    /** Today's board for the end-of-quiz screen: ranked results + students still pending. */
+  async function dayBoard(quiz, day = dayOf()) {
+    const { rows } = await load(quiz, monthOf(new Date(day + 'T12:00:00Z')));
+    const today = rank(rows.filter((r) => dayOf(r.finished_at) === day));
+    const done = new Set(today.map((r) => (r.student_id != null ? 'id:' + r.student_id : 'n:' + r.student_name)));
+    const missing = S.roster().filter((s) => !done.has(s.id != null ? 'id:' + s.id : 'n:' + s.name));
+    return { rows: today, missing };
+  }
+
+  LL.results = { record, flush, open, render, monthOf, dayOf, dayBoard, current: () => current };
 })();

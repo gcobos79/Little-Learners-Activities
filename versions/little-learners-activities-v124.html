@@ -676,6 +676,32 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 .nav-center { display: grid; justify-items: center; gap: 2px; }
 .nav-center h2::first-letter, .month-nav h2::first-letter { text-transform: uppercase; }
 
+/* ---------- End-of-quiz board (today's results for the class) ---------- */
+.finish.with-board { place-content: start center; align-content: start; overflow: auto; padding: 4px 0 8px; gap: 10px; }
+.finish.with-board .stars { font-size: clamp(44px, 8vh, 80px); }
+.finish.with-board h1 { font-size: clamp(26px, 5vh, 44px); }
+.finish-buttons { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.board { width: min(560px, 100%); background: var(--surface); border: 3px solid var(--line); border-radius: 24px; padding: 12px; display: grid; gap: 8px; box-shadow: var(--shadow); }
+.board h2 { font-size: clamp(20px, 3.2vh, 26px); text-align: center; }
+.board-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-height: 38vh; max-height: 38dvh; overflow: auto; }
+.board-list li { display: grid; grid-template-columns: 44px 40px 1fr auto; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 14px; background: var(--surface-2); font-weight: 900; font-size: clamp(17px, 2.6vh, 22px); text-align: left; }
+.board-list li .animal { font-size: 30px; line-height: 1; }
+.board-list li .avatar-img { width: 34px; height: 34px; }
+.board-list .b-place { text-align: center; font-size: 22px; }
+.board-list .b-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.board-list .b-score { color: var(--primary); }
+.board-list li.pending { background: transparent; border: 2px dashed var(--line); color: var(--muted); }
+.board-list .b-pending { color: var(--muted); font-size: .85em; }
+.board-list li.me { background: var(--warn-soft); outline: 3px solid var(--sun); }
+@media (max-height: 560px) { .finish.with-board .stars { display: none; } .board-list { max-height: 46vh; } }
+
+/* ---------- Font for children: Century Gothic ----------
+ * Century Gothic is a commercial font, so it can't be included with the site; it is used
+ * when the device has it (Windows, Mac with Office). Otherwise the closest available
+ * geometric font is used. */
+:root { --font-kids: 'Century Gothic', CenturyGothic, 'URW Gothic', 'URW Gothic L', 'TeX Gyre Adventor', AppleGothic, Futura, 'Trebuchet MS', var(--font); }
+.mode-home #screen-students, .mode-student main, .mode-student .appbar, #player { font-family: var(--font-kids); }
+
 </style>
 </head>
 <body class="mode-home">
@@ -2531,14 +2557,45 @@ window.LL = window.LL || {};
     if (!opts.preview && who && quiz.id && attempt && LL.results) {
       LL.results.record({ quiz, student: who, answers: attempt.answers, total: questions.length, startedAt: attempt.startedAt, finishedAt: new Date().toISOString() });
     }
-    body().replaceChildren(el('div.finish',
+    const showBoard = !opts.preview && who && quiz.id && LL.results;
+    const board = showBoard ? el('div.board', { 'aria-live': 'polite' }, el('p.muted', 'Cargando los resultados de hoy…')) : null;
+    body().replaceChildren(el('div.finish' + (showBoard ? '.with-board' : ''),
       el('div.stars', '⭐🌟⭐'),
       el('h1', who ? `¡Muy bien, ${who.name}!` : '¡Muy bien!'),
       el('p.lead', 'Terminaste «' + quiz.name + '».'),
-      el('div', { style: { display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' } },
+      board,
+      el('div.finish-buttons',
         el('button.btn.ghost.big', { type: 'button', onclick: () => { index = 0; newAttempt(); render(); } }, '🔁 Otra vez'),
-        el('button.btn.primary.big', { type: 'button', onclick: close }, opts.preview ? 'Cerrar vista previa' : '📚 Mis actividades')),
+        el('button.btn.primary.big', { type: 'button', onclick: () => close() }, opts.preview ? 'Cerrar vista previa' : '📚 Mis actividades')),
     ));
+    if (showBoard) fillBoard(board, quiz, who);
+  }
+
+  /** Today's results of this quiz for the whole class: best first, then who is still pending. */
+  async function fillBoard(board, q, who) {
+    let data;
+    try { data = await LL.results.dayBoard(q); } catch { data = null; }
+    if (!board.isConnected) return;
+    if (!data) { board.replaceChildren(el('p.muted', 'No se pudieron cargar los resultados de hoy.')); return; }
+    const me = (r) => (who.id != null ? r.student_id === who.id || r.id === who.id : (r.student_name || r.name) === who.name);
+    const list = el('ol.board-list');
+    for (const r of data.rows) {
+      list.append(el('li' + (me(r) ? '.me' : ''),
+        el('span.b-place', r.place <= 3 ? ['🥇', '🥈', '🥉'][r.place - 1] : String(r.place)),
+        LL.teacher.avatar({ animal: r.student_animal, avatar: r.student_avatar }),
+        el('span.b-name', r.student_name),
+        el('span.b-score', r.score + ' / ' + r.total)));
+    }
+    for (const s of data.missing) {
+      list.append(el('li.pending' + (me(s) ? '.me' : ''),
+        el('span.b-place', '·'),
+        LL.teacher.avatar(s),
+        el('span.b-name', s.name),
+        el('span.b-score.b-pending', '⏳ Pendiente')));
+    }
+    board.replaceChildren(el('h2', '🏆 Resultados de hoy'), list);
+    const mine = list.querySelector('li.me');
+    if (mine) setTimeout(() => mine.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 300);
   }
 
   // Wire fixed controls once.
@@ -2788,7 +2845,16 @@ window.LL = window.LL || {};
     });
   }
 
-  LL.results = { record, flush, open, render, monthOf, dayOf, current: () => current };
+    /** Today's board for the end-of-quiz screen: ranked results + students still pending. */
+  async function dayBoard(quiz, day = dayOf()) {
+    const { rows } = await load(quiz, monthOf(new Date(day + 'T12:00:00Z')));
+    const today = rank(rows.filter((r) => dayOf(r.finished_at) === day));
+    const done = new Set(today.map((r) => (r.student_id != null ? 'id:' + r.student_id : 'n:' + r.student_name)));
+    const missing = S.roster().filter((s) => !done.has(s.id != null ? 'id:' + s.id : 'n:' + s.name));
+    return { rows: today, missing };
+  }
+
+  LL.results = { record, flush, open, render, monthOf, dayOf, dayBoard, current: () => current };
 })();
 
 </script>

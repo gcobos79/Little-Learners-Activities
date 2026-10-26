@@ -227,14 +227,45 @@ window.LL = window.LL || {};
     if (!opts.preview && who && quiz.id && attempt && LL.results) {
       LL.results.record({ quiz, student: who, answers: attempt.answers, total: questions.length, startedAt: attempt.startedAt, finishedAt: new Date().toISOString() });
     }
-    body().replaceChildren(el('div.finish',
+    const showBoard = !opts.preview && who && quiz.id && LL.results;
+    const board = showBoard ? el('div.board', { 'aria-live': 'polite' }, el('p.muted', 'Cargando los resultados de hoy…')) : null;
+    body().replaceChildren(el('div.finish' + (showBoard ? '.with-board' : ''),
       el('div.stars', '⭐🌟⭐'),
       el('h1', who ? `¡Muy bien, ${who.name}!` : '¡Muy bien!'),
       el('p.lead', 'Terminaste «' + quiz.name + '».'),
-      el('div', { style: { display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' } },
+      board,
+      el('div.finish-buttons',
         el('button.btn.ghost.big', { type: 'button', onclick: () => { index = 0; newAttempt(); render(); } }, '🔁 Otra vez'),
-        el('button.btn.primary.big', { type: 'button', onclick: close }, opts.preview ? 'Cerrar vista previa' : '📚 Mis actividades')),
+        el('button.btn.primary.big', { type: 'button', onclick: () => close() }, opts.preview ? 'Cerrar vista previa' : '📚 Mis actividades')),
     ));
+    if (showBoard) fillBoard(board, quiz, who);
+  }
+
+  /** Today's results of this quiz for the whole class: best first, then who is still pending. */
+  async function fillBoard(board, q, who) {
+    let data;
+    try { data = await LL.results.dayBoard(q); } catch { data = null; }
+    if (!board.isConnected) return;
+    if (!data) { board.replaceChildren(el('p.muted', 'No se pudieron cargar los resultados de hoy.')); return; }
+    const me = (r) => (who.id != null ? r.student_id === who.id || r.id === who.id : (r.student_name || r.name) === who.name);
+    const list = el('ol.board-list');
+    for (const r of data.rows) {
+      list.append(el('li' + (me(r) ? '.me' : ''),
+        el('span.b-place', r.place <= 3 ? ['🥇', '🥈', '🥉'][r.place - 1] : String(r.place)),
+        LL.teacher.avatar({ animal: r.student_animal, avatar: r.student_avatar }),
+        el('span.b-name', r.student_name),
+        el('span.b-score', r.score + ' / ' + r.total)));
+    }
+    for (const s of data.missing) {
+      list.append(el('li.pending' + (me(s) ? '.me' : ''),
+        el('span.b-place', '·'),
+        LL.teacher.avatar(s),
+        el('span.b-name', s.name),
+        el('span.b-score.b-pending', '⏳ Pendiente')));
+    }
+    board.replaceChildren(el('h2', '🏆 Resultados de hoy'), list);
+    const mine = list.querySelector('li.me');
+    if (mine) setTimeout(() => mine.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 300);
   }
 
   // Wire fixed controls once.

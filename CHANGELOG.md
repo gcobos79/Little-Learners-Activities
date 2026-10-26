@@ -15,6 +15,10 @@
   to another child after 🏠. Unsaved quiz changes are protected.
 - Results “📅 Por día” view (default): who did the activity on a given day and who is still missing;
   ‹ › to move between days, “Ir a hoy”. “🗓️ Por mes” keeps the monthly view.
+- End-of-quiz screen shows “🏆 Resultados de hoy” for the whole class: icon, name and score, best
+  first; children who haven't done it yet appear below as “⏳ Pendiente”. The child who just
+  finished is highlighted. Buttons “Otra vez” and “Mis actividades” unchanged.
+- Children's screens use Century Gothic when the device has it (closest geometric font otherwise).
 - The ✨ Little Learners logo is a home button (teacher: top of Mis actividades; otherwise ¿Quién eres?).
 
 ## V123 — October 2026 (real database)
