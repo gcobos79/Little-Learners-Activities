@@ -78,8 +78,8 @@ window.LL = window.LL || {};
   /* ---------- Teacher view ---------- */
   let current = { quiz: null, month: monthOf() };
 
-  function open(quiz) {
-    current = { quiz, month: monthOf() };
+  function open(quiz, month) {
+    current = { quiz, month: month || monthOf() };
     LL.app.go('results');
   }
 
@@ -128,9 +128,9 @@ window.LL = window.LL || {};
         el('button.btn.ghost', { type: 'button', onclick: () => LL.app.go('library') }, '⬅️ Mis actividades'),
         el('div', el('h1', '📊 ' + quiz.name), el('p.lead', 'Un resultado por estudiante cada mes: queda el último intento.'))),
       el('div.month-nav',
-        el('button.btn.soft', { type: 'button', 'aria-label': 'Mes anterior', onclick: () => { current.month = shiftMonth(month, -1); render(); } }, '‹'),
+        el('button.btn.soft', { type: 'button', 'aria-label': 'Mes anterior', onclick: () => { current.month = shiftMonth(month, -1); render(); LL.app.replaceRoute(); } }, '‹'),
         el('h2', monthLabel(month)),
-        el('button.btn.soft', { type: 'button', 'aria-label': 'Mes siguiente', disabled: isThisMonth, onclick: () => { current.month = shiftMonth(month, 1); render(); } }, '›')),
+        el('button.btn.soft', { type: 'button', 'aria-label': 'Mes siguiente', disabled: isThisMonth, onclick: () => { current.month = shiftMonth(month, 1); render(); LL.app.replaceRoute(); } }, '›')),
       el('div.panel', el('p.muted', 'Cargando resultados…'))));
 
     const { rows, offline } = await load(quiz, month);
@@ -186,5 +186,5 @@ window.LL = window.LL || {};
     });
   }
 
-  LL.results = { record, flush, open, render, monthOf };
+  LL.results = { record, flush, open, render, monthOf, current: () => current };
 })();

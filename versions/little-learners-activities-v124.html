@@ -659,12 +659,18 @@ button.rt-row:hover { border-color: var(--primary); }
   .rt-head .rt-time, .rt-head span:last-child { display: none; }
 }
 
+/* The logo is also the "home" button */
+button.brand { border: 0; background: none; padding: 6px 8px; margin-left: -8px; border-radius: 14px; color: inherit; font: inherit; font-weight: 900; font-size: 20px; cursor: pointer; }
+button.brand:hover { background: rgba(0,0,0,.04); }
+button.brand:active { transform: translateY(1px); }
+.mode-login button.brand { cursor: default; }
+
 </style>
 </head>
 <body class="mode-home">
   <a class="skip-link" href="#app">Saltar al contenido</a>
   <header class="appbar">
-    <div class="brand"><span class="brand-mark" aria-hidden="true">✨</span><span class="brand-name">Little Learners</span></div>
+    <button type="button" class="brand" id="brandHome" aria-label="Little Learners: ir al inicio" title="Ir al inicio"><span class="brand-mark" aria-hidden="true">✨</span><span class="brand-name">Little Learners</span></button>
     <div class="appbar-center" id="appbarCenter"></div>
     <div class="appbar-right" id="appbarRight"></div>
   </header>
@@ -2320,16 +2326,21 @@ window.LL = window.LL || {};
     chip.setAttribute('aria-label', who ? 'Estudiante: ' + who.name : '');
     document.body.style.overflow = 'hidden';
     render();
+    document.dispatchEvent(new CustomEvent('ll-player-open', { detail: { quizId: entry.id || null, preview: !!options.preview } }));
   }
 
-  function close() {
+  /** fromHistory: closed by the browser's Back button (the page history already moved). */
+  function close(how) {
+    if (root().hidden) return;
     clearTimer();
     stopSound();
     root().hidden = true;
     document.body.style.overflow = '';
     const cb = opts.onClose;
+    const id = quiz && quiz.id;
     quiz = null;
     cb && cb();
+    document.dispatchEvent(new CustomEvent('ll-player-close', { detail: { quizId: id, fromHistory: !!(how && how.fromHistory) } }));
   }
 
   function clearTimer() { if (timer) clearTimeout(timer); timer = null; run++; }
@@ -2521,7 +2532,7 @@ window.LL = window.LL || {};
 
   // Wire fixed controls once.
   document.addEventListener('DOMContentLoaded', () => {
-    $('#playerExit').addEventListener('click', close);
+    $('#playerExit').addEventListener('click', () => close());
     document.addEventListener('keydown', (e) => {
       if (root().hidden) return;
       if (e.key === 'Escape') { close(); return; }
@@ -2536,7 +2547,7 @@ window.LL = window.LL || {};
     });
   });
 
-  LL.player = { open, close, isOpen: () => !root().hidden };
+  LL.player = { open, close, isOpen: () => !root().hidden, quizId: () => (quiz && quiz.id) || null };
 })();
 
 </script>
@@ -2622,8 +2633,8 @@ window.LL = window.LL || {};
   /* ---------- Teacher view ---------- */
   let current = { quiz: null, month: monthOf() };
 
-  function open(quiz) {
-    current = { quiz, month: monthOf() };
+  function open(quiz, month) {
+    current = { quiz, month: month || monthOf() };
     LL.app.go('results');
   }
 
@@ -2672,9 +2683,9 @@ window.LL = window.LL || {};
         el('button.btn.ghost', { type: 'button', onclick: () => LL.app.go('library') }, '⬅️ Mis actividades'),
         el('div', el('h1', '📊 ' + quiz.name), el('p.lead', 'Un resultado por estudiante cada mes: queda el último intento.'))),
       el('div.month-nav',
-        el('button.btn.soft', { type: 'button', 'aria-label': 'Mes anterior', onclick: () => { current.month = shiftMonth(month, -1); render(); } }, '‹'),
+        el('button.btn.soft', { type: 'button', 'aria-label': 'Mes anterior', onclick: () => { current.month = shiftMonth(month, -1); render(); LL.app.replaceRoute(); } }, '‹'),
         el('h2', monthLabel(month)),
-        el('button.btn.soft', { type: 'button', 'aria-label': 'Mes siguiente', disabled: isThisMonth, onclick: () => { current.month = shiftMonth(month, 1); render(); } }, '›')),
+        el('button.btn.soft', { type: 'button', 'aria-label': 'Mes siguiente', disabled: isThisMonth, onclick: () => { current.month = shiftMonth(month, 1); render(); LL.app.replaceRoute(); } }, '›')),
       el('div.panel', el('p.muted', 'Cargando resultados…'))));
 
     const { rows, offline } = await load(quiz, month);
@@ -2730,7 +2741,7 @@ window.LL = window.LL || {};
     });
   }
 
-  LL.results = { record, flush, open, render, monthOf };
+  LL.results = { record, flush, open, render, monthOf, current: () => current };
 })();
 
 </script>
@@ -2749,7 +2760,8 @@ window.LL = window.LL || {};
 
   const isStudent = () => LL.app.state.mode === 'student';
 
-  function setFolder(id) { currentFolder = id || null; render(); }
+  function setFolder(id) { currentFolder = id || null; render(); LL.app.pushRoute(); }
+  function setFolderQuiet(id) { currentFolder = id || null; }
   function resetToRoot() { currentFolder = null; }
 
   function render() {
@@ -2987,7 +2999,7 @@ window.LL = window.LL || {};
     $('#newQuizBtn').addEventListener('click', () => LL.editor.open(null, currentFolder));
   });
 
-  LL.library = { render, setFolder, resetToRoot, current: () => currentFolder };
+  LL.library = { render, setFolder, setFolderQuiet, resetToRoot, play, current: () => currentFolder };
 })();
 
 </script>
@@ -3390,7 +3402,7 @@ window.LL = window.LL || {};
     if (LL.app && LL.app.state.screen === 'editor' && isDirty()) { e.preventDefault(); e.returnValue = ''; }
   });
 
-  LL.editor = { open, canLeave };
+  LL.editor = { open, canLeave, currentId: () => (quiz ? quiz.id || 'nuevo' : null) };
 })();
 
 </script>
@@ -4143,7 +4155,7 @@ window.LL = window.LL || {};
   const { el, $, $$, toast } = LL.ui;
   const S = LL.store;
 
-  const state = { screen: 'students', mode: null, student: null };
+  const state = { screen: 'students', mode: null, student: null, teacherUnlocked: false };
   const SCREENS = ['login', 'set-password', 'students', 'library', 'editor', 'students-admin', 'backup', 'sonidos-admin', 'sonidos', 'result', 'info', 'results'];
   let infoReturn = 'students';
   const TEACHER_TABS = [
@@ -4171,6 +4183,7 @@ window.LL = window.LL || {};
     if (screen === 'info') LL.info.render(state.infoSection);
     if (screen === 'results') LL.results.render();
     renderAppbar();
+    pushRoute();
     window.scrollTo(0, 0);
     const h = $('#screen-' + screen + ' h1');
     if (h && document.activeElement && document.activeElement !== document.body && !$('#screen-' + screen).contains(document.activeElement)) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
@@ -4232,7 +4245,7 @@ window.LL = window.LL || {};
 
   async function enterTeacher() {
     if (!(await LL.auth.checkPin())) return;
-    state.mode = 'teacher'; state.student = null;
+    state.mode = 'teacher'; state.student = null; state.teacherUnlocked = true;
     LL.sync.run();
     LL.library.resetToRoot();
     go('library');
@@ -4242,7 +4255,7 @@ window.LL = window.LL || {};
     if (state.screen === 'editor' && !(await LL.editor.canLeave())) return;
     if (LL.player.isOpen()) LL.player.close();
     stopSonidos();
-    state.mode = null; state.student = null; state.screen = 'editor-left';
+    state.mode = null; state.student = null; state.teacherUnlocked = false; state.screen = 'editor-left';
     if (LL.auth.needsLogin()) { go('login'); return; }
     go('students');
     LL.sync.run();
@@ -4331,7 +4344,110 @@ window.LL = window.LL || {};
     start();
   });
 
+  /* ---------- Browser Back / Forward ----------
+   * Every screen, folder, quiz being edited and open player gets its own entry
+   * in the browser history, so Chrome's ← and → move inside the site instead of
+   * leaving it. For safety, Back never re-opens the teacher area after "Salir"
+   * (no PIN skipping) and never switches to another child after 🏠. */
+  let restoring = false, firstRoute = true, skipNextPop = false;
+  const studentKey = (s) => (s ? (s.id != null ? 'id:' + s.id : 'n:' + s.name) : null);
+
+  function routeState() {
+    const r = { screen: state.screen, mode: state.mode || null, student: studentKey(state.student) };
+    if (state.screen === 'library') r.folder = LL.library.current() || null;
+    if (state.screen === 'editor') r.quiz = LL.editor.currentId();
+    if (state.screen === 'results') { const c = LL.results.current(); r.quiz = c.quiz && c.quiz.id; r.month = c.month; }
+    if (state.screen === 'info') r.info = state.infoSection || 'acerca';
+    if (LL.player.isOpen() && LL.player.quizId()) r.player = LL.player.quizId();
+    return r;
+  }
+  function hashFor(r) {
+    const base = r.mode === 'teacher' ? '#/maestro' : r.mode === 'student' ? '#/estudiante' : '#';
+    const tail = {
+      login: '/entrar', students: '/', library: r.folder ? '/carpeta/' + r.folder : '/actividades', editor: '/editar/' + (r.quiz || 'nuevo'),
+      results: '/resultados/' + (r.quiz || '') + '/' + (r.month || ''), 'students-admin': '/estudiantes', backup: '/ajustes',
+      'sonidos-admin': '/sonidos-iniciales', sonidos: '/sonidos-iniciales/jugar', result: '/resultado', info: '/info/' + (r.info || ''),
+    }[r.screen] || '/';
+    return base + tail + (r.player ? '/quiz/' + r.player : '');
+  }
+  function sameRoute(a, b) { return !!a && !!b && JSON.stringify(a) === JSON.stringify(b); }
+
+  /** Add a history entry for what is on screen now (unless it's the same as the current one). */
+  function pushRoute() {
+    if (restoring || ['set-password', 'editor-left'].includes(state.screen)) return;
+    const r = routeState();
+    if (sameRoute(history.state, r)) return;
+    try {
+      if (firstRoute || state.screen === 'result') history.replaceState(r, '', hashFor(r));
+      else history.pushState(r, '', hashFor(r));
+    } catch { /* some file:// setups refuse history changes; the app still works */ }
+    firstRoute = false;
+  }
+  function replaceRoute() {
+    if (restoring) return;
+    const r = routeState();
+    try { history.replaceState(r, '', hashFor(r)); } catch { /* ignore */ }
+  }
+
+  document.addEventListener('ll-player-open', () => pushRoute());
+  document.addEventListener('ll-player-close', (e) => {
+    // Closed with the ↩️ button: also remove its history entry, so Back doesn't reopen it.
+    if (!e.detail.fromHistory && !restoring && history.state && history.state.player) { skipNextPop = true; history.back(); }
+  });
+
+  window.addEventListener('popstate', async (e) => {
+    if (skipNextPop) { skipNextPop = false; return; }
+    const target = e.state || { screen: LL.auth.needsLogin() ? 'login' : 'students', mode: null };
+    const before = routeState();
+    restoring = true;
+    try {
+      // Unsaved quiz? Ask first; staying puts the history back where it was.
+      if (state.screen === 'editor' && target.screen !== 'editor') {
+        if (LL.player.isOpen()) LL.player.close({ fromHistory: true });
+        if (!(await LL.editor.canLeave())) { history.pushState(before, '', hashFor(before)); return; }
+        state.screen = 'editor-left';
+      }
+      if (LL.player.isOpen() && !target.player) LL.player.close({ fromHistory: true });
+
+      // Safety rules for shared tablets.
+      const toHome = () => { state.mode = null; state.student = null; state.teacherUnlocked = false; LL.library.resetToRoot(); return go(LL.auth.needsLogin() ? 'login' : 'students'); };
+      if (target.mode === 'teacher' && !state.teacherUnlocked) { await toHome(); restoring = false; replaceRoute(); return; }
+      if (target.mode === 'student' && (!state.student || studentKey(state.student) !== target.student)) { await toHome(); restoring = false; replaceRoute(); return; }
+      if (!target.mode && state.mode) { state.mode = null; state.student = null; state.teacherUnlocked = false; LL.library.resetToRoot(); }
+      state.mode = target.mode || null;
+
+      if (target.screen === 'library') LL.library.setFolderQuiet(target.folder || null);
+      if (target.screen === 'editor') {
+        await LL.editor.open(target.quiz && target.quiz !== 'nuevo' ? target.quiz : null, LL.library.current());
+      } else if (target.screen === 'results') {
+        const q = S.getQuiz(target.quiz);
+        if (q) LL.results.open(q, target.month); else await go('library');
+      } else if (target.screen === 'info') {
+        state.infoSection = target.info; await go('info');
+      } else if (['sonidos', 'result'].includes(target.screen)) {
+        stopSonidos(); await go(state.mode ? 'library' : 'students');
+      } else {
+        await go(target.screen || 'students');
+      }
+      if (target.player) {
+        const q = S.getQuiz(target.player);
+        if (q && (state.mode === 'teacher' || S.isReady(q))) LL.library.play(q);
+      }
+    } finally {
+      restoring = false;
+    }
+  });
+
+  /** The logo: teachers go to the top of "Mis actividades"; everyone else to "¿Quién eres?". */
+  function logoHome() {
+    if (state.screen === 'login' || state.screen === 'set-password') return;
+    if (LL.player.isOpen()) LL.player.close();
+    if (state.mode === 'teacher') { LL.library.setFolderQuiet(null); go('library'); return; }
+    goHome();
+  }
+
   async function start() {
+    $('#brandHome').addEventListener('click', logoHome);
     S.mergeDuplicateFolders();
     // Links from invitation / password-reset emails arrive with a token in the address.
     const r = LL.cloud.enabled() ? await LL.cloud.handleRedirect() : null;
@@ -4357,7 +4473,7 @@ window.LL = window.LL || {};
     if (!LL.player.isOpen() && state.screen !== 'editor' && !state.mode) go('login');
   });
 
-  LL.app = { state, go, goHome, openSonidos, openInfo };
+  LL.app = { state, go, goHome, openSonidos, openInfo, pushRoute, replaceRoute };
 })();
 
 </script>

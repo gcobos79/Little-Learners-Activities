@@ -33,16 +33,21 @@ window.LL = window.LL || {};
     chip.setAttribute('aria-label', who ? 'Estudiante: ' + who.name : '');
     document.body.style.overflow = 'hidden';
     render();
+    document.dispatchEvent(new CustomEvent('ll-player-open', { detail: { quizId: entry.id || null, preview: !!options.preview } }));
   }
 
-  function close() {
+  /** fromHistory: closed by the browser's Back button (the page history already moved). */
+  function close(how) {
+    if (root().hidden) return;
     clearTimer();
     stopSound();
     root().hidden = true;
     document.body.style.overflow = '';
     const cb = opts.onClose;
+    const id = quiz && quiz.id;
     quiz = null;
     cb && cb();
+    document.dispatchEvent(new CustomEvent('ll-player-close', { detail: { quizId: id, fromHistory: !!(how && how.fromHistory) } }));
   }
 
   function clearTimer() { if (timer) clearTimeout(timer); timer = null; run++; }
@@ -234,7 +239,7 @@ window.LL = window.LL || {};
 
   // Wire fixed controls once.
   document.addEventListener('DOMContentLoaded', () => {
-    $('#playerExit').addEventListener('click', close);
+    $('#playerExit').addEventListener('click', () => close());
     document.addEventListener('keydown', (e) => {
       if (root().hidden) return;
       if (e.key === 'Escape') { close(); return; }
@@ -249,5 +254,5 @@ window.LL = window.LL || {};
     });
   });
 
-  LL.player = { open, close, isOpen: () => !root().hidden };
+  LL.player = { open, close, isOpen: () => !root().hidden, quizId: () => (quiz && quiz.id) || null };
 })();

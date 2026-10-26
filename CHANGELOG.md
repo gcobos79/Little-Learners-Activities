@@ -10,6 +10,10 @@
 - The “Evaluación” mode was removed: every quiz shows the correct answer after a mistake
   (also in Sonidos iniciales).
 - Editor: clear “‹ Anterior / Siguiente ›” question navigation, separate from reordering.
+- Chrome's Back / Forward buttons now move inside the site (folders, quizzes, editor, tabs, results)
+  instead of leaving it. Back never reopens the teacher area after “Salir” and never switches
+  to another child after 🏠. Unsaved quiz changes are protected.
+- The ✨ Little Learners logo is a home button (teacher: top of Mis actividades; otherwise ¿Quién eres?).
 
 ## V123 — October 2026 (real database)
 - Students come from the existing `students` table (active students of the signed-in teacher).

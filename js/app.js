@@ -4,7 +4,7 @@ window.LL = window.LL || {};
   const { el, $, $$, toast } = LL.ui;
   const S = LL.store;
 
-  const state = { screen: 'students', mode: null, student: null };
+  const state = { screen: 'students', mode: null, student: null, teacherUnlocked: false };
   const SCREENS = ['login', 'set-password', 'students', 'library', 'editor', 'students-admin', 'backup', 'sonidos-admin', 'sonidos', 'result', 'info', 'results'];
   let infoReturn = 'students';
   const TEACHER_TABS = [
@@ -32,6 +32,7 @@ window.LL = window.LL || {};
     if (screen === 'info') LL.info.render(state.infoSection);
     if (screen === 'results') LL.results.render();
     renderAppbar();
+    pushRoute();
     window.scrollTo(0, 0);
     const h = $('#screen-' + screen + ' h1');
     if (h && document.activeElement && document.activeElement !== document.body && !$('#screen-' + screen).contains(document.activeElement)) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
@@ -93,7 +94,7 @@ window.LL = window.LL || {};
 
   async function enterTeacher() {
     if (!(await LL.auth.checkPin())) return;
-    state.mode = 'teacher'; state.student = null;
+    state.mode = 'teacher'; state.student = null; state.teacherUnlocked = true;
     LL.sync.run();
     LL.library.resetToRoot();
     go('library');
@@ -103,7 +104,7 @@ window.LL = window.LL || {};
     if (state.screen === 'editor' && !(await LL.editor.canLeave())) return;
     if (LL.player.isOpen()) LL.player.close();
     stopSonidos();
-    state.mode = null; state.student = null; state.screen = 'editor-left';
+    state.mode = null; state.student = null; state.teacherUnlocked = false; state.screen = 'editor-left';
     if (LL.auth.needsLogin()) { go('login'); return; }
     go('students');
     LL.sync.run();
@@ -192,7 +193,110 @@ window.LL = window.LL || {};
     start();
   });
 
+  /* ---------- Browser Back / Forward ----------
+   * Every screen, folder, quiz being edited and open player gets its own entry
+   * in the browser history, so Chrome's ← and → move inside the site instead of
+   * leaving it. For safety, Back never re-opens the teacher area after "Salir"
+   * (no PIN skipping) and never switches to another child after 🏠. */
+  let restoring = false, firstRoute = true, skipNextPop = false;
+  const studentKey = (s) => (s ? (s.id != null ? 'id:' + s.id : 'n:' + s.name) : null);
+
+  function routeState() {
+    const r = { screen: state.screen, mode: state.mode || null, student: studentKey(state.student) };
+    if (state.screen === 'library') r.folder = LL.library.current() || null;
+    if (state.screen === 'editor') r.quiz = LL.editor.currentId();
+    if (state.screen === 'results') { const c = LL.results.current(); r.quiz = c.quiz && c.quiz.id; r.month = c.month; }
+    if (state.screen === 'info') r.info = state.infoSection || 'acerca';
+    if (LL.player.isOpen() && LL.player.quizId()) r.player = LL.player.quizId();
+    return r;
+  }
+  function hashFor(r) {
+    const base = r.mode === 'teacher' ? '#/maestro' : r.mode === 'student' ? '#/estudiante' : '#';
+    const tail = {
+      login: '/entrar', students: '/', library: r.folder ? '/carpeta/' + r.folder : '/actividades', editor: '/editar/' + (r.quiz || 'nuevo'),
+      results: '/resultados/' + (r.quiz || '') + '/' + (r.month || ''), 'students-admin': '/estudiantes', backup: '/ajustes',
+      'sonidos-admin': '/sonidos-iniciales', sonidos: '/sonidos-iniciales/jugar', result: '/resultado', info: '/info/' + (r.info || ''),
+    }[r.screen] || '/';
+    return base + tail + (r.player ? '/quiz/' + r.player : '');
+  }
+  function sameRoute(a, b) { return !!a && !!b && JSON.stringify(a) === JSON.stringify(b); }
+
+  /** Add a history entry for what is on screen now (unless it's the same as the current one). */
+  function pushRoute() {
+    if (restoring || ['set-password', 'editor-left'].includes(state.screen)) return;
+    const r = routeState();
+    if (sameRoute(history.state, r)) return;
+    try {
+      if (firstRoute || state.screen === 'result') history.replaceState(r, '', hashFor(r));
+      else history.pushState(r, '', hashFor(r));
+    } catch { /* some file:// setups refuse history changes; the app still works */ }
+    firstRoute = false;
+  }
+  function replaceRoute() {
+    if (restoring) return;
+    const r = routeState();
+    try { history.replaceState(r, '', hashFor(r)); } catch { /* ignore */ }
+  }
+
+  document.addEventListener('ll-player-open', () => pushRoute());
+  document.addEventListener('ll-player-close', (e) => {
+    // Closed with the ↩️ button: also remove its history entry, so Back doesn't reopen it.
+    if (!e.detail.fromHistory && !restoring && history.state && history.state.player) { skipNextPop = true; history.back(); }
+  });
+
+  window.addEventListener('popstate', async (e) => {
+    if (skipNextPop) { skipNextPop = false; return; }
+    const target = e.state || { screen: LL.auth.needsLogin() ? 'login' : 'students', mode: null };
+    const before = routeState();
+    restoring = true;
+    try {
+      // Unsaved quiz? Ask first; staying puts the history back where it was.
+      if (state.screen === 'editor' && target.screen !== 'editor') {
+        if (LL.player.isOpen()) LL.player.close({ fromHistory: true });
+        if (!(await LL.editor.canLeave())) { history.pushState(before, '', hashFor(before)); return; }
+        state.screen = 'editor-left';
+      }
+      if (LL.player.isOpen() && !target.player) LL.player.close({ fromHistory: true });
+
+      // Safety rules for shared tablets.
+      const toHome = () => { state.mode = null; state.student = null; state.teacherUnlocked = false; LL.library.resetToRoot(); return go(LL.auth.needsLogin() ? 'login' : 'students'); };
+      if (target.mode === 'teacher' && !state.teacherUnlocked) { await toHome(); restoring = false; replaceRoute(); return; }
+      if (target.mode === 'student' && (!state.student || studentKey(state.student) !== target.student)) { await toHome(); restoring = false; replaceRoute(); return; }
+      if (!target.mode && state.mode) { state.mode = null; state.student = null; state.teacherUnlocked = false; LL.library.resetToRoot(); }
+      state.mode = target.mode || null;
+
+      if (target.screen === 'library') LL.library.setFolderQuiet(target.folder || null);
+      if (target.screen === 'editor') {
+        await LL.editor.open(target.quiz && target.quiz !== 'nuevo' ? target.quiz : null, LL.library.current());
+      } else if (target.screen === 'results') {
+        const q = S.getQuiz(target.quiz);
+        if (q) LL.results.open(q, target.month); else await go('library');
+      } else if (target.screen === 'info') {
+        state.infoSection = target.info; await go('info');
+      } else if (['sonidos', 'result'].includes(target.screen)) {
+        stopSonidos(); await go(state.mode ? 'library' : 'students');
+      } else {
+        await go(target.screen || 'students');
+      }
+      if (target.player) {
+        const q = S.getQuiz(target.player);
+        if (q && (state.mode === 'teacher' || S.isReady(q))) LL.library.play(q);
+      }
+    } finally {
+      restoring = false;
+    }
+  });
+
+  /** The logo: teachers go to the top of "Mis actividades"; everyone else to "¿Quién eres?". */
+  function logoHome() {
+    if (state.screen === 'login' || state.screen === 'set-password') return;
+    if (LL.player.isOpen()) LL.player.close();
+    if (state.mode === 'teacher') { LL.library.setFolderQuiet(null); go('library'); return; }
+    goHome();
+  }
+
   async function start() {
+    $('#brandHome').addEventListener('click', logoHome);
     S.mergeDuplicateFolders();
     // Links from invitation / password-reset emails arrive with a token in the address.
     const r = LL.cloud.enabled() ? await LL.cloud.handleRedirect() : null;
@@ -218,5 +322,5 @@ window.LL = window.LL || {};
     if (!LL.player.isOpen() && state.screen !== 'editor' && !state.mode) go('login');
   });
 
-  LL.app = { state, go, goHome, openSonidos, openInfo };
+  LL.app = { state, go, goHome, openSonidos, openInfo, pushRoute, replaceRoute };
 })();

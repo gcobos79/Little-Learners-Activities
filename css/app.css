@@ -650,3 +650,9 @@ button.rt-row:hover { border-color: var(--primary); }
   .rt-row .rt-time { grid-column: 2 / span 2; font-size: 13px; }
   .rt-head .rt-time, .rt-head span:last-child { display: none; }
 }
+
+/* The logo is also the "home" button */
+button.brand { border: 0; background: none; padding: 6px 8px; margin-left: -8px; border-radius: 14px; color: inherit; font: inherit; font-weight: 900; font-size: 20px; cursor: pointer; }
+button.brand:hover { background: rgba(0,0,0,.04); }
+button.brand:active { transform: translateY(1px); }
+.mode-login button.brand { cursor: default; }

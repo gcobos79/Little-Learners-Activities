@@ -11,7 +11,8 @@ window.LL = window.LL || {};
 
   const isStudent = () => LL.app.state.mode === 'student';
 
-  function setFolder(id) { currentFolder = id || null; render(); }
+  function setFolder(id) { currentFolder = id || null; render(); LL.app.pushRoute(); }
+  function setFolderQuiet(id) { currentFolder = id || null; }
   function resetToRoot() { currentFolder = null; }
 
   function render() {
@@ -249,5 +250,5 @@ window.LL = window.LL || {};
     $('#newQuizBtn').addEventListener('click', () => LL.editor.open(null, currentFolder));
   });
 
-  LL.library = { render, setFolder, resetToRoot, current: () => currentFolder };
+  LL.library = { render, setFolder, setFolderQuiet, resetToRoot, play, current: () => currentFolder };
 })();

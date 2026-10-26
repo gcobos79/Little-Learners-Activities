@@ -395,5 +395,5 @@ window.LL = window.LL || {};
     if (LL.app && LL.app.state.screen === 'editor' && isDirty()) { e.preventDefault(); e.returnValue = ''; }
   });
 
-  LL.editor = { open, canLeave };
+  LL.editor = { open, canLeave, currentId: () => (quiz ? quiz.id || 'nuevo' : null) };
 })();
