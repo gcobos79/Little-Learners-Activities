@@ -136,9 +136,119 @@ window.LL = window.LL || {};
     list.replaceChildren();
     qs.forEach((q, i) => {
       const bad = !!S.questionProblem(q);
-      list.append(el('button.q-item' + (bad ? '.problem' : ''), { type: 'button', 'aria-current': String(i === qIndex), title: bad ? S.questionProblem(q) : '', onclick: () => { qIndex = i; renderQuestion(); renderQList(); } },
-        el('span.num', String(i + 1)), el('span.txt', questionLabel(q))));
+      list.append(el('button.q-item' + (bad ? '.problem' : ''), { type: 'button', 'data-i': String(i), 'aria-current': String(i === qIndex), title: bad ? S.questionProblem(q) : 'Arrastra para cambiar el orden', onclick: () => { if (dragJustEnded) return; qIndex = i; renderQuestion(); renderQList(); } },
+        el('span.num', String(i + 1)), el('span.txt', questionLabel(q)), el('span.grip', { 'aria-hidden': 'true', title: 'Arrastra para cambiar el orden' }, '⠿')));
     });
+    if (!list.dataset.drag) { list.dataset.drag = '1'; enableQuestionDrag(list); }
+  }
+
+  /* ---------- Drag a question in the list to change the order ----------
+   * Mouse: press anywhere on a question and move. Touch: drag the ⠿ handle
+   * (or press and hold a question), so the list can still be scrolled with a finger. */
+  let dragJustEnded = false;
+  function enableQuestionDrag(list) {
+    let d = null;
+    const horizontal = () => getComputedStyle(list).gridAutoFlow.includes('column');
+    const items = () => [...list.querySelectorAll('.q-item')];
+
+    function begin() {
+      d.on = true;
+      const r = d.item.getBoundingClientRect();
+      d.dx = d.x - r.left; d.dy = d.y - r.top;
+      d.ghost = d.item.cloneNode(true);
+      d.ghost.classList.add('q-ghost');
+      Object.assign(d.ghost.style, { width: r.width + 'px', height: r.height + 'px' });
+      document.body.append(d.ghost);
+      d.item.classList.add('dragging');
+      list.classList.add('sorting');
+      document.body.classList.add('q-sorting');
+      d.timer = setInterval(autoScroll, 30);
+      if (navigator.vibrate && d.touch) try { navigator.vibrate(15); } catch { /* ignore */ }
+      move();
+    }
+    function move() {
+      d.ghost.style.transform = 'translate(' + (d.x - d.dx) + 'px,' + (d.y - d.dy) + 'px) rotate(-1.5deg)';
+      const hz = horizontal();
+      const all = items();
+      let target = all.length;
+      for (let i = 0; i < all.length; i++) {
+        const r = all[i].getBoundingClientRect();
+        if ((hz ? d.x < r.left + r.width / 2 : d.y < r.top + r.height / 2)) { target = i; break; }
+      }
+      d.target = target;
+      // Show where it will land: a line before the target question (or after the last one).
+      list.classList.toggle('h', hz);
+      all.forEach((x) => x.classList.remove('drop-before', 'drop-after'));
+      if (target < all.length) all[target].classList.add('drop-before'); else all[all.length - 1].classList.add('drop-after');
+    }
+    function autoScroll() {
+      if (!d || !d.on) return;
+      const edge = 48, step = 14;
+      if (horizontal()) {
+        const r = list.getBoundingClientRect();
+        if (d.x < r.left + edge) list.scrollLeft -= step; else if (d.x > r.right - edge) list.scrollLeft += step; else return;
+      } else {
+        const side = list.closest('.editor-side');
+        const sr = side && side.scrollHeight > side.clientHeight ? side.getBoundingClientRect() : null;
+        if (sr && d.y < sr.top + edge && side.scrollTop > 0) side.scrollTop -= step;
+        else if (sr && d.y > sr.bottom - edge && side.scrollTop < side.scrollHeight - side.clientHeight) side.scrollTop += step;
+        else if (d.y < edge + 70) window.scrollBy(0, -step);
+        else if (d.y > window.innerHeight - edge) window.scrollBy(0, step);
+        else return;
+      }
+      move();
+    }
+    function end(commit) {
+      if (!d) return;
+      const s = d; d = null;
+      clearTimeout(s.hold);
+      if (!s.on) return;
+      clearInterval(s.timer);
+      s.ghost.remove();
+      items().forEach((x) => x.classList.remove('drop-before', 'drop-after'));
+      s.item.classList.remove('dragging');
+      list.classList.remove('sorting');
+      document.body.classList.remove('q-sorting');
+      dragJustEnded = true; setTimeout(() => { dragJustEnded = false; }, 0);
+      if (!commit) return;
+      const from = s.from;
+      const to = s.target > from ? s.target - 1 : s.target;
+      if (to === from) return;
+      const qs = quiz.config.questions;
+      const [moved] = qs.splice(from, 1);
+      qs.splice(to, 0, moved);
+      qIndex = to; // show the question that was moved
+      renderQuestion(); changed();
+      toast('La pregunta ' + (from + 1) + ' ahora es la ' + (to + 1) + '.');
+    }
+
+    list.addEventListener('pointerdown', (e) => {
+      const item = e.target.closest('.q-item');
+      if (!item || e.button > 0 || quiz.config.questions.length < 2) return;
+      const touch = e.pointerType !== 'mouse';
+      const onGrip = !!e.target.closest('.grip');
+      d = { item, from: Number(item.dataset.i), x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, on: false, id: e.pointerId, touch, grip: onGrip };
+      if (touch && onGrip) { e.preventDefault(); begin(); }
+      else if (touch) d.hold = setTimeout(() => { if (d && !d.on) begin(); }, 450); // press and hold
+    });
+    window.addEventListener('pointermove', (e) => {
+      if (!d || e.pointerId !== d.id) return;
+      d.x = e.clientX; d.y = e.clientY;
+      if (!d.on) {
+        const far = Math.hypot(d.x - d.sx, d.y - d.sy) > 8;
+        if (d.touch) { if (far) { clearTimeout(d.hold); d = null; } return; } // finger is scrolling
+        if (far) begin();
+        return;
+      }
+      e.preventDefault();
+      move();
+    }, { passive: false });
+    // While dragging with a finger, stop the page from scrolling.
+    window.addEventListener('touchmove', (e) => { if (d && d.on) e.preventDefault(); }, { passive: false });
+    window.addEventListener('pointerup', (e) => { if (d && e.pointerId === d.id) end(true); });
+    window.addEventListener('pointercancel', (e) => { if (d && e.pointerId === d.id) end(false); });
+    window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && d && d.on) end(false); });
+    list.addEventListener('contextmenu', (e) => { if (d) e.preventDefault(); });
   }
 
   /* ---------- One question ---------- */

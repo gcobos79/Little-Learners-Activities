@@ -1,6 +1,9 @@
 # Changelog
 
 ## V125 — October 2026 (voice type, storage)
+- Editor: drag a question in the list to change the order (4 dropped on 2 becomes 2, the old 2
+  becomes 3). Mouse: drag the question. Touch: drag the ⠿ handle, or press and hold the question.
+  A line shows where it will land; Esc cancels. The ↑/↓ “Cambiar de lugar” buttons still work.
 - Storage: when signed in, pictures and audio go to the cloud as soon as they are chosen, so the
   browser's ~5 MB storage doesn't fill up. If storage is full when saving, the app removes old quiz
   versions and the editing backup, uploads the pictures, and saves anyway. New “🧹 Liberar espacio”
