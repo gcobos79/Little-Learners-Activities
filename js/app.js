@@ -1,16 +1,15 @@
-/* App shell: screens, top bar, student picker, teacher entry, Sonidos iniciales. */
+/* App shell: screens, top bar, student picker, teacher entry. */
 window.LL = window.LL || {};
 (function () {
   const { el, $, $$, toast } = LL.ui;
   const S = LL.store;
 
   const state = { screen: 'students', mode: null, student: null, teacherUnlocked: false };
-  const SCREENS = ['login', 'set-password', 'students', 'library', 'editor', 'students-admin', 'backup', 'sonidos-admin', 'sonidos', 'result', 'info', 'results'];
+  const SCREENS = ['login', 'set-password', 'students', 'library', 'editor', 'students-admin', 'backup', 'info', 'results'];
   let infoReturn = 'students';
   const TEACHER_TABS = [
     { id: 'library', icon: '📚', label: 'Actividades' },
     { id: 'students-admin', icon: '👧', label: 'Estudiantes' },
-    { id: 'sonidos-admin', icon: '🔤', label: 'Sonidos iniciales' },
     { id: 'backup', icon: '⚙️', label: 'Ajustes' },
   ];
 
@@ -32,7 +31,6 @@ window.LL = window.LL || {};
     if (screen === 'library') LL.library.render();
     if (screen === 'students-admin') LL.teacher.renderRoster();
     if (screen === 'backup') LL.teacher.renderBackup();
-    if (screen === 'sonidos-admin') LL.teacher.renderSonidos();
     if (screen === 'info') LL.info.render(state.infoSection);
     if (screen === 'results') LL.results.render();
     renderAppbar();
@@ -107,7 +105,6 @@ window.LL = window.LL || {};
   async function goHome() {
     if (state.screen === 'editor' && !(await LL.editor.canLeave())) return;
     if (LL.player.isOpen()) LL.player.close();
-    stopSonidos();
     state.mode = null; state.student = null; state.teacherUnlocked = false; state.screen = 'editor-left';
     if (LL.auth.needsLogin()) { go('login'); return; }
     go('students');
@@ -147,53 +144,7 @@ window.LL = window.LL || {};
     go('library');
   }
 
-  /* ---------- Sonidos iniciales (original activity) ---------- */
-  let sonidosConfig = null;
-  function openSonidos() {
-    sonidosConfig = { ...S.sonidos(), mode: 'practice' };
-    if (!sonidosConfig.letters.length) { toast('Elige al menos una letra en «Sonidos iniciales».', 'error'); return; }
-    go('sonidos');
-    $('#sonidosTitle').textContent = '🔤 Sonidos iniciales' + (state.student ? ' · ' + state.student.name : ' · prueba del maestro');
-    const f = $('#sonidosFrame');
-    const cfg = { lang: sonidosConfig.lang, per: sonidosConfig.per, speed: sonidosConfig.speed, mode: 'practice', letters: sonidosConfig.letters, fixedImages: sonidosConfig.fixedImages || null };
-    f.onload = () => f.contentWindow.postMessage({ type: 'll-start', config: cfg }, '*');
-    f.srcdoc = LL.sonidosActivityHTML;
-  }
-  function stopSonidos() { const f = $('#sonidosFrame'); if (f) { f.onload = null; f.removeAttribute('srcdoc'); f.src = 'about:blank'; } }
-
-  function sonidosFinished(result) {
-    stopSonidos();
-    const c = sonidosConfig;
-    if (!state.student) {
-      toast('Prueba terminada: ' + result.ok + ' de ' + result.total + ' correctas.', 'success');
-      go('library');
-      return;
-    }
-    const me = state.student;
-    const scores = S.sonidosScores(c);
-    const prev = scores[me.name];
-    if (!prev || result.ok > prev.ok) scores[me.name] = { ok: result.ok, total: result.total, animal: me.animal };
-    S.saveSonidosScores(c, scores);
-    $('#resultName').textContent = me.name;
-    $('#resultScore').textContent = result.ok + ' / ' + result.total;
-    const ranking = Object.entries(scores).map(([name, d]) => ({ name, ...d })).sort((a, b) => b.ok - a.ok || a.name.localeCompare(b.name));
-    $('#resultPlace').textContent = 'Puesto ' + (ranking.findIndex((x) => x.name === me.name) + 1) + ' de ' + ranking.length;
-    $('#resultDate').textContent = 'Resultados de hoy (' + S.todayChicago() + ') con esta misma configuración';
-    const list = $('#resultRanks');
-    list.replaceChildren();
-    ranking.forEach((r, i) => list.append(el('div.rank' + (r.name === me.name ? '.mine' : ''), el('span', (i + 1) + '.' + (i < 5 ? ' ⭐' : '')), el('span', r.animal || '🐾'), el('span', r.name), el('span', r.ok + '/' + r.total))));
-    go('result');
-  }
-
-  window.addEventListener('message', (e) => {
-    const f = $('#sonidosFrame');
-    if (!f || e.source !== f.contentWindow || !e.data || e.data.type !== 'll-finished') return;
-    sonidosFinished(e.data);
-  });
-
   document.addEventListener('DOMContentLoaded', () => {
-    $('#sonidosExit').addEventListener('click', () => { stopSonidos(); go('library'); });
-    $('#resultOk').addEventListener('click', () => go('library'));
     document.querySelectorAll('[data-info]').forEach((b) => b.addEventListener('click', () => openInfo(b.dataset.info)));
     start();
   });
@@ -220,7 +171,7 @@ window.LL = window.LL || {};
     const tail = {
       login: '/entrar', students: '/', library: r.folder ? '/carpeta/' + r.folder : '/actividades', editor: '/editar/' + (r.quiz || 'nuevo'),
       results: '/resultados/' + (r.quiz || '') + '/' + (r.month || ''), 'students-admin': '/estudiantes', backup: '/ajustes',
-      'sonidos-admin': '/sonidos-iniciales', sonidos: '/sonidos-iniciales/jugar', result: '/resultado', info: '/info/' + (r.info || ''),
+      info: '/info/' + (r.info || ''),
     }[r.screen] || '/';
     return base + tail + (r.player ? '/quiz/' + r.player : '');
   }
@@ -278,8 +229,8 @@ window.LL = window.LL || {};
         if (q) LL.results.open(q, target.month, target.view, target.day); else await go('library');
       } else if (target.screen === 'info') {
         state.infoSection = target.info; await go('info');
-      } else if (['sonidos', 'result'].includes(target.screen)) {
-        stopSonidos(); await go(state.mode ? 'library' : 'students');
+      } else if (['sonidos', 'sonidos-admin', 'result'].includes(target.screen)) {
+        await go(state.mode ? 'library' : 'students'); // old links to the removed Sonidos iniciales prototype
       } else if ((await go(target.screen || 'students')) === false) {
         history.pushState(before, '', hashFor(before)); // stayed where we were (e.g. wrong PIN for Ajustes)
         return;
@@ -347,7 +298,6 @@ window.LL = window.LL || {};
     if (state.screen === 'students') renderStudents();
     else if (state.screen === 'library') LL.library.render();
     else if (state.screen === 'students-admin') LL.teacher.renderRoster();
-    else if (state.screen === 'sonidos-admin') LL.teacher.renderSonidos();
   });
   document.addEventListener('ll-signed-out', () => {
     if (LL.cloud.signedIn()) return;
@@ -355,5 +305,5 @@ window.LL = window.LL || {};
     if (!LL.player.isOpen() && state.screen !== 'editor' && !state.mode) go('login');
   });
 
-  LL.app = { state, go, goHome, openSonidos, openInfo, pushRoute, replaceRoute, checkUpdate };
+  LL.app = { state, go, goHome, openInfo, pushRoute, replaceRoute, checkUpdate };
 })();

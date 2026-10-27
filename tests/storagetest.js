@@ -58,7 +58,7 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
   console.log('storage used after sync:', Math.round(after / 1024) + ' KB');
   ok(after < used, 'device copy is smaller after the pictures moved to the cloud');
   // Settings button
-  await p.click('button:has-text("Mis actividades")'); await p.click('.tab >> nth=3'); await p.waitForTimeout(300);
+  await p.click('button:has-text("Mis actividades")'); await p.click('.tab:has-text("Ajustes")'); await p.waitForTimeout(300);
   await p.click('button:has-text("Liberar espacio")'); await p.click('.modal button:has-text("Liberar espacio")'); await p.waitForTimeout(2500);
   ok((await p.textContent('#toasts')).includes('se liberaron'), 'Settings → “Liberar espacio” works');
   console.log('ERRORS', errs);

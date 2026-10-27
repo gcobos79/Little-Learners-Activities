@@ -330,9 +330,7 @@ body.q-sorting, body.q-sorting * { cursor: grabbing !important; user-select: non
 @keyframes pop { from { transform: scale(.4); opacity: 0; } 70% { transform: scale(1.1); } }
 .preview-banner { text-align: center; font-weight: 900; color: #8A5B08; background: var(--warn-soft); border-radius: 12px; padding: 4px 10px; font-size: 14px; }
 
-/* ---------- Sonidos iniciales + result ---------- */
-.sonidos-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; font-size: 22px; }
-.sonidos-frame { width: 100%; height: calc(100vh - var(--appbar-h) - 120px); min-height: 480px; border: 0; border-radius: var(--radius); background: #fff; box-shadow: var(--shadow); }
+/* ---------- Result ranking (kept styles) ---------- */
 .result-panel { max-width: 720px; margin: 0 auto; display: grid; gap: 12px; justify-items: center; text-align: center; }
 .trophy { font-size: 72px; }
 .score { font-size: 52px; font-weight: 900; color: var(--primary); }
@@ -405,7 +403,6 @@ main {
 .modal-back { padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
 .modal { max-height: 90vh; max-height: 90dvh; }
 #toasts { bottom: max(18px, calc(env(safe-area-inset-bottom) + 10px)); }
-.sonidos-frame { height: calc(100vh - var(--appbar-h) - 120px); height: calc(100dvh - var(--appbar-h) - 120px); }
 
 /* Kid-facing buttons: no text selection or iOS "copy" callout on long press. */
 .student-card, .card-main, .option, .icon-btn, .teacher-gate, .tab, .segmented button {
@@ -801,7 +798,6 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 .sort-status .st-time { color: var(--muted); }
 .sort-status .st-ok { color: #15803D; }
 @media (max-width: 480px) { .sort-status { gap: 4px; font-size: 15px; } .sort-status > span { padding: 3px 8px; } }
-.sort-instruction { margin: -4px 0 0; text-align: center; font-weight: 900; font-size: clamp(17px, 2.6vh, 24px); }
 .sort-belt { position: relative; flex: 0 0 auto; height: min(clamp(170px, 38vh, 330px), calc(42vw + 44px)); overflow: hidden; touch-action: none;
   background: linear-gradient(#fff, #F6F8FC); border-radius: 14px; }
 .sort-belt::before, .sort-belt::after { content: ''; position: absolute; left: 0; right: 0; height: 10px; z-index: 0; pointer-events: none;
@@ -820,8 +816,8 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 .sort-card.picked { visibility: hidden; }
 .sort-ghost { position: fixed; z-index: 1000; margin: 0; pointer-events: none; cursor: grabbing; transform: scale(.9) rotate(-3deg) !important; box-shadow: 0 18px 34px rgba(32, 50, 76, .35); font-family: var(--font-kids); }
 .sort-ghost .sort-card-word { font-size: calc(var(--card, 160px) * .13); }
-.sort-targets { flex: 1 1 auto; min-height: 0; display: flex; flex-wrap: wrap; justify-content: center; align-content: center; gap: clamp(10px, 2vw, 26px); padding: 4px; }
-.sort-target { --t: clamp(118px, min(17vw, 24vh), 240px); position: relative; width: var(--t); height: calc(var(--t) * .74); padding: calc(var(--t) * .06);
+.sort-targets { flex: 1 1 auto; min-height: 0; display: flex; flex-wrap: wrap; justify-content: center; align-content: center; gap: clamp(18px, 3.6vw, 52px) clamp(22px, 4.4vw, 64px); padding: 6px; }
+.sort-target { --t: calc(clamp(154px, min(22vw, 31vh), 312px) * var(--fit, 1)); position: relative; width: var(--t); height: calc(var(--t) * .74); padding: calc(var(--t) * .06);
   display: flex; align-items: center; justify-content: center; border-radius: 10px; border: 3px dashed rgba(0, 0, 0, .28);
   background: var(--group, #FFD43B); color: #111; font-family: var(--font-kids); transition: transform .12s ease, box-shadow .12s ease; }
 .sort-target-face { height: 100%; aspect-ratio: 1 / 1; max-width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
@@ -831,12 +827,19 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 .sort-target-label.long { font-size: calc(var(--t) * .16); }
 .sort-target-label.small { font-size: calc(var(--t) * .12); }
 .sort-target.hover { transform: scale(1.08); border-style: solid; border-color: var(--primary); box-shadow: 0 0 0 6px var(--primary-soft), 0 10px 22px rgba(0, 0, 0, .18); }
-.sort-target-mark { position: absolute; inset: 0; display: grid; place-items: center; font-size: calc(var(--t) * .5); font-weight: 900; color: #B91C1C; pointer-events: none; opacity: 0; }
 .sort-target.good { animation: sortGood .5s steps(2, end) 4; border-style: solid; border-color: #15803D; }
 .sort-target.bad { animation: sortBad .5s steps(2, end) 2; border-style: solid; border-color: #B91C1C; }
-.sort-target.bad .sort-target-mark { opacity: 1; }
-.sort-target.bad .sort-target-mark::after { content: '✕'; }
-@keyframes sortGood { 0%, 49.999% { background: #22C55E; } 50%, 100% { background: var(--group, #FFD43B); } }
+.sort-target.bad @keyframes sortGood { 0%, 49.999% { background: #22C55E; } 50%, 100% { background: var(--group, #FFD43B); } }
 @keyframes sortBad { 0%, 49.999% { background: #EF4444; } 50%, 100% { background: var(--group, #FFD43B); } }
 @media (prefers-reduced-motion: reduce) { .sort-target.good { animation: none; background: #22C55E; } .sort-target.bad { animation: none; background: #EF4444; } }
-@media (max-height: 520px) { .sort-instruction { display: none; } .sort-belt { height: 40vh; } .sort-target { --t: clamp(96px, 24vh, 150px); } }
+@media (max-height: 520px) { .sort-belt { height: 40vh; } .sort-target { --t: calc(clamp(110px, 30vh, 190px) * var(--fit, 1)); } }
+
+/* 📢 Activity instructions button (player top bar) */
+.player-help { flex: 0 0 auto; }
+.player-help.talking { animation: help-talk .9s ease; }
+@keyframes help-talk { 20% { transform: scale(1.15) rotate(-6deg); } 45% { transform: scale(1.08) rotate(5deg); } 70% { transform: scale(1.1); } }
+.player.is-sort #playerSpeak { visibility: hidden; }
+@media (prefers-reduced-motion: reduce) { .player-help.talking { animation: none; } }
+.instructions-field { display: grid; gap: 8px; margin-bottom: 16px; padding: 14px 16px; }
+.instructions-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.instructions-head label { font-weight: 900; font-size: 17px; }

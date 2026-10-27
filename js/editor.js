@@ -75,6 +75,7 @@ window.LL = window.LL || {};
       el('button.btn.soft', { type: 'button', onclick: preview }, '▶️ Probar'),
       el('button.btn.primary', { type: 'button', onclick: save }, '💾 Guardar')));
     r.append(el('p.small#edState', { style: { margin: '-8px 0 12px', fontWeight: '800' } }));
+    r.append(instructionsField());
 
     if (isSort()) {
       const main = el('div.panel.sort-editor#edSort');
@@ -90,6 +91,21 @@ window.LL = window.LL || {};
     r.append(el('div.editor-layout', side, el('div.panel.q-editor#edQuestion')));
     renderQuestion();
     changed();
+  }
+
+  /** Header: the activity's instructions, read by the 📢 button in the activity. */
+  function instructionsField() {
+    const c = quiz.config;
+    if (!c.instructions && c.sort && c.sort.instruction) c.instructions = c.sort.instruction; // early V126 sort activities
+    if (c.sort) delete c.sort.instruction;
+    const box = el('textarea', { rows: '2', maxlength: '300', placeholder: isSort() ? 'Ej. Escucha el nombre de cada dibujo y llévalo a la letra con la que empieza.' : 'Ej. Escucha la pregunta y toca la respuesta correcta.', 'aria-label': 'Instrucciones de la actividad' });
+    box.value = c.instructions || '';
+    box.addEventListener('input', () => { c.instructions = box.value; changed(); });
+    const test = el('button.btn.sm.ghost', { type: 'button', onclick: () => { if (box.value.trim()) speak(box.value, c.lang, c.voiceGender); else { toast('Escribe primero las instrucciones.'); box.focus(); } } }, '🔊 Escuchar');
+    return el('div.panel.instructions-field',
+      el('div.instructions-head', el('label', { htmlFor: 'edInstructions' }, '📢 Instrucciones de la actividad'), test),
+      Object.assign(box, { id: 'edInstructions' }),
+      el('span.hint', 'Opcional. Explica a los niños de qué se trata la actividad. En la actividad aparece el botón 📢 arriba para escucharlas' + (isSort() ? ', y se leen solas al empezar.' : '.')));
   }
 
   function settingsPanel() {

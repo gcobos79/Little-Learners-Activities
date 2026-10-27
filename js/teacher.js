@@ -1,4 +1,4 @@
-/* Teacher tools: students, backup / sharing, and Sonidos iniciales settings. */
+/* Teacher tools: students, backup / sharing and settings. */
 window.LL = window.LL || {};
 (function () {
   const { el, $, toast, dialog, confirmDialog, pickFile, download, formatBytes } = LL.ui;
@@ -346,85 +346,5 @@ window.LL = window.LL || {};
     } catch (e) { toast(e.message, 'error'); }
   }
 
-  /* ---------- Sonidos iniciales ---------- */
-  function syncImages(c, force) {
-    const bank = LL.IMAGE_BANK[c.lang];
-    const prev = !force && c.fixedImages && c.fixedImagesLang === c.lang ? c.fixedImages : {};
-    const out = {};
-    for (const letter of c.letters) {
-      const options = bank[letter];
-      const keep = [];
-      for (const it of prev[letter] || []) if (options.some(([e, w]) => e === it[0] && w === it[1]) && !keep.some((k) => k[1] === it[1])) keep.push(it);
-      const free = LL.ui.shuffle(options.filter(([, w]) => !keep.some((k) => k[1] === w)));
-      out[letter] = [...keep.slice(0, c.per), ...free.slice(0, Math.max(0, c.per - keep.length))];
-    }
-    c.fixedImages = out;
-    c.fixedImagesLang = c.lang;
-  }
-
-  function renderSonidos() {
-    const page = $('#screen-sonidos-admin');
-    const c = S.sonidos();
-    if (!c.fixedImages) { syncImages(c); S.saveSonidos(c); }
-    const commit = (redrawImages) => { if (redrawImages) syncImages(c); S.saveSonidos(c); renderSonidos(); };
-
-    const show = el('input', { type: 'checkbox', checked: !!c.showToStudents });
-    show.addEventListener('change', () => { c.showToStudents = show.checked; commit(false); toast(show.checked ? 'Los estudiantes ya ven «Sonidos iniciales».' : '«Sonidos iniciales» quedó oculto para los estudiantes.'); });
-
-    const seg = (opts, val, fn) => {
-      const w = el('div.segmented');
-      for (const [v, label] of opts) w.append(el('button', { type: 'button', 'aria-pressed': String(String(v) === String(val)), onclick: () => fn(v) }, label));
-      return w;
-    };
-
-    const letters = el('div.letters');
-    for (const L of 'MPSLF') {
-      const cb = el('input', { type: 'checkbox', checked: c.letters.includes(L) });
-      cb.addEventListener('change', () => {
-        const next = 'MPSLF'.split('').filter((x) => (x === L ? cb.checked : c.letters.includes(x)));
-        if (!next.length) { cb.checked = true; toast('Elige al menos una letra.', 'error'); return; }
-        c.letters = next; commit(true);
-      });
-      letters.append(el('label', cb, L));
-    }
-
-    const per = el('select', { style: { maxWidth: '140px' } });
-    for (const n of [4, 5, 6, 7, 8]) per.append(new Option(String(n), String(n), false, n === c.per));
-    per.addEventListener('change', () => { c.per = Number(per.value); commit(true); });
-
-    const groups = el('div.image-groups');
-    for (const L of c.letters) {
-      const slots = el('div.image-slots');
-      (c.fixedImages[L] || []).forEach(([emoji, word], idx) => {
-        const sel = el('select', { 'aria-label': 'Letra ' + L + ', imagen ' + (idx + 1) });
-        LL.IMAGE_BANK[c.lang][L].forEach(([e, w], k) => sel.add(new Option(e + ' ' + w, String(k), false, e === emoji && w === word)));
-        sel.addEventListener('change', () => {
-          const pick = LL.IMAGE_BANK[c.lang][L][Number(sel.value)];
-          if (c.fixedImages[L].some((it, j) => j !== idx && it[1] === pick[1])) { toast('Esa imagen ya está elegida para esta letra.', 'error'); renderSonidos(); return; }
-          c.fixedImages[L][idx] = [...pick]; commit(false);
-        });
-        slots.append(sel);
-      });
-      groups.append(el('div', el('h3', 'Letra ' + L), slots));
-    }
-
-    page.replaceChildren(el('div.tool-page',
-      el('div', el('h1', '🔤 Sonidos iniciales'), el('p.lead', 'La actividad original de arrastrar dibujos a su letra. Los cambios se guardan solos.')),
-      el('div.panel', { style: { display: 'grid', gap: '16px' } },
-        el('div.field', el('label.switch', show, 'Mostrar a los estudiantes'), el('span.hint', 'Aparece como una tarjeta más en sus actividades.')),
-        el('div.field', 'Letras', letters),
-        el('div', { style: { display: 'flex', gap: '18px', flexWrap: 'wrap' } },
-          el('div.field', 'Idioma', seg([['es', 'Español'], ['en', 'English']], c.lang, (v) => { c.lang = v; commit(true); })),
-          el('div.field', 'Velocidad', seg([[28, 'Lenta'], [45, 'Normal'], [70, 'Rápida']], c.speed, (v) => { c.speed = Number(v); commit(false); })),
-          el('label.field', 'Imágenes por letra', per)),
-        el('button.btn.primary', { type: 'button', style: { justifySelf: 'start' }, onclick: () => LL.app.openSonidos() }, '▶️ Probar')),
-      el('div.panel', { style: { display: 'grid', gap: '12px' } },
-        el('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' } },
-          el('h2', '🖼️ Imágenes'),
-          el('button.btn.sm.ghost', { type: 'button', onclick: () => { syncImages(c, true); S.saveSonidos(c); renderSonidos(); } }, '🎲 Otra selección')),
-        el('p.small.muted', 'Siempre salen estas mismas imágenes, aunque cambie su orden.'),
-        groups)));
-  }
-
-  LL.teacher = { renderRoster, renderBackup, renderSonidos, avatar };
+  LL.teacher = { renderRoster, renderBackup, avatar };
 })();

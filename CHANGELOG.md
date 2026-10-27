@@ -1,6 +1,14 @@
 # Changelog
 
 ## V126 — October 2026 (Clasificación rápida)
+- Activity instructions (header of every activity, column `quizzes.instructions`): the editor has
+  «📢 Instrucciones de la actividad» with 🔊 Escuchar; in the activity a 📢 button next to the child's
+  name reads them (Clasificación rápida also reads them when it starts). `save_quiz` keeps them when an
+  older app saves without the field.
+- Clasificación rápida: group tiles 30% bigger and more spaced (they shrink only if they don't fit; up
+  to 6 groups stay on one row when possible). A wrong answer blinks red without a ✕.
+- Removed the old «Sonidos iniciales» prototype (tab, screens, library card, files). Old links go to
+  the activities.
 - Game screen redesigned after Wordwall's Speed Sorting, but roomier: a tall belt between moving
   rails with big picture cards in coloured frames; compact, centred group tiles (white face on a
   coloured frame); ⏱️ time · count · ✓ right answers in the top bar. Rails stop while feedback shows.

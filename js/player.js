@@ -20,9 +20,20 @@ window.LL = window.LL || {};
   let sortTotal = 0, sortDone = 0;
   const isSort = () => !!quiz && quiz.type === 'sort';
 
+  const instructions = () => LL.store.instructionsOf(quiz && quiz.config);
+  function sayInstructions() {
+    const t = instructions(); if (!t) return;
+    stopSound();
+    const b = $('#playerHelp'); b.classList.remove('talking'); void b.offsetWidth; b.classList.add('talking');
+    speak(t, quiz.config?.lang, quiz.config?.voiceGender || 'female');
+  }
+
   function open(entry, options = {}) {
     quiz = entry;
     opts = options;
+    // 📢 Instructions of the activity (part of its header), when the teacher wrote some.
+    $('#playerHelp').hidden = !LL.store.instructionsOf(entry.config);
+    root().classList.toggle('is-sort', entry.type === 'sort');
     questions = entry.type === 'sort' ? [] : LL.store.clone(entry.config?.questions || []);
     if (entry.config?.questionOrder === 'random' && !options.preview) questions = shuffle(questions);
     index = Math.max(0, Math.min(options.startIndex || 0, questions.length - 1));
@@ -96,10 +107,8 @@ window.LL = window.LL || {};
     sortTotal = info.total;
     renderProgress();
     $('#playerProgress').append(info.status); // ⏱️ time · count · ✓ right, in the top bar
-    const speakBtn = $('#playerSpeak');
-    speakBtn.disabled = !info.instruction;
-    speakBtn.onclick = () => speak(info.instruction, quiz.config?.lang, quiz.config?.voiceGender || 'female');
-    if (info.instruction) { const myRun = run; timer = setTimeout(() => { if (myRun === run && !root().hidden) speak(info.instruction, quiz.config?.lang, quiz.config?.voiceGender || 'female'); }, 300); }
+    // Nothing else to read here: the instructions (📢) are read once when the game starts.
+    if (instructions()) { const myRun = run; timer = setTimeout(() => { if (myRun === run && !root().hidden) sayInstructions(); }, 300); }
     if (!info.total) body().replaceChildren(el('div.finish', el('div.stars', '🤔'), el('h1', 'Esta actividad todavía no tiene tarjetas.')));
   }
 
@@ -323,6 +332,7 @@ window.LL = window.LL || {};
   document.addEventListener('DOMContentLoaded', () => {
     // Exit: students must hold the button for 3 seconds (a ring fills up), so a stray tap
     // doesn't end the activity. In the teacher's preview a normal click is enough.
+    $('#playerHelp').addEventListener('click', () => sayInstructions());
     const exitBtn = $('#playerExit');
     const HOLD_MS = 3000;
     let holdTimer = null, held = false;

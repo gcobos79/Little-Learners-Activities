@@ -31,15 +31,6 @@ window.LL = window.LL || {};
     const set = S.sortSettingsOf(c);
     container.replaceChildren();
 
-    // Optional instruction shown (and read) at the top of the activity.
-    const instr = el('textarea', { rows: '2', maxlength: '200', placeholder: 'Ej. Lleva cada dibujo a la letra con la que empieza.' });
-    instr.value = set.instruction || '';
-    instr.addEventListener('input', () => { set.instruction = instr.value; api.changed(); });
-    const instrField = el('label.field.sort-instruction-field', 'Instrucción (opcional)', el('span.hint', 'Se muestra arriba de la banda; el botón 🔊 la lee.'), instr);
-    instrField.hidden = !set.instruction;
-    const instrBtn = el('button.btn.sm.ghost', { type: 'button', onclick: () => { instrField.hidden = false; instrBtn.hidden = true; instr.focus(); } }, '＋ Instrucción');
-    instrBtn.hidden = !instrField.hidden;
-
     const status = el('div');
     const refreshStatus = () => {
       const msg = S.sortProblem(c);
@@ -149,9 +140,9 @@ window.LL = window.LL || {};
     } }, '＋ Agregar grupo');
 
     container.append(
-      el('div.sort-editor-head', el('h2', '🧺 Grupos y tarjetas'), instrBtn),
+      el('div.sort-editor-head', el('h2', '🧺 Grupos y tarjetas')),
       el('p.small.muted', 'Las tarjetas pasan por una banda y el niño lleva cada una a su grupo. Escribe el nombre de cada grupo (por ejemplo una letra) y agrega sus tarjetas con imagen y/o palabra.'),
-      instrField, status, grid,
+      status, grid,
       el('div.sort-editor-foot', addGroup, el('span.small.muted', 'De 2 a ' + MAX_GROUPS + ' grupos · de 1 a ' + MAX_ITEMS + ' tarjetas por grupo.')));
     drawAll();
   }

@@ -110,6 +110,7 @@ window.LL = window.LL || {};
       id: r.id, familyId: r.id, type: r.activity_type === 'sort' ? 'sort' : 'quiz', name: r.name, version: 1, folderId: r.folder_id || null,
       createdAt: iso(r.created_at), updatedAt: iso(r.updated_at),
       config: { lang: r.language, voiceGender: r.voice_gender === 'male' ? 'male' : 'female', mode: 'practice', questionOrder: r.question_order, answerOrder: r.answer_order, visibility: r.visible ? 'visible' : 'hidden', coverImage: ref(r.cover_path), questions,
+        instructions: r.instructions || (r.settings && r.settings.instruction) || '',
         ...(r.activity_type === 'sort' ? { sort: S.sortSettings({ sort: r.settings || {} }) } : {}) },
     };
   }
@@ -147,7 +148,8 @@ window.LL = window.LL || {};
     });
     return {
       p_quiz: { id: entry.id, folder_id: entry.folderId && folderIds.has(entry.folderId) ? entry.folderId : null, name: String(entry.name || '').slice(0, 200), language: c.lang, voice_gender: c.voiceGender === 'male' ? 'male' : 'female', mode: 'practice', question_order: c.questionOrder, answer_order: c.answerOrder, visible: c.visibility === 'visible', cover_path: path(c.coverImage), created_at: entry.createdAt || entry.updatedAt, updated_at: entry.updatedAt,
-        activity_type: entry.type === 'sort' ? 'sort' : 'quiz', settings: entry.type === 'sort' ? S.sortSettings(c) : {} },
+        activity_type: entry.type === 'sort' ? 'sort' : 'quiz', settings: entry.type === 'sort' ? S.sortSettings(c) : {},
+        instructions: S.instructionsOf(c).slice(0, 300) },
       p_questions: questions,
       p_options: options,
     };

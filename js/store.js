@@ -276,7 +276,7 @@ window.LL = window.LL || {};
   }
   function saveRoster(r) { return writeJSON(KEYS.roster, r); }
 
-  /* ---------- Sonidos iniciales ---------- */
+  /* ---------- Sonidos iniciales (old prototype, removed in V126; its saved settings are only kept so sync keeps working) ---------- */
   function sonidos() { return { ...DEFAULT_SONIDOS, ...readJSON(KEYS.sonidos, {}) }; }
   function saveSonidos(s) { return writeJSON(KEYS.sonidos, s); }
 
@@ -285,12 +285,6 @@ window.LL = window.LL || {};
     const v = Object.fromEntries(parts.map((p) => [p.type, p.value]));
     return `${v.year}-${v.month}-${v.day}`;
   }
-  // Same key format as V121, so today's ranking keeps working.
-  function sonidosScoreKey(c) {
-    return 'll-demo-v2:' + todayChicago() + ':red:' + JSON.stringify([c.lang, c.per, c.letters.slice().sort(), c.mode]);
-  }
-  function sonidosScores(c) { return readJSON(sonidosScoreKey(c), {}); }
-  function saveSonidosScores(c, data) { return writeJSON(sonidosScoreKey(c), data); }
 
   /** Make room in the browser's storage without losing anything:
    *  - older saved versions of the same quiz (only the newest is ever shown),
@@ -413,7 +407,10 @@ window.LL = window.LL || {};
   }
 
   /* ---------- «Clasificación rápida» helpers ---------- */
-  const SORT_DEFAULTS = { speed: 'normal', perGroup: 0, showText: false, speak: true, instruction: '' };
+  const SORT_DEFAULTS = { speed: 'normal', perGroup: 0, showText: false, speak: true };
+  /** The activity's instructions (part of its header): what the 📢 button reads to the children.
+   *  Early V126 sort activities kept them in config.sort.instruction. */
+  const instructionsOf = (c) => String((c && (c.instructions || (c.sort && c.sort.instruction))) || '').trim();
   function newSortItem() { return { id: uid('quiz'), text: '', image: '', audioMode: 'voice', readTextEnabled: false, readText: '', audio: '', correct: true }; }
   function newSortGroup(label = '', items = 3) {
     return { id: uid('quiz'), text: label, image: '', emoji: '', audioMode: 'voice', readTextEnabled: false, readText: '', audio: '', correctCount: 1, options: Array.from({ length: items }, newSortItem) };
@@ -461,10 +458,10 @@ window.LL = window.LL || {};
     KEYS, FOLDER_COLORS, ANIMALS, clone, uid, byName,
     readLibrary, quizzes, getQuiz, isReady, saveQuiz, duplicateQuiz, deleteQuiz, moveQuiz,
     folders, getFolder, saveFolder, deleteFolder, moveFolder, folderNameTaken, mergeDuplicateFolders, folderTrail, folderPathLabel, folderHas,
-    roster, saveRoster, sonidos, saveSonidos, pinHash, savePinHash, voice, saveVoice, settingsAt, quietly, readJSON, writeJSON, writeLibrary, writeFolders, sonidosScores, saveSonidosScores, todayChicago,
+    roster, saveRoster, sonidos, saveSonidos, pinHash, savePinHash, voice, saveVoice, settingsAt, quietly, readJSON, writeJSON, writeLibrary, writeFolders, todayChicago,
     readDraft, writeDraft, clearDraft,
     exportBackup, importBackup, validateBackup, storageUsed, deleteAllData, freeSpace,
     newOption, newQuestion, newQuiz, questionProblem, isActivity,
-    newSort, newSortGroup, newSortItem, sortSettings, sortSettingsOf, sortProblem, itemFilled,
+    newSort, newSortGroup, newSortItem, sortSettings, sortSettingsOf, sortProblem, itemFilled, instructionsOf,
   };
 })();

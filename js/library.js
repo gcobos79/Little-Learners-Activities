@@ -37,9 +37,6 @@ window.LL = window.LL || {};
     for (const f of subFolders) grid.append(folderCard(f, folders, entries, student));
     for (const t of items) grid.append(quizCard(t, student));
 
-    // The original "Sonidos iniciales" activity, when the teacher turns it on for students.
-    const son = S.sonidos();
-    if (!currentFolder && (!student || son.showToStudents)) grid.append(sonidosCard(son, student));
 
     LL.ui.stagger(grid);
     const empty = $('#libraryEmpty');
@@ -142,17 +139,6 @@ window.LL = window.LL || {};
         el('button.icon-btn', { type: 'button', 'aria-label': 'Más opciones del quiz', onclick: (e) => quizMenu(e, t) }, '⋯')));
       card.addEventListener('contextmenu', (e) => { e.preventDefault(); quizMenu(e, t); });
     }
-    return card;
-  }
-
-  function sonidosCard(son, student) {
-    const main = el('button.card-main', { type: 'button', onclick: () => LL.app.openSonidos() },
-      el('span.cover-placeholder', { style: { background: '#FFE7EC' }, 'aria-hidden': 'true' }, '🔤'),
-      el('span.name', 'Sonidos iniciales'),
-      el('span.meta', 'Arrastra cada dibujo a su letra · ' + son.letters.join(', ')));
-    if (!student) main.append(el('span.badge.' + (son.showToStudents ? 'visible' : 'hidden'), son.showToStudents ? '👀 Visible para estudiantes' : '🛠️ Solo para el maestro'));
-    const card = el('div.card.quiz', main);
-    if (!student) card.append(el('div.card-tools', el('button.btn.sm.soft', { type: 'button', onclick: () => LL.app.go('sonidos-admin') }, '⚙️ Configurar')));
     return card;
   }
 

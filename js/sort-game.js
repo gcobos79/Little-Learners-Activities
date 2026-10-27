@@ -1,7 +1,7 @@
 /* «Clasificación rápida»: cards ride a conveyor belt; the child drags each one to its group.
- * Same rules as the Sonidos iniciales prototype:
+ * Same rules as the old Sonidos iniciales prototype (removed):
  *  - Right group: the box blinks green (½ s) and the card counts.
- *  - Wrong group: the box blinks red with ✕ (1 s), then the right group blinks green (2 s).
+ *  - Wrong group: the box blinks red (1 s, no ✕), then the right group blinks green (2 s).
  *    The card is used up either way (no point when wrong).
  *  - Dropped outside the boxes: the card goes back to its place on the belt.
  *  - Cards nobody picks keep going round. While feedback shows, the belt stops.
@@ -55,7 +55,7 @@ window.LL = window.LL || {};
       const label = String(grp.text || '').trim();
       if (grp.image) face.append(el('img', { src: grp.image, alt: '' }));
       if (label) face.append(el('span.sort-target-label' + (grp.image ? '.small' : label.length > 3 ? '.long' : ''), label));
-      box.append(face, el('span.sort-target-mark', { 'aria-hidden': 'true' }));
+      box.append(face);
       // Tapping a group reads its name.
       box.addEventListener('click', () => { if (!g.drag && String(grp.text || '').trim()) api.say(grp, grp.text); });
       targets.append(box);
@@ -71,9 +71,7 @@ window.LL = window.LL || {};
       belt.append(tile);
     });
 
-    const instruction = String(set.instruction || '').trim();
     host.replaceChildren(el('div.sort-game',
-      instruction ? el('p.sort-instruction', instruction) : null,
       belt, targets));
     g.clock = setInterval(() => { if (game === g) g.stTime.textContent = '⏱️ ' + clock(Date.now() - g.startedAt); }, 500);
 
@@ -88,7 +86,7 @@ window.LL = window.LL || {};
     g.onResize = () => layout();
     window.addEventListener('resize', g.onResize);
     api.onProgress && api.onProgress(0, cards.length, 0);
-    return { total: cards.length, instruction, status: el('div.sort-status', g.stTime, g.stCount, g.stOk) };
+    return { total: cards.length, status: el('div.sort-status', g.stTime, g.stCount, g.stOk) };
   }
 
   function layout() {
@@ -97,6 +95,23 @@ window.LL = window.LL || {};
     g.size = Math.max(70, Math.round(h - 40)); // room for the rails above and below
     g.gap = Math.round(g.size * 1.32);
     g.belt.style.setProperty('--card', g.size + 'px');
+    fitTargets();
+  }
+  /** Big group tiles, but never off the screen: shrink a little only when they don't fit. */
+  function fitTargets() {
+    const t = game && game.targets; if (!t) return;
+    let fit = 1;
+    t.style.setProperty('--fit', '1');
+    // Up to 6 groups: keep them on one row when that only needs them a little smaller (≥ 80%).
+    const tiles = [...t.querySelectorAll('.sort-target')];
+    if (tiles.length > 1 && tiles.length <= 6) {
+      const cs = getComputedStyle(t);
+      const gap = parseFloat(cs.columnGap) || 0, pad = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+      const w = tiles[0].getBoundingClientRect().width;
+      const rowFit = (t.clientWidth - pad - gap * (tiles.length - 1)) / (w * tiles.length);
+      if (rowFit < 1 && rowFit >= 0.8) { fit = Math.floor(rowFit * 100) / 100; t.style.setProperty('--fit', String(fit)); }
+    }
+    while (fit > 0.55 && t.scrollHeight > t.clientHeight + 2) { fit -= 0.05; t.style.setProperty('--fit', fit.toFixed(2)); }
   }
   function place(card) { card.el.style.transform = 'translateX(' + card.x + 'px)'; }
 

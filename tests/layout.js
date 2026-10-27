@@ -51,7 +51,7 @@ const devices={
     await p.click('.card.quiz:has-text("Animales") >> text=Editar').catch(async()=>{await p.click('#cardGrid >> text=Español'); await p.waitForTimeout(300); await p.click('.card.quiz:has-text("Animales") >> text=Editar');});
     await p.waitForTimeout(300); await shot('8editor');
     await p.screenshot({path:`${out}/${name}-8editor-full.png`,fullPage:true});
-    await p.click('.tab >> nth=3'); await p.waitForTimeout(300); await shot('9backup');
+    await p.click('.tab:has-text("Ajustes")'); await p.waitForTimeout(300); await shot('9backup');
     await p.click('.appbar-right .icon-btn'); await p.waitForTimeout(300); await shot('10info');
     report[name]={issues:[...new Set(issues)],errs};
     await ctx.close();

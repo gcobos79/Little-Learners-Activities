@@ -35,7 +35,7 @@ const shots=process.argv[3]||'/tmp';
   const cloudGatos=mock.db.quizzes.find(r=>r.name==='Gatos');
   ok(cloudGatos && mock.db.quiz_questions.find(q=>q.quiz_id===cloudGatos.id).tts,'A: quiz with voice uploaded to cloud');
   // PIN
-  await A.click('.tab >> nth=3'); await A.waitForTimeout(400);
+  await A.click('.tab:has-text("Ajustes")'); await A.waitForTimeout(400);
   await A.screenshot({path:shots+'/c2-settings.png',fullPage:true});
   await A.click('button:has-text("Crear PIN")'); await A.waitForTimeout(200);
   for(const k of '1234') await A.keyboard.press(k); await A.keyboard.press('Enter'); await A.waitForTimeout(250);

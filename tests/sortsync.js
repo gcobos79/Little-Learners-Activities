@@ -20,6 +20,7 @@ const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) process
   await A.focus('.teacher-gate'); await A.keyboard.press('Enter'); await A.waitForTimeout(300);
   await A.click('#newQuizBtn'); await A.click('.kind-choice:has-text("Clasificación rápida")'); await A.waitForTimeout(400);
   await A.fill('#edName', 'Letras sync');
+  await A.fill('#edInstructions', 'Escucha y clasifica.');
   const names = await A.$$('.sort-group-name'); await names[0].fill('P'); await names[1].fill('S');
   const r0 = await A.$$('.sort-group >> nth=0 >> .sort-item input[type=text]'); await r0[0].fill('pato'); await r0[1].fill('perro');
   const r1 = await A.$$('.sort-group >> nth=1 >> .sort-item input[type=text]'); await r1[0].fill('sol');
@@ -28,11 +29,13 @@ const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) process
   await A.click('text=💾 Guardar'); await A.waitForTimeout(2500);
   const row = mock.db.quizzes.find((q) => q.name === 'Letras sync');
   ok(row && row.activity_type === 'sort' && row.settings && row.settings.speed === 'slow', 'database row: activity_type = sort, settings saved');
+  ok(row && row.instructions === 'Escucha y clasifica.', 'database row: instructions column');
   ok(mock.db.quiz_questions.filter((q) => q.quiz_id === row.id).map((q) => q.prompt).join(',') === 'P,S', 'groups stored as rows (P, S)');
   ok(mock.db.quiz_options.filter((o) => o.quiz_id === row.id).length === 3, 'cards stored (3)');
   const B = await mk();
   const e = await B.evaluate(() => LL.store.quizzes().find((q) => q.name === 'Letras sync'));
   ok(e && e.type === 'sort' && e.config.sort.speed === 'slow' && e.config.questions.length === 2, 'tablet receives it as «Clasificación rápida» with its settings');
+  ok(e && e.config.instructions === 'Escucha y clasifica.', 'tablet receives the instructions');
   await B.click('.student-card >> nth=0'); await B.waitForTimeout(400);
   ok((await B.textContent('.card.quiz:has-text("Letras sync") .meta')).includes('Clasificación rápida'), 'student library shows it');
   await B.click('.card.quiz:has-text("Letras sync")'); await B.waitForTimeout(900);

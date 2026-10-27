@@ -65,7 +65,7 @@ const assert=(c,m)=>{console.log((c?'PASS ':'FAIL ')+m)};
   const moved=await p.evaluate(()=>JSON.parse(localStorage.getItem('ll-activities-v10-templates')).find(x=>x.name==='Prueba nueva 2').folderId);
   assert(moved==='folder-2','teacher: move quiz into folder');
   // Backup export
-  await p.click('.tab >> nth=3'); await p.waitForTimeout(300);
+  await p.click('.tab:has-text("Ajustes")'); await p.waitForTimeout(300);
   const [dl]=await Promise.all([p.waitForEvent('download'),p.click('button:has-text("📥 Descargar respaldo")')]);
   const path=await dl.path(); const backup=JSON.parse(require('fs').readFileSync(path,'utf8'));
   assert(backup.app==='little-learners-activities'&&backup.data['ll-activities-v10-templates'].length===6,'backup: export contains all library entries (incl. old quick_sort)');
@@ -76,17 +76,15 @@ const assert=(c,m)=>{console.log((c?'PASS ':'FAIL ')+m)};
   // import
   await p.click('button:has-text("Usar sin cuenta")'); await p.waitForTimeout(300);
   await p.focus('.teacher-gate'); await p.keyboard.press('Enter'); await p.waitForTimeout(300);
-  await p.click('.tab >> nth=3'); await p.waitForTimeout(300);
+  await p.click('.tab:has-text("Ajustes")'); await p.waitForTimeout(300);
   const [fc]=await Promise.all([p.waitForEvent('filechooser'),p.click('text=📤 Elegir archivo…')]);
   await fc.setFiles(path); await p.waitForTimeout(400);
   await p.click('.modal >> text=Agregar a lo que ya tengo'); await p.waitForTimeout(400);
   const n=await p.evaluate(()=>JSON.parse(localStorage.getItem('ll-activities-v10-templates')||'[]').length);
   assert(n===6,'import: restores library from backup');
-  // Sonidos iniciales launches
-  await p.click('.tab >> nth=2'); await p.waitForTimeout(300);
-  await p.click('#screen-sonidos-admin button:has-text("Probar")'); await p.waitForTimeout(1500);
-  const tiles=await p.frameLocator('#sonidosFrame').locator('.tile').count();
-  assert(tiles>0,'Sonidos iniciales: original activity starts ('+tiles+' tiles)');
+  // The old Sonidos iniciales prototype is gone (V126)
+  const tabs=await p.$$eval('.tab',a=>a.map(x=>x.textContent));
+  assert(!tabs.some(t=>t.includes('Sonidos'))&&!(await p.$('.card:has-text("Sonidos iniciales")')),'Sonidos iniciales prototype removed (tabs: '+tabs.join(' | ')+')');
   console.log('PAGE ERRORS',errs);
   await b.close();
 })();
