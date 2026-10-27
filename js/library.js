@@ -48,8 +48,8 @@ window.LL = window.LL || {};
     if (nothing) {
       empty.replaceChildren(
         el('div.big-emoji', student ? '🌱' : '📂'),
-        el('div', student ? 'Todavía no hay actividades aquí.' : currentFolder ? 'Esta carpeta está vacía.' : 'Todavía no tienes quizzes.'),
-        student ? null : el('div.muted.small', 'Usa «＋ Nuevo quiz» o «📁 Nueva carpeta» para agregar algo aquí.'),
+        el('div', student ? 'Todavía no hay actividades aquí.' : currentFolder ? 'Esta carpeta está vacía.' : 'Todavía no tienes actividades.'),
+        student ? null : el('div.muted.small', 'Usa «＋ Nueva actividad» o «📁 Nueva carpeta» para agregar algo aquí.'),
       );
     }
   }
@@ -101,13 +101,35 @@ window.LL = window.LL || {};
     return card;
   }
 
+  /** «＋ Nueva actividad»: choose the kind first. */
+  async function chooseNewActivity() {
+    const pick = (kind) => () => { document.querySelector('.modal-back')?.click(); setTimeout(() => LL.editor.open(null, currentFolder, kind), 0); };
+    await dialog({
+      title: '¿Qué tipo de actividad?',
+      body: el('div.kind-choices',
+        el('button.kind-choice', { type: 'button', onclick: pick('quiz') },
+          el('span.kind-icon', '❓'), el('span.kind-name', 'Quiz'), el('span.kind-desc', 'Preguntas con respuestas para elegir.')),
+        el('button.kind-choice', { type: 'button', onclick: pick('sort') },
+          el('span.kind-icon', '🧺'), el('span.kind-name', 'Selecciona y empareja'), el('span.kind-desc', 'Las tarjetas pasan por una banda y el niño lleva cada una a su grupo.'))),
+      actions: [{ label: 'Cancelar', kind: 'ghost', value: false }],
+    });
+  }
+
+  function cardMeta(t) {
+    const qs = t.config?.questions || [];
+    if (t.type === 'sort') {
+      const cards = qs.reduce((s, g) => s + (g.options || []).filter(S.itemFilled).length, 0);
+      return 'Selecciona y empareja · ' + qs.length + ' grupos · ' + cards + (cards === 1 ? ' tarjeta' : ' tarjetas');
+    }
+    return 'Quiz · ' + qs.length + (qs.length === 1 ? ' pregunta' : ' preguntas');
+  }
+
   function quizCard(t, student) {
     const cover = t.config?.coverImage || '';
-    const n = t.config?.questions?.length || 0;
     const main = el('button.card-main', { type: 'button', onclick: () => play(t) },
-      LL.media.isImage(cover) ? el('img.cover', { src: cover, alt: '' }) : el('span.cover-placeholder', { 'aria-hidden': 'true' }, '❓'),
+      LL.media.isImage(cover) ? el('img.cover', { src: cover, alt: '' }) : el('span.cover-placeholder', { 'aria-hidden': 'true' }, t.type === 'sort' ? '🧺' : '❓'),
       el('span.name', t.name),
-      el('span.meta', 'Quiz · ' + n + (n === 1 ? ' pregunta' : ' preguntas')));
+      el('span.meta', cardMeta(t)));
     const card = el('div.card.quiz', { dataset: { quizId: t.id } }, main);
     if (!student) {
       card.classList.add('draggable');
@@ -358,7 +380,7 @@ window.LL = window.LL || {};
 
   document.addEventListener('DOMContentLoaded', () => {
     $('#newFolderBtn').addEventListener('click', () => editFolder(null));
-    $('#newQuizBtn').addEventListener('click', () => LL.editor.open(null, currentFolder));
+    $('#newQuizBtn').addEventListener('click', chooseNewActivity);
     initDrag();
   });
 

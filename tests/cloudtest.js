@@ -23,7 +23,7 @@ const shots=process.argv[3]||'/tmp';
   ok(await A.isVisible('#studentGrid'),'A: lands on student picker');
   // Teacher creates a quiz
   await A.focus('.teacher-gate'); await A.keyboard.press('Enter'); await A.waitForTimeout(400);
-  await A.click('#newQuizBtn'); await A.waitForTimeout(300);
+  await A.click('#newQuizBtn'); await A.click('.kind-choice:has-text("Quiz")'); await A.waitForTimeout(300);
   await A.fill('#edName','Gatos'); await A.fill('#edQuestion textarea','¿Dónde está el gato?');
   const ins=await A.$$('#edQuestion .answer input[type=text]'); await ins[0].fill('gato'); await ins[1].fill('perro'); await ins[2].fill('pato'); await ins[3].fill('sapo');
   await A.click('.answer >> nth=0 >> .correct-toggle');

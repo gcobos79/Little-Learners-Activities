@@ -1,5 +1,21 @@
 # Changelog
 
+## V126 — October 2026 (Selecciona y empareja)
+- New activity type **«🧺 Selecciona y empareja»** (from the Sonidos iniciales prototype, for any
+  topic): cards (picture and/or word) ride a conveyor belt; the child drags each one to its group.
+  Right group: green blink; wrong group: red ✕, then the right group blinks green (the card is used);
+  dropped outside: back to the belt. Mouse and touch. Picking a card says its word.
+- «＋ Nueva actividad» asks for the type (Quiz / Selecciona y empareja).
+- Editor (like the Wordwall group-sort editor): one panel per group (name, optional picture), numbered
+  cards with picture + word, ↑/↓, duplicate, delete, «🖼️ Varias imágenes» (one card per picture, the
+  word comes from the file name), optional instruction. Settings: belt speed (Lenta / Normal / Rápida),
+  cards per group per game (all or a random subset), say the word, show the word under the picture.
+- Same player features as quizzes: child's name, hold ↩️ 3 s to leave, end screen with today's board
+  (score and time), results saved per month («Lo llevó a: …» in the detail), folders, duplicate, sync.
+- Database: `quizzes.activity_type` ('quiz' | 'sort') and `quizzes.settings` (jsonb); `save_quiz` keeps
+  them when an older app version saves. Groups are stored as quiz_questions and cards as quiz_options.
+  Until the migration is applied, a new sort activity stays on the device that created it.
+
 ## V125 — October 2026 (voice type, storage)
 - Ajustes asks for the teacher PIN every time it is opened (tab, browser Back/Forward). A wrong PIN
   shows «❌ PIN incorrecto» with «Aceptar» and the teacher stays where they were. Coming back from

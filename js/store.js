@@ -88,11 +88,17 @@ window.LL = window.LL || {};
   }
   function writeLibrary(a, opts) { return writeJSON(KEYS.library, a, opts); }
 
-  /** Latest version of every quiz family (same rule as V121). */
+  /** Activity types: 'quiz' (questions with answers) and 'sort' («Selecciona y empareja»: put each
+   *  card on the conveyor belt into its group). A sort activity is stored in the same shape as a quiz
+   *  so pictures, voices, sync and backups work the same: each group is a "question" (text = group
+   *  name) and each card is an "answer" of that group; config.sort has the belt settings. */
+  const isActivity = (t) => !!t && (t.type === 'quiz' || t.type === 'sort');
+
+  /** Latest version of every activity family (same rule as V121). */
   function quizzes() {
     const latest = new Map();
     for (const t of readLibrary()) {
-      if (t.type !== 'quiz') continue;
+      if (!isActivity(t)) continue;
       const fam = t.familyId || t.id;
       const old = latest.get(fam);
       if (!old || Number(t.version) > Number(old.version)) {
@@ -106,23 +112,24 @@ window.LL = window.LL || {};
 
   function getQuiz(id) { return quizzes().find((q) => q.id === id) || null; }
 
-  /** A quiz is shown to students only when it is marked visible and has questions. */
+  /** Shown to students only when marked visible and complete enough to play. */
   function isReady(q) {
-    return q && q.config && q.config.visibility === 'visible' &&
-      Array.isArray(q.config.questions) && q.config.questions.length > 0;
+    if (!(q && q.config && q.config.visibility === 'visible' && Array.isArray(q.config.questions))) return false;
+    if (q.type === 'sort') return !sortProblem(q.config);
+    return q.config.questions.length > 0;
   }
 
   /** Create or update a quiz in place (V121 behavior: same id, same version). */
   function saveQuiz(quiz, opts) {
     const all = readLibrary();
     const now = new Date().toISOString();
-    const idx = quiz.id ? all.findIndex((x) => x.id === quiz.id && x.type === 'quiz') : -1;
+    const idx = quiz.id ? all.findIndex((x) => x.id === quiz.id && isActivity(x)) : -1;
     if (idx >= 0) {
       all[idx] = { ...all[idx], name: quiz.name, config: clone(quiz.config), updatedAt: now };
     } else {
       const id = uid('quiz');
       quiz.id = id;
-      all.push({ id, familyId: id, type: 'quiz', name: quiz.name, version: 1, folderId: quiz.folderId || null, config: clone(quiz.config), createdAt: now, updatedAt: now });
+      all.push({ id, familyId: id, type: quiz.type === 'sort' ? 'sort' : 'quiz', name: quiz.name, version: 1, folderId: quiz.folderId || null, config: clone(quiz.config), createdAt: now, updatedAt: now });
     }
     return writeLibrary(all, opts) ? quiz.id : null;
   }
@@ -133,7 +140,7 @@ window.LL = window.LL || {};
     const names = new Set(quizzes().map((x) => x.name));
     let name = q.name + ' (copia)', n = 2;
     while (names.has(name)) name = q.name + ' (copia ' + (n++) + ')';
-    const copy = { name, folderId: q.folderId || null, config: { ...clone(q.config), visibility: 'hidden' } };
+    const copy = { type: q.type, name, folderId: q.folderId || null, config: { ...clone(q.config), visibility: 'hidden' } };
     return saveQuiz(copy);
   }
 
@@ -293,12 +300,12 @@ window.LL = window.LL || {};
     const lib = readLibrary();
     const newest = new Map();
     for (const t of lib) {
-      if (t.type !== 'quiz') continue;
+      if (!isActivity(t)) continue;
       const fam = t.familyId || t.id, old = newest.get(fam);
       if (!old || Number(t.version) > Number(old.version)) newest.set(fam, t);
     }
     for (const t of lib) { const n = newest.get(t.familyId || t.id); if (n && n !== t && !n.folderId && t.folderId) n.folderId = t.folderId; }
-    const keep = lib.filter((t) => t.type !== 'quiz' || newest.get(t.familyId || t.id) === t);
+    const keep = lib.filter((t) => !isActivity(t) || newest.get(t.familyId || t.id) === t);
     if (keep.length !== lib.length) quietly(() => writeLibrary(keep, { quiet: true }));
     if (opts.draft) clearDraft();
     return before - storageUsed();
@@ -327,7 +334,7 @@ window.LL = window.LL || {};
       let grew = true;
       while (grew) { grew = false; for (const f of fol) if (f.parentId && ids.has(f.parentId) && !ids.has(f.id)) { ids.add(f.id); grew = true; } }
       fol = fol.filter((f) => ids.has(f.id)).map((f) => (f.id === folderId ? { ...f, parentId: null } : f));
-      lib = lib.filter((t) => t.type === 'quiz' && ids.has(t.folderId));
+      lib = lib.filter((t) => isActivity(t) && ids.has(t.folderId));
       return { app: 'little-learners-activities', format: 1, exportedAt: new Date().toISOString(), kind: 'folder', data: { [KEYS.library]: lib, [KEYS.folders]: fol } };
     }
     const data = {};
@@ -353,7 +360,7 @@ window.LL = window.LL || {};
     };
     const counts = { quizzes: 0, folders: 0 };
     if (Array.isArray(d[KEYS.library])) {
-      counts.quizzes = d[KEYS.library].filter((x) => x.type === 'quiz').length;
+      counts.quizzes = d[KEYS.library].filter(isActivity).length;
       writeLibrary(mode === 'replace' ? d[KEYS.library] : mergeById(readLibrary(), d[KEYS.library]));
     }
     if (Array.isArray(d[KEYS.folders])) {
@@ -405,6 +412,35 @@ window.LL = window.LL || {};
     return { id: null, name: '', folderId: folderId || null, config: { lang: 'es', voiceGender: 'female', mode: 'practice', questionOrder: 'fixed', answerOrder: 'fixed', visibility: 'hidden', coverImage: '', questions: [newQuestion()] } };
   }
 
+  /* ---------- «Selecciona y empareja» helpers ---------- */
+  const SORT_DEFAULTS = { speed: 'normal', perGroup: 0, showText: false, speak: true, instruction: '' };
+  function newSortItem() { return { id: uid('quiz'), text: '', image: '', audioMode: 'voice', readTextEnabled: false, readText: '', audio: '', correct: true }; }
+  function newSortGroup(label = '', items = 3) {
+    return { id: uid('quiz'), text: label, image: '', emoji: '', audioMode: 'voice', readTextEnabled: false, readText: '', audio: '', correctCount: 1, options: Array.from({ length: items }, newSortItem) };
+  }
+  function newSort(folderId) {
+    return { id: null, type: 'sort', name: '', folderId: folderId || null, config: { lang: 'es', voiceGender: 'female', mode: 'practice', questionOrder: 'fixed', answerOrder: 'random', visibility: 'hidden', coverImage: '', sort: { ...SORT_DEFAULTS }, questions: [newSortGroup(), newSortGroup()] } };
+  }
+  const sortSettings = (c) => ({ ...SORT_DEFAULTS, ...((c && c.sort) || {}) });
+  /** The activity's own settings object (filled with defaults), so every panel edits the same one. */
+  function sortSettingsOf(c) {
+    if (!c.sort || typeof c.sort !== 'object') c.sort = {};
+    for (const [k, v] of Object.entries(SORT_DEFAULTS)) if (!(k in c.sort)) c.sort[k] = v;
+    return c.sort;
+  }
+  const itemFilled = (o) => !!(String(o.text || '').trim() || o.image);
+  /** '' when the activity can be played, otherwise what is missing. */
+  function sortProblem(c) {
+    const groups = (c && c.questions) || [];
+    if (groups.length < 2) return 'Agrega al menos 2 grupos.';
+    for (let i = 0; i < groups.length; i++) {
+      const g = groups[i];
+      if (!(String(g.text || '').trim() || g.image)) return 'Escribe el nombre del grupo ' + (i + 1) + ' (o ponle una imagen).';
+      if (!(g.options || []).some(itemFilled)) return 'El grupo «' + (String(g.text || '').trim() || i + 1) + '» necesita al menos una tarjeta con imagen o texto.';
+    }
+    return '';
+  }
+
   /** Returns '' when the question is complete, otherwise a short message. Same rules as V121. */
   function questionProblem(q) {
     const visible = String(q.text || '').trim() || String(q.image || '').trim() || String(q.emoji || '').trim();
@@ -428,6 +464,7 @@ window.LL = window.LL || {};
     roster, saveRoster, sonidos, saveSonidos, pinHash, savePinHash, voice, saveVoice, settingsAt, quietly, readJSON, writeJSON, writeLibrary, writeFolders, sonidosScores, saveSonidosScores, todayChicago,
     readDraft, writeDraft, clearDraft,
     exportBackup, importBackup, validateBackup, storageUsed, deleteAllData, freeSpace,
-    newOption, newQuestion, newQuiz, questionProblem,
+    newOption, newQuestion, newQuiz, questionProblem, isActivity,
+    newSort, newSortGroup, newSortItem, sortSettings, sortSettingsOf, sortProblem, itemFilled,
   };
 })();

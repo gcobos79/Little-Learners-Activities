@@ -87,6 +87,7 @@ module.exports = function makeMock() {
       const mine = rows.filter((r) => r[col] === u.id);
       const params = [...url.searchParams.entries()];
       if (m === 'GET') {
+        if (api.noSortColumns && t === 'quizzes' && /activity_type|settings/.test(url.searchParams.get('select') || '')) return json(route, { message: 'column quizzes.activity_type does not exist', code: '42703' }, 400);
         let out = filter(mine, params);
         if (stamped.has(t)) out = out.sort((a, b) => String(a.server_updated_at).localeCompare(String(b.server_updated_at)));
         if (t === 'students') out = out.sort((a, b) => (a.sort_order ?? 1e9) - (b.sort_order ?? 1e9) || a.name.localeCompare(b.name));
@@ -141,6 +142,6 @@ module.exports = function makeMock() {
     }
     return json(route, { message: 'unhandled ' + m + ' ' + p }, 404);
   }
-  const api = { handler, db, files, noTtsKey: false, stats: () => ({ ttsCalls, uploads }) };
+  const api = { handler, db, files, noTtsKey: false, noSortColumns: false, stats: () => ({ ttsCalls, uploads }) };
   return api;
 };

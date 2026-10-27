@@ -31,7 +31,7 @@ const assert=(c,m)=>{console.log((c?'PASS ':'FAIL ')+m)};
   await p.focus('.teacher-gate'); await p.keyboard.press('Enter'); await p.waitForTimeout(400);
   assert(await p.isVisible('#newQuizBtn'),'teacher: keyboard Enter opens teacher area');
   // Create quiz
-  await p.click('#newQuizBtn'); await p.waitForTimeout(400);
+  await p.click('#newQuizBtn'); await p.click('.kind-choice:has-text("Quiz")'); await p.waitForTimeout(400);
   await p.fill('#edName','Prueba nueva');
   await p.fill('#edQuestion textarea','¿Cuál es azul?');
   const inputs=await p.$$('#edQuestion .answer input[type=text]');

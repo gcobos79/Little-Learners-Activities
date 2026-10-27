@@ -107,9 +107,10 @@ window.LL = window.LL || {};
       return item;
     });
     return {
-      id: r.id, familyId: r.id, type: 'quiz', name: r.name, version: 1, folderId: r.folder_id || null,
+      id: r.id, familyId: r.id, type: r.activity_type === 'sort' ? 'sort' : 'quiz', name: r.name, version: 1, folderId: r.folder_id || null,
       createdAt: iso(r.created_at), updatedAt: iso(r.updated_at),
-      config: { lang: r.language, voiceGender: r.voice_gender === 'male' ? 'male' : 'female', mode: 'practice', questionOrder: r.question_order, answerOrder: r.answer_order, visibility: r.visible ? 'visible' : 'hidden', coverImage: ref(r.cover_path), questions },
+      config: { lang: r.language, voiceGender: r.voice_gender === 'male' ? 'male' : 'female', mode: 'practice', questionOrder: r.question_order, answerOrder: r.answer_order, visibility: r.visible ? 'visible' : 'hidden', coverImage: ref(r.cover_path), questions,
+        ...(r.activity_type === 'sort' ? { sort: S.sortSettings({ sort: r.settings || {} }) } : {}) },
     };
   }
 
@@ -145,10 +146,23 @@ window.LL = window.LL || {};
       });
     });
     return {
-      p_quiz: { id: entry.id, folder_id: entry.folderId && folderIds.has(entry.folderId) ? entry.folderId : null, name: String(entry.name || '').slice(0, 200), language: c.lang, voice_gender: c.voiceGender === 'male' ? 'male' : 'female', mode: 'practice', question_order: c.questionOrder, answer_order: c.answerOrder, visible: c.visibility === 'visible', cover_path: path(c.coverImage), created_at: entry.createdAt || entry.updatedAt, updated_at: entry.updatedAt },
+      p_quiz: { id: entry.id, folder_id: entry.folderId && folderIds.has(entry.folderId) ? entry.folderId : null, name: String(entry.name || '').slice(0, 200), language: c.lang, voice_gender: c.voiceGender === 'male' ? 'male' : 'female', mode: 'practice', question_order: c.questionOrder, answer_order: c.answerOrder, visible: c.visibility === 'visible', cover_path: path(c.coverImage), created_at: entry.createdAt || entry.updatedAt, updated_at: entry.updatedAt,
+        activity_type: entry.type === 'sort' ? 'sort' : 'quiz', settings: entry.type === 'sort' ? S.sortSettings(c) : {} },
       p_questions: questions,
       p_options: options,
     };
+  }
+
+  let sortOk = false, sortWarned = false;
+  /** Does the database know activity types yet (migration V126)? */
+  async function sortSupported() {
+    if (sortOk) return true;
+    try { await LL.cloud.select('quizzes', 'select=id,activity_type,settings&limit=1'); sortOk = true; }
+    catch (e) {
+      if (!(e && e.status === 400)) throw e; // offline etc.: the normal retry handles it
+      if (!sortWarned) { sortWarned = true; LL.ui.toast('«Selecciona y empareja» se guardó en este aparato. Para verla en las tablets falta actualizar la base de datos.', 'error'); }
+    }
+    return sortOk;
   }
 
   /* ---------- Download ---------- */
@@ -307,6 +321,9 @@ window.LL = window.LL || {};
     for (const q of latest) {
       const stamp = q.updatedAt || q.createdAt || now;
       if (st.q[q.id] === stamp) continue;
+      // «Selecciona y empareja» needs the V126 database columns; until then it stays on this device
+      // (otherwise other tablets would receive it as a broken quiz).
+      if (q.type === 'sort' && !(await sortSupported())) continue;
       const lib = S.readLibrary();
       const entry = lib.find((x) => x.id === q.id);
       if (!entry) continue;

@@ -314,7 +314,7 @@ window.LL = window.LL || {};
     try { data = JSON.parse(await f.text()); } catch { toast('No se pudo leer ese archivo.', 'error'); return; }
     if (!S.validateBackup(data)) { toast('Este archivo no es un respaldo de Little Learners Activities.', 'error'); return; }
     const lib = data.data[S.KEYS.library] || [], fol = data.data[S.KEYS.folders] || [];
-    const nQ = lib.filter((x) => x.type === 'quiz').length;
+    const nQ = lib.filter(S.isActivity).length;
     const isFolder = data.kind === 'folder';
     const actions = [{ label: 'Cancelar', kind: 'ghost', value: null }];
     if (!isFolder) actions.push({ label: 'Reemplazar todo', kind: 'danger-ghost', value: 'replace' });

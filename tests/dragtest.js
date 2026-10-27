@@ -10,7 +10,7 @@ async function run(b, file, viewport, label) {
   await p.evaluate(() => { localStorage.clear(); localStorage.setItem('ll-v122-local-mode', '1'); });
   await p.reload(); await p.waitForTimeout(400);
   await p.focus('.teacher-gate'); await p.keyboard.press('Enter'); await p.waitForTimeout(300);
-  await p.click('#newQuizBtn'); await p.waitForTimeout(400);
+  await p.click('#newQuizBtn'); await p.click('.kind-choice:has-text("Quiz")'); await p.waitForTimeout(400);
   await p.fill('#edName', 'Orden ' + label);
   for (let i = 1; i <= 4; i++) {
     if (i > 1) { await p.click('#edAddQ'); await p.waitForTimeout(100); }

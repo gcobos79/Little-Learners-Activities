@@ -23,7 +23,7 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
     try { localStorage.setItem('ll-activities-v10-templates', JSON.stringify(lib)); window.__filled = true; } catch (e) { window.__filled = false; }
   });
   await p.focus('.teacher-gate'); await p.keyboard.press('Enter'); await p.waitForTimeout(300);
-  await p.click('#newQuizBtn'); await p.waitForTimeout(300);
+  await p.click('#newQuizBtn'); await p.click('.kind-choice:has-text("Quiz")'); await p.waitForTimeout(300);
   await p.fill('#edName', 'Búho'); await p.fill('#edQuestion > label textarea', 'Uno');
   // A big noisy picture (does not compress well)
   const png = await p.evaluate(() => { const c = document.createElement('canvas'); c.width = 900; c.height = 900; const x = c.getContext('2d'); for (let i = 0; i < 60000; i++) { x.fillStyle = `hsl(${Math.random() * 360},80%,50%)`; x.fillRect(Math.random() * 900, Math.random() * 900, 4, 4); } return c.toDataURL('image/png').split(',')[1]; });

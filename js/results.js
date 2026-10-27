@@ -191,7 +191,7 @@ window.LL = window.LL || {};
           el('span.rt-time', fmtTime(r.duration_seconds)));
         table.append(row);
       }
-      panel.append(table, el('p.small.muted', 'Toca un estudiante para ver cada pregunta.'));
+      panel.append(table, el('p.small.muted', current.quiz && current.quiz.type === 'sort' ? 'Toca un estudiante para ver dónde llevó cada tarjeta.' : 'Toca un estudiante para ver cada pregunta.'));
     }
     // Who hasn't done it this month
     const done = new Set(rows.map((r) => (r.student_id != null ? 'id:' + r.student_id : 'n:' + r.student_name)));
@@ -208,12 +208,13 @@ window.LL = window.LL || {};
   }
 
   function detail(r) {
+    const sorting = !!(current.quiz && current.quiz.type === 'sort');
     const list = el('ol.answer-list');
     for (const a of r.answers || []) {
       list.append(el('li.' + (a.correct ? 'good' : 'bad'),
         el('span.mark', a.correct ? '✓' : '✗'),
         el('span.q', a.prompt || '(pregunta sin texto)'),
-        el('span.a', 'Respondió: ' + (a.chosen_text || '—'))));
+        el('span.a', (sorting ? 'Lo llevó a: ' : 'Respondió: ') + (a.chosen_text || '—'))));
     }
     dialog({
       title: r.student_name + ' · ' + r.score + ' / ' + r.total,

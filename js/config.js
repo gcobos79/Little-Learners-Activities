@@ -4,8 +4,8 @@
 window.LL = window.LL || {};
 LL.config = {
   // Set by tools/stamp_version.py on every publish.
-  build: '20261027002431',
-  version: 'V125',
+  build: '20261027012111',
+  version: 'V126',
   // Who runs this site, e.g. 'Sra. García · Escuela Primaria Lincoln'
   owner: 'Geovanny Cobos',
   // How people can reach you about privacy or problems, e.g. an email address

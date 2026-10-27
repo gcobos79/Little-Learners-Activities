@@ -20,34 +20,40 @@ window.LL = window.LL || {};
     try { return await LL.media.upload(dataUrl, folder); } catch { return dataUrl; } // offline: upload later
   }
 
-  async function open(id, folderId) {
+  const isSort = () => !!quiz && quiz.type === 'sort';
+  const draftKey = () => quiz.id || (isSort() ? 'new-sort' : 'new');
+
+  /** kind (new activities only): 'quiz' or 'sort' («Selecciona y empareja»). */
+  async function open(id, folderId, kind) {
     if (id) {
       const q = S.getQuiz(id);
-      if (!q) { toast('No se encontró ese quiz.', 'error'); return; }
-      quiz = { id: q.id, name: q.name, folderId: q.folderId || null, config: S.clone(q.config) };
+      if (!q) { toast('No se encontró esa actividad.', 'error'); return; }
+      quiz = { id: q.id, type: q.type === 'sort' ? 'sort' : 'quiz', name: q.name, folderId: q.folderId || null, config: S.clone(q.config) };
       if (!Array.isArray(quiz.config.questions)) quiz.config.questions = [];
       quiz.config = { lang: 'es', voiceGender: 'female', mode: 'practice', questionOrder: 'fixed', answerOrder: 'fixed', visibility: 'hidden', coverImage: '', ...quiz.config };
+      if (quiz.type === 'sort') quiz.config.sort = S.sortSettings(quiz.config);
     } else {
-      quiz = S.newQuiz(folderId);
+      quiz = kind === 'sort' ? S.newSort(folderId) : S.newQuiz(folderId);
     }
     snapshot = JSON.stringify(quiz);
     qIndex = 0;
 
     const draft = S.readDraft();
-    if (draft && draft.quizId === (id || 'new') && draft.quiz && JSON.stringify(draft.quiz) !== snapshot) {
+    if (draft && draft.quizId === draftKey() && draft.quiz && JSON.stringify(draft.quiz) !== snapshot) {
       const when = draft.at ? new Date(draft.at).toLocaleString('es-US') : '';
-      if (await confirmDialog('¿Recuperar cambios sin guardar?', 'Encontramos cambios de este quiz que no se guardaron' + (when ? ' (' + when + ')' : '') + '. ¿Quieres recuperarlos?', 'Recuperar')) {
+      if (await confirmDialog('¿Recuperar cambios sin guardar?', 'Encontramos cambios de esta actividad que no se guardaron' + (when ? ' (' + when + ')' : '') + '. ¿Quieres recuperarlos?', 'Recuperar')) {
         quiz = draft.quiz;
       } else S.clearDraft();
     }
-    if (!quiz.config.questions.length) quiz.config.questions.push(S.newQuestion());
+    if (isSort()) { while (quiz.config.questions.length < 2) quiz.config.questions.push(S.newSortGroup()); }
+    else if (!quiz.config.questions.length) quiz.config.questions.push(S.newQuestion());
     await LL.app.go('editor');
     renderAll();
     if (!id) setTimeout(() => $('#edName') && $('#edName').focus(), 50);
   }
 
   function changed() {
-    if (isDirty()) S.writeDraft({ quizId: quiz.id || 'new', quiz, at: new Date().toISOString() });
+    if (isDirty()) S.writeDraft({ quizId: draftKey(), quiz, at: new Date().toISOString() });
     const st = $('#edState');
     if (st) {
       st.textContent = isDirty() ? '● Cambios sin guardar' : '✓ Guardado';
@@ -60,7 +66,7 @@ window.LL = window.LL || {};
   function renderAll() {
     const r = root();
     r.replaceChildren();
-    const name = el('input.name-input#edName', { type: 'text', maxlength: '90', placeholder: 'Nombre del quiz (ej. Animales)', value: quiz.name, 'aria-label': 'Nombre del quiz' });
+    const name = el('input.name-input#edName', { type: 'text', maxlength: '90', placeholder: isSort() ? 'Nombre de la actividad (ej. Clasificar A, F, K, P)' : 'Nombre del quiz (ej. Animales)', value: quiz.name, 'aria-label': isSort() ? 'Nombre de la actividad' : 'Nombre del quiz' });
     name.addEventListener('input', () => { quiz.name = name.value; changed(); });
 
     r.append(el('div.editor-top',
@@ -70,6 +76,13 @@ window.LL = window.LL || {};
       el('button.btn.primary', { type: 'button', onclick: save }, '💾 Guardar')));
     r.append(el('p.small#edState', { style: { margin: '-8px 0 12px', fontWeight: '800' } }));
 
+    if (isSort()) {
+      const main = el('div.panel.sort-editor#edSort');
+      r.append(el('div.editor-layout.sort-layout', el('aside.editor-side', settingsPanel()), main));
+      LL.sortEditor.render(main, quiz, { changed, store });
+      changed();
+      return;
+    }
     const side = el('aside.editor-side', settingsPanel(), el('div.panel', { style: { display: 'grid', gap: '10px' } },
       el('h3#edQCount'),
       el('div.q-list#edQList'),
@@ -86,7 +99,8 @@ window.LL = window.LL || {};
 
     const vis = el('input', { type: 'checkbox', checked: c.visibility === 'visible' });
     vis.addEventListener('change', () => { c.visibility = vis.checked ? 'visible' : 'hidden'; changed(); });
-    p.append(el('div.field', el('label.switch', vis, 'Visible para estudiantes'), el('span.hint', 'Déjalo apagado mientras lo preparas. Los estudiantes solo ven los quizzes visibles.')));
+    p.append(el('div.field', el('label.switch', vis, 'Visible para estudiantes'), el('span.hint', 'Déjalo apagado mientras lo preparas. Los estudiantes solo ven las actividades visibles.')));
+    if (isSort()) p.append(el('p.type-tag', '🧺 Selecciona y empareja'));
 
     const voiceNote = el('span.hint.voice-note', { 'aria-live': 'polite' });
     const drawVoiceNote = () => {
@@ -106,11 +120,12 @@ window.LL = window.LL || {};
     p.append(el('div.field', 'Tipo de voz', segmented([['female', '👩 Mujer'], ['male', '👨 Hombre']], c.voiceGender || 'female', (v) => { c.voiceGender = v; drawVoiceNote(); changed(); speak(c.lang === 'en' ? 'Hello! This is the voice.' : '¡Hola! Así suena la voz.', c.lang, v); }),
       voiceNote));
 
+    if (isSort()) p.append(...LL.sortEditor.settingsFields(quiz, { changed }, segmented));
     const qr = el('input', { type: 'checkbox', checked: c.questionOrder === 'random' });
     qr.addEventListener('change', () => { c.questionOrder = qr.checked ? 'random' : 'fixed'; changed(); });
     const ar = el('input', { type: 'checkbox', checked: c.answerOrder === 'random' });
     ar.addEventListener('change', () => { c.answerOrder = ar.checked ? 'random' : 'fixed'; changed(); });
-    p.append(el('div.field', 'Orden', el('label.switch', qr, 'Mezclar preguntas'), el('label.switch', ar, 'Mezclar respuestas')));
+    if (!isSort()) p.append(el('div.field', 'Orden', el('label.switch', qr, 'Mezclar preguntas'), el('label.switch', ar, 'Mezclar respuestas')));
 
     const coverBox = el('div.media-row');
     const drawCover = () => {
@@ -454,7 +469,8 @@ window.LL = window.LL || {};
   function save() {
     quiz.name = (quiz.name || '').trim();
     quiz.config.mode = 'practice'; // only one mode: a wrong answer always shows the right one
-    if (!quiz.name) { toast('Escribe un nombre para el quiz.', 'error'); $('#edName').focus(); return false; }
+    if (!quiz.name) { toast(isSort() ? 'Escribe un nombre para la actividad.' : 'Escribe un nombre para el quiz.', 'error'); $('#edName').focus(); return false; }
+    if (isSort()) return saveSort();
     // A question that was never touched is simply dropped.
     const blank = (q) => !String(q.text || '').trim() && !q.image && !q.audio && !String(q.readText || '').trim() && q.options.every((o) => !String(o.text || '').trim() && !o.image && !o.audio && !o.correct);
     const qs = quiz.config.questions;
@@ -487,6 +503,44 @@ window.LL = window.LL || {};
     renderAll();
     if (problems.length) toast('Guardado como «En preparación». Faltan ' + problems.length + ' pregunta(s) por completar.', 'success');
     else toast(quiz.config.visibility === 'visible' ? '✓ Guardado. Los estudiantes ya pueden verlo.' : '✓ Guardado (en preparación).', 'success');
+    prepareVoices(id);
+    return true;
+  }
+
+  /** «Selecciona y empareja»: empty cards are dropped; it can be visible only when playable. */
+  function saveSort() {
+    const c = quiz.config;
+    S.sortSettingsOf(c);
+    for (const g of c.questions) {
+      const filled = g.options.filter(S.itemFilled);
+      g.options = filled.length ? filled : g.options.slice(0, 1);
+      g.options.forEach((o) => { o.correct = true; o.audioMode = 'voice'; });
+      g.audioMode = 'voice';
+      g.correctCount = 1;
+    }
+    const problem = S.sortProblem(c);
+    if (problem && c.visibility === 'visible') {
+      renderAll();
+      toast('Para que los estudiantes la vean: ' + problem, 'error');
+      return false;
+    }
+    return writeAndRefresh(problem ? 'Guardada como «En preparación». ' + problem : (c.visibility === 'visible' ? '✓ Guardada. Los estudiantes ya pueden verla.' : '✓ Guardada (en preparación).'));
+  }
+
+  /** Write to the browser (freeing space if needed), then refresh the editor. */
+  function writeAndRefresh(okMessage) {
+    let id = S.saveQuiz(quiz, { quiet: true });
+    if (!id) { S.clearDraft(); S.freeSpace(); id = S.saveQuiz(quiz, { quiet: true }); }
+    if (!id) {
+      if (LL.cloud.signedIn()) { saveViaCloud(); return false; }
+      toast('El almacenamiento de este navegador está lleno. Quita algunas imágenes, o entra con tu cuenta para guardarlas en la nube.', 'error');
+      return false;
+    }
+    quiz.id = id;
+    snapshot = JSON.stringify(quiz);
+    S.clearDraft();
+    renderAll();
+    toast(okMessage, 'success');
     prepareVoices(id);
     return true;
   }
@@ -526,7 +580,7 @@ window.LL = window.LL || {};
     const r = await LL.tts.prepareQuiz(work, (i, n) => { const s = st(); if (s) s.textContent = '🗣️ Preparando voces naturales… ' + i + ' de ' + n; });
     if (r.made) {
       const latest = S.getQuiz(id);
-      if (latest) { applyTts(latest.config, work.config); S.saveQuiz({ id, name: latest.name, folderId: latest.folderId, config: latest.config }); }
+      if (latest) { applyTts(latest.config, work.config); S.saveQuiz({ id, type: latest.type, name: latest.name, folderId: latest.folderId, config: latest.config }); }
       if (quiz && quiz.id === id) { const wasClean = !isDirty(); applyTts(quiz.config, work.config); if (wasClean) snapshot = JSON.stringify(quiz); }
       toast('🗣️ Voz natural lista para ' + r.made + (r.made === 1 ? ' texto.' : ' textos.'), 'success');
     }
@@ -534,14 +588,14 @@ window.LL = window.LL || {};
   }
 
   function preview() {
-    LL.player.open({ name: quiz.name || 'Vista previa', config: S.clone(quiz.config) }, { preview: true, startIndex: qIndex, onClose: () => {} });
+    LL.player.open({ type: quiz.type || 'quiz', name: quiz.name || 'Vista previa', config: S.clone(quiz.config) }, { preview: true, startIndex: qIndex, onClose: () => {} });
   }
 
   async function canLeave() {
     if (!isDirty()) return true;
     const v = await dialog({
       title: '¿Guardar los cambios?',
-      body: 'Este quiz tiene cambios sin guardar.',
+      body: isSort() ? 'Esta actividad tiene cambios sin guardar.' : 'Este quiz tiene cambios sin guardar.',
       actions: [{ label: 'Seguir editando', kind: 'ghost', value: 'stay' }, { label: 'Salir sin guardar', kind: 'danger-ghost', value: 'discard' }, { label: 'Guardar y salir', kind: 'primary', value: 'save' }],
     });
     if (v === 'save') return save();

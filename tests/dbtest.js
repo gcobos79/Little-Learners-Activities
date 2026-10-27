@@ -48,7 +48,7 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
 
   // New quiz with a picture answer
   await A.click('.tab >> nth=0'); await A.waitForTimeout(300);
-  await A.click('#newQuizBtn'); await A.waitForTimeout(300);
+  await A.click('#newQuizBtn'); await A.click('.kind-choice:has-text("Quiz")'); await A.waitForTimeout(300);
   await A.fill('#edName', 'Colores'); await A.fill('#edQuestion textarea', '¿Cuál es rojo?');
   const ins = await A.$$('#edQuestion .answer input[type=text]'); for (let i = 0; i < 4; i++) await ins[i].fill(['rojo', 'azul', 'verde', 'amarillo'][i]);
   const [fc2] = await Promise.all([A.waitForEvent('filechooser'), A.click('.answer >> nth=0 >> button:has-text("Imagen")')]);

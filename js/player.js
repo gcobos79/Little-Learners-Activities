@@ -16,10 +16,14 @@ window.LL = window.LL || {};
   const root = () => $('#player');
   const body = () => $('#playerBody');
 
+  // «Selecciona y empareja» (type 'sort') runs the conveyor-belt game in the same player.
+  let sortTotal = 0, sortDone = 0;
+  const isSort = () => !!quiz && quiz.type === 'sort';
+
   function open(entry, options = {}) {
     quiz = entry;
     opts = options;
-    questions = LL.store.clone(entry.config?.questions || []);
+    questions = entry.type === 'sort' ? [] : LL.store.clone(entry.config?.questions || []);
     if (entry.config?.questionOrder === 'random' && !options.preview) questions = shuffle(questions);
     index = Math.max(0, Math.min(options.startIndex || 0, questions.length - 1));
     newAttempt();
@@ -41,6 +45,7 @@ window.LL = window.LL || {};
     if (root().hidden) return;
     clearTimer();
     stopSound();
+    if (LL.sortGame) LL.sortGame.stop();
     root().hidden = true;
     document.body.style.overflow = '';
     const cb = opts.onClose;
@@ -71,6 +76,7 @@ window.LL = window.LL || {};
     const p = $('#playerProgress');
     p.replaceChildren();
     if (opts.preview) p.append(el('span.preview-banner', 'Vista previa del maestro'));
+    if (isSort()) { p.append(el('span.progress-text', { 'aria-label': sortDone + ' de ' + sortTotal + ' tarjetas' }, '🧺 ' + sortDone + ' / ' + sortTotal)); return; }
     if (questions.length <= 20) {
       questions.forEach((_, i) => p.append(el('span.dot' + (i < index ? '.done' : i === index ? '.now' : ''))));
     } else {
@@ -78,7 +84,26 @@ window.LL = window.LL || {};
     }
   }
 
+  function renderSort() {
+    clearTimer();
+    stopSound();
+    sortDone = 0;
+    const info = LL.sortGame.start(body(), quiz, {
+      say: (item, text) => sayItem(item, text),
+      onProgress: (done, total) => { sortDone = done; sortTotal = total; renderProgress(); },
+      onFinish: (r) => { attempt.answers = r.answers; sortTotal = r.total; finish(); },
+    });
+    sortTotal = info.total;
+    renderProgress();
+    const speakBtn = $('#playerSpeak');
+    speakBtn.disabled = !info.instruction;
+    speakBtn.onclick = () => speak(info.instruction, quiz.config?.lang, quiz.config?.voiceGender || 'female');
+    if (info.instruction) { const myRun = run; timer = setTimeout(() => { if (myRun === run && !root().hidden) speak(info.instruction, quiz.config?.lang, quiz.config?.voiceGender || 'female'); }, 300); }
+    if (!info.total) body().replaceChildren(el('div.finish', el('div.stars', '🤔'), el('h1', 'Esta actividad todavía no tiene tarjetas.')));
+  }
+
   function render() {
+    if (isSort()) { renderSort(); return; }
     clearTimer();
     stopSound();
     answered = false;
@@ -242,7 +267,7 @@ window.LL = window.LL || {};
     const who = LL.app.state.student;
     // Save the result (one per student, quiz and month; the newest replaces older ones).
     if (!opts.preview && who && quiz.id && attempt && LL.results) {
-      LL.results.record({ quiz, student: who, answers: attempt.answers, total: questions.length, startedAt: attempt.startedAt, finishedAt: new Date().toISOString() });
+      LL.results.record({ quiz, student: who, answers: attempt.answers, total: isSort() ? sortTotal : questions.length, startedAt: attempt.startedAt, finishedAt: new Date().toISOString() });
     }
     const showBoard = !opts.preview && who && quiz.id && LL.results;
     const board = showBoard ? el('div.board', { 'aria-live': 'polite' }, el('p.muted', 'Cargando los resultados de hoy…')) : null;

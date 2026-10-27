@@ -1,0 +1,55 @@
+// «Selecciona y empareja» syncs between devices with its type and settings (V126).
+const { chromium } = require('playwright');
+const makeMock = require('./mocksb.js');
+const path = require('path');
+const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) process.exitCode = 1; };
+(async () => {
+  const file = path.resolve(process.argv[2] || '../index.html');
+  const mock = makeMock(); mock.noTtsKey = true;
+  mock.db.students.push({ id: 1, teacher_id: 'u-1111', name: 'Sofía', animal: '🐱', active: true });
+  const b = await chromium.launch();
+  const mk = async () => {
+    const ctx = await b.newContext({ viewport: { width: 1280, height: 800 } });
+    await ctx.route('https://abbtbaupzdzdvtkunmtf.supabase.co/**', mock.handler);
+    const p = await ctx.newPage(); p.errs = []; p.on('pageerror', (e) => p.errs.push(e.message));
+    await p.goto('file://' + file); await p.evaluate(() => localStorage.clear()); await p.reload(); await p.waitForTimeout(300);
+    await p.fill('input[type=email]', 'teacher@test.org'); await p.fill('input[type=password]', 'secreto123'); await p.click('button:has-text("Entrar")'); await p.waitForTimeout(1500);
+    return p;
+  };
+  const A = await mk();
+  await A.focus('.teacher-gate'); await A.keyboard.press('Enter'); await A.waitForTimeout(300);
+  await A.click('#newQuizBtn'); await A.click('.kind-choice:has-text("Selecciona y empareja")'); await A.waitForTimeout(400);
+  await A.fill('#edName', 'Letras sync');
+  const names = await A.$$('.sort-group-name'); await names[0].fill('P'); await names[1].fill('S');
+  const r0 = await A.$$('.sort-group >> nth=0 >> .sort-item input[type=text]'); await r0[0].fill('pato'); await r0[1].fill('perro');
+  const r1 = await A.$$('.sort-group >> nth=1 >> .sort-item input[type=text]'); await r1[0].fill('sol');
+  await A.click('.segmented button:has-text("Lenta")');
+  await A.click('label.switch:has-text("Visible para estudiantes")');
+  await A.click('text=💾 Guardar'); await A.waitForTimeout(2500);
+  const row = mock.db.quizzes.find((q) => q.name === 'Letras sync');
+  ok(row && row.activity_type === 'sort' && row.settings && row.settings.speed === 'slow', 'database row: activity_type = sort, settings saved');
+  ok(mock.db.quiz_questions.filter((q) => q.quiz_id === row.id).map((q) => q.prompt).join(',') === 'P,S', 'groups stored as rows (P, S)');
+  ok(mock.db.quiz_options.filter((o) => o.quiz_id === row.id).length === 3, 'cards stored (3)');
+  const B = await mk();
+  const e = await B.evaluate(() => LL.store.quizzes().find((q) => q.name === 'Letras sync'));
+  ok(e && e.type === 'sort' && e.config.sort.speed === 'slow' && e.config.questions.length === 2, 'tablet receives it as «Selecciona y empareja» with its settings');
+  await B.click('.student-card >> nth=0'); await B.waitForTimeout(400);
+  ok((await B.textContent('.card.quiz:has-text("Letras sync") .meta')).includes('Selecciona y empareja'), 'student library shows it');
+  await B.click('.card.quiz:has-text("Letras sync")'); await B.waitForTimeout(900);
+  ok((await B.$$('.sort-card')).length === 3, 'tablet plays it: 3 cards on the belt');
+  // Database without the V126 columns: a new sort activity stays on the device (with a notice).
+  mock.noSortColumns = true;
+  const C = await mk();
+  await C.focus('.teacher-gate'); await C.keyboard.press('Enter'); await C.waitForTimeout(300);
+  await C.click('#newQuizBtn'); await C.click('.kind-choice:has-text("Selecciona y empareja")'); await C.waitForTimeout(400);
+  await C.fill('#edName', 'Sin migración');
+  const n3 = await C.$$('.sort-group-name'); await n3[0].fill('X'); await n3[1].fill('Y');
+  await (await C.$$('.sort-group >> nth=0 >> .sort-item input[type=text]'))[0].fill('uno');
+  await (await C.$$('.sort-group >> nth=1 >> .sort-item input[type=text]'))[0].fill('dos');
+  await C.click('text=💾 Guardar'); await C.waitForTimeout(3000);
+  ok(!mock.db.quizzes.some((q) => q.name === 'Sin migración'), 'old database: the sort activity is NOT uploaded (tablets would see a broken quiz)');
+  ok(await C.evaluate(() => LL.store.quizzes().some((q) => q.name === 'Sin migración' && q.type === 'sort')), 'old database: it is kept on this device');
+  ok(await C.isVisible('.toast:has-text("falta actualizar la base de datos")'), 'old database: the teacher is told why');
+  console.log('errors', A.errs, B.errs, C.errs);
+  await b.close();
+})();

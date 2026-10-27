@@ -35,7 +35,7 @@ const VOICES = {
   };
   const A = await mk(VOICES.both);
   await A.focus('.teacher-gate'); await A.keyboard.press('Enter'); await A.waitForTimeout(300);
-  await A.click('#newQuizBtn'); await A.waitForTimeout(300);
+  await A.click('#newQuizBtn'); await A.click('.kind-choice:has-text("Quiz")'); await A.waitForTimeout(300);
   ok(await A.isVisible('.segmented button:has-text("Mujer")') && await A.isVisible('.segmented button:has-text("Hombre")'), 'editor shows “Tipo de voz: Mujer / Hombre”');
   await A.fill('#edName', 'Voz hombre'); await A.fill('#edQuestion > label textarea', '¿Dónde está el perro?');
   const ins = await A.$$('#edQuestion .answer input[type=text]'); for (let i = 0; i < 4; i++) await ins[i].fill('r' + i);
