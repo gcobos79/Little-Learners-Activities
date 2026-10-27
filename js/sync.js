@@ -160,7 +160,7 @@ window.LL = window.LL || {};
     try { await LL.cloud.select('quizzes', 'select=id,activity_type,settings&limit=1'); sortOk = true; }
     catch (e) {
       if (!(e && e.status === 400)) throw e; // offline etc.: the normal retry handles it
-      if (!sortWarned) { sortWarned = true; LL.ui.toast('«Selecciona y empareja» se guardó en este aparato. Para verla en las tablets falta actualizar la base de datos.', 'error'); }
+      if (!sortWarned) { sortWarned = true; LL.ui.toast('«Clasificación rápida» se guardó en este aparato. Para verla en las tablets falta actualizar la base de datos.', 'error'); }
     }
     return sortOk;
   }
@@ -321,7 +321,7 @@ window.LL = window.LL || {};
     for (const q of latest) {
       const stamp = q.updatedAt || q.createdAt || now;
       if (st.q[q.id] === stamp) continue;
-      // «Selecciona y empareja» needs the V126 database columns; until then it stays on this device
+      // «Clasificación rápida» needs the V126 database columns; until then it stays on this device
       // (otherwise other tablets would receive it as a broken quiz).
       if (q.type === 'sort' && !(await sortSupported())) continue;
       const lib = S.readLibrary();

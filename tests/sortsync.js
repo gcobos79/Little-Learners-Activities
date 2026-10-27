@@ -1,4 +1,4 @@
-// «Selecciona y empareja» syncs between devices with its type and settings (V126).
+// «Clasificación rápida» syncs between devices with its type and settings (V126).
 const { chromium } = require('playwright');
 const makeMock = require('./mocksb.js');
 const path = require('path');
@@ -18,7 +18,7 @@ const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) process
   };
   const A = await mk();
   await A.focus('.teacher-gate'); await A.keyboard.press('Enter'); await A.waitForTimeout(300);
-  await A.click('#newQuizBtn'); await A.click('.kind-choice:has-text("Selecciona y empareja")'); await A.waitForTimeout(400);
+  await A.click('#newQuizBtn'); await A.click('.kind-choice:has-text("Clasificación rápida")'); await A.waitForTimeout(400);
   await A.fill('#edName', 'Letras sync');
   const names = await A.$$('.sort-group-name'); await names[0].fill('P'); await names[1].fill('S');
   const r0 = await A.$$('.sort-group >> nth=0 >> .sort-item input[type=text]'); await r0[0].fill('pato'); await r0[1].fill('perro');
@@ -32,16 +32,16 @@ const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) process
   ok(mock.db.quiz_options.filter((o) => o.quiz_id === row.id).length === 3, 'cards stored (3)');
   const B = await mk();
   const e = await B.evaluate(() => LL.store.quizzes().find((q) => q.name === 'Letras sync'));
-  ok(e && e.type === 'sort' && e.config.sort.speed === 'slow' && e.config.questions.length === 2, 'tablet receives it as «Selecciona y empareja» with its settings');
+  ok(e && e.type === 'sort' && e.config.sort.speed === 'slow' && e.config.questions.length === 2, 'tablet receives it as «Clasificación rápida» with its settings');
   await B.click('.student-card >> nth=0'); await B.waitForTimeout(400);
-  ok((await B.textContent('.card.quiz:has-text("Letras sync") .meta')).includes('Selecciona y empareja'), 'student library shows it');
+  ok((await B.textContent('.card.quiz:has-text("Letras sync") .meta')).includes('Clasificación rápida'), 'student library shows it');
   await B.click('.card.quiz:has-text("Letras sync")'); await B.waitForTimeout(900);
   ok((await B.$$('.sort-card')).length === 3, 'tablet plays it: 3 cards on the belt');
   // Database without the V126 columns: a new sort activity stays on the device (with a notice).
   mock.noSortColumns = true;
   const C = await mk();
   await C.focus('.teacher-gate'); await C.keyboard.press('Enter'); await C.waitForTimeout(300);
-  await C.click('#newQuizBtn'); await C.click('.kind-choice:has-text("Selecciona y empareja")'); await C.waitForTimeout(400);
+  await C.click('#newQuizBtn'); await C.click('.kind-choice:has-text("Clasificación rápida")'); await C.waitForTimeout(400);
   await C.fill('#edName', 'Sin migración');
   const n3 = await C.$$('.sort-group-name'); await n3[0].fill('X'); await n3[1].fill('Y');
   await (await C.$$('.sort-group >> nth=0 >> .sort-item input[type=text]'))[0].fill('uno');

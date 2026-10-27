@@ -1,4 +1,4 @@
-/* «Selecciona y empareja»: cards ride a conveyor belt; the child drags each one to its group.
+/* «Clasificación rápida»: cards ride a conveyor belt; the child drags each one to its group.
  * Same rules as the Sonidos iniciales prototype:
  *  - Right group: the box blinks green (½ s) and the card counts.
  *  - Wrong group: the box blinks red with ✕ (1 s), then the right group blinks green (2 s).

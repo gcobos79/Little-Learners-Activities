@@ -88,7 +88,7 @@ window.LL = window.LL || {};
   }
   function writeLibrary(a, opts) { return writeJSON(KEYS.library, a, opts); }
 
-  /** Activity types: 'quiz' (questions with answers) and 'sort' («Selecciona y empareja»: put each
+  /** Activity types: 'quiz' (questions with answers) and 'sort' («Clasificación rápida»: put each
    *  card on the conveyor belt into its group). A sort activity is stored in the same shape as a quiz
    *  so pictures, voices, sync and backups work the same: each group is a "question" (text = group
    *  name) and each card is an "answer" of that group; config.sort has the belt settings. */
@@ -412,7 +412,7 @@ window.LL = window.LL || {};
     return { id: null, name: '', folderId: folderId || null, config: { lang: 'es', voiceGender: 'female', mode: 'practice', questionOrder: 'fixed', answerOrder: 'fixed', visibility: 'hidden', coverImage: '', questions: [newQuestion()] } };
   }
 
-  /* ---------- «Selecciona y empareja» helpers ---------- */
+  /* ---------- «Clasificación rápida» helpers ---------- */
   const SORT_DEFAULTS = { speed: 'normal', perGroup: 0, showText: false, speak: true, instruction: '' };
   function newSortItem() { return { id: uid('quiz'), text: '', image: '', audioMode: 'voice', readTextEnabled: false, readText: '', audio: '', correct: true }; }
   function newSortGroup(label = '', items = 3) {

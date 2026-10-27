@@ -754,7 +754,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 @keyframes exit-nudge { 20%, 60% { transform: translateX(-4px); } 40%, 80% { transform: translateX(4px); } }
 @media (prefers-reduced-motion: reduce) { #playerExit.nudge { animation: none; } }
 
-/* ---------- «Selecciona y empareja»: new-activity chooser ---------- */
+/* ---------- «Clasificación rápida»: new-activity chooser ---------- */
 .kind-choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 4px; }
 .kind-choice { display: grid; gap: 6px; justify-items: start; text-align: left; padding: 16px; border-radius: 18px; border: 3px solid var(--line); background: var(--surface); }
 .kind-choice:hover, .kind-choice:focus-visible { border-color: var(--primary); background: var(--primary-soft); }
@@ -763,7 +763,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 .kind-desc { font-size: 14px; font-weight: 700; color: var(--muted); }
 .type-tag { margin: -4px 0 0; font-weight: 900; color: var(--primary); }
 
-/* ---------- «Selecciona y empareja»: editor ---------- */
+/* ---------- «Clasificación rápida»: editor ---------- */
 .sort-layout { grid-template-columns: 290px 1fr; }
 .sort-editor { display: grid; gap: 14px; align-content: start; }
 .sort-editor-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
@@ -800,7 +800,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
   .sort-group-tools { grid-column: 1 / -1; justify-content: flex-end; }
 }
 
-/* ---------- «Selecciona y empareja»: the game ---------- */
+/* ---------- «Clasificación rápida»: the game ---------- */
 .sort-game { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: clamp(10px, 2.2vh, 24px); font-family: var(--font-kids); }
 .sort-instruction { margin: 0; text-align: center; font-weight: 900; font-size: clamp(18px, 2.8vh, 26px); }
 .sort-belt { position: relative; flex: 0 0 auto; height: clamp(130px, 30vh, 250px); overflow: hidden; border-radius: 26px; border: 6px solid #7C8EA8;
@@ -940,7 +940,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 window.LL = window.LL || {};
 LL.config = {
   // Set by tools/stamp_version.py on every publish.
-  build: '20261027012111',
+  build: '20261027014942',
   version: 'V126',
   // Who runs this site, e.g. 'Sra. García · Escuela Primaria Lincoln'
   owner: 'Geovanny Cobos',
@@ -1050,7 +1050,7 @@ window.LL = window.LL || {};
   }
   function writeLibrary(a, opts) { return writeJSON(KEYS.library, a, opts); }
 
-  /** Activity types: 'quiz' (questions with answers) and 'sort' («Selecciona y empareja»: put each
+  /** Activity types: 'quiz' (questions with answers) and 'sort' («Clasificación rápida»: put each
    *  card on the conveyor belt into its group). A sort activity is stored in the same shape as a quiz
    *  so pictures, voices, sync and backups work the same: each group is a "question" (text = group
    *  name) and each card is an "answer" of that group; config.sort has the belt settings. */
@@ -1374,7 +1374,7 @@ window.LL = window.LL || {};
     return { id: null, name: '', folderId: folderId || null, config: { lang: 'es', voiceGender: 'female', mode: 'practice', questionOrder: 'fixed', answerOrder: 'fixed', visibility: 'hidden', coverImage: '', questions: [newQuestion()] } };
   }
 
-  /* ---------- «Selecciona y empareja» helpers ---------- */
+  /* ---------- «Clasificación rápida» helpers ---------- */
   const SORT_DEFAULTS = { speed: 'normal', perGroup: 0, showText: false, speak: true, instruction: '' };
   function newSortItem() { return { id: uid('quiz'), text: '', image: '', audioMode: 'voice', readTextEnabled: false, readText: '', audio: '', correct: true }; }
   function newSortGroup(label = '', items = 3) {
@@ -2175,7 +2175,7 @@ window.LL = window.LL || {};
     try { await LL.cloud.select('quizzes', 'select=id,activity_type,settings&limit=1'); sortOk = true; }
     catch (e) {
       if (!(e && e.status === 400)) throw e; // offline etc.: the normal retry handles it
-      if (!sortWarned) { sortWarned = true; LL.ui.toast('«Selecciona y empareja» se guardó en este aparato. Para verla en las tablets falta actualizar la base de datos.', 'error'); }
+      if (!sortWarned) { sortWarned = true; LL.ui.toast('«Clasificación rápida» se guardó en este aparato. Para verla en las tablets falta actualizar la base de datos.', 'error'); }
     }
     return sortOk;
   }
@@ -2336,7 +2336,7 @@ window.LL = window.LL || {};
     for (const q of latest) {
       const stamp = q.updatedAt || q.createdAt || now;
       if (st.q[q.id] === stamp) continue;
-      // «Selecciona y empareja» needs the V126 database columns; until then it stays on this device
+      // «Clasificación rápida» needs the V126 database columns; until then it stays on this device
       // (otherwise other tablets would receive it as a broken quiz).
       if (q.type === 'sort' && !(await sortSupported())) continue;
       const lib = S.readLibrary();
@@ -2589,7 +2589,7 @@ F:[['🐟','fish'],['🦊','fox'],['🐸','frog'],['🌸','flower'],['🔥','fir
 </script>
   <script>
 /* js/sort-game.js */
-/* «Selecciona y empareja»: cards ride a conveyor belt; the child drags each one to its group.
+/* «Clasificación rápida»: cards ride a conveyor belt; the child drags each one to its group.
  * Same rules as the Sonidos iniciales prototype:
  *  - Right group: the box blinks green (½ s) and the card counts.
  *  - Wrong group: the box blinks red with ✕ (1 s), then the right group blinks green (2 s).
@@ -2832,7 +2832,7 @@ window.LL = window.LL || {};
   const root = () => $('#player');
   const body = () => $('#playerBody');
 
-  // «Selecciona y empareja» (type 'sort') runs the conveyor-belt game in the same player.
+  // «Clasificación rápida» (type 'sort') runs the conveyor-belt game in the same player.
   let sortTotal = 0, sortDone = 0;
   const isSort = () => !!quiz && quiz.type === 'sort';
 
@@ -3554,7 +3554,7 @@ window.LL = window.LL || {};
         el('button.kind-choice', { type: 'button', onclick: pick('quiz') },
           el('span.kind-icon', '❓'), el('span.kind-name', 'Quiz'), el('span.kind-desc', 'Preguntas con respuestas para elegir.')),
         el('button.kind-choice', { type: 'button', onclick: pick('sort') },
-          el('span.kind-icon', '🧺'), el('span.kind-name', 'Selecciona y empareja'), el('span.kind-desc', 'Las tarjetas pasan por una banda y el niño lleva cada una a su grupo.'))),
+          el('span.kind-icon', '🧺'), el('span.kind-name', 'Clasificación rápida'), el('span.kind-desc', 'Las tarjetas pasan por una banda y el niño lleva cada una a su grupo.'))),
       actions: [{ label: 'Cancelar', kind: 'ghost', value: false }],
     });
   }
@@ -3563,7 +3563,7 @@ window.LL = window.LL || {};
     const qs = t.config?.questions || [];
     if (t.type === 'sort') {
       const cards = qs.reduce((s, g) => s + (g.options || []).filter(S.itemFilled).length, 0);
-      return 'Selecciona y empareja · ' + qs.length + ' grupos · ' + cards + (cards === 1 ? ' tarjeta' : ' tarjetas');
+      return 'Clasificación rápida · ' + qs.length + ' grupos · ' + cards + (cards === 1 ? ' tarjeta' : ' tarjetas');
     }
     return 'Quiz · ' + qs.length + (qs.length === 1 ? ' pregunta' : ' preguntas');
   }
@@ -3834,7 +3834,7 @@ window.LL = window.LL || {};
 </script>
   <script>
 /* js/sort-editor.js */
-/* Editor for «Selecciona y empareja» (activity type 'sort').
+/* Editor for «Clasificación rápida» (activity type 'sort').
  * Layout like the teacher's reference: one panel per group (its name, optionally a picture) with a
  * numbered list of cards (picture + word). Groups are stored as quiz "questions" and cards as their
  * "answers" (see store.js), so saving, pictures, voices and sync are shared with quizzes. */
@@ -4046,7 +4046,7 @@ window.LL = window.LL || {};
   const isSort = () => !!quiz && quiz.type === 'sort';
   const draftKey = () => quiz.id || (isSort() ? 'new-sort' : 'new');
 
-  /** kind (new activities only): 'quiz' or 'sort' («Selecciona y empareja»). */
+  /** kind (new activities only): 'quiz' or 'sort' («Clasificación rápida»). */
   async function open(id, folderId, kind) {
     if (id) {
       const q = S.getQuiz(id);
@@ -4123,7 +4123,7 @@ window.LL = window.LL || {};
     const vis = el('input', { type: 'checkbox', checked: c.visibility === 'visible' });
     vis.addEventListener('change', () => { c.visibility = vis.checked ? 'visible' : 'hidden'; changed(); });
     p.append(el('div.field', el('label.switch', vis, 'Visible para estudiantes'), el('span.hint', 'Déjalo apagado mientras lo preparas. Los estudiantes solo ven las actividades visibles.')));
-    if (isSort()) p.append(el('p.type-tag', '🧺 Selecciona y empareja'));
+    if (isSort()) p.append(el('p.type-tag', '🧺 Clasificación rápida'));
 
     const voiceNote = el('span.hint.voice-note', { 'aria-live': 'polite' });
     const drawVoiceNote = () => {
@@ -4530,7 +4530,7 @@ window.LL = window.LL || {};
     return true;
   }
 
-  /** «Selecciona y empareja»: empty cards are dropped; it can be visible only when playable. */
+  /** «Clasificación rápida»: empty cards are dropped; it can be visible only when playable. */
   function saveSort() {
     const c = quiz.config;
     S.sortSettingsOf(c);

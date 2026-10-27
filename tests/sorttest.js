@@ -1,4 +1,4 @@
-// «Selecciona y empareja»: create, edit, play (mouse + touch), results (V126).
+// «Clasificación rápida»: create, edit, play (mouse + touch), results (V126).
 const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
@@ -18,8 +18,8 @@ const IMG_DIR = process.argv[4];
 
   // Create
   await p.click('#newQuizBtn'); await p.waitForTimeout(300);
-  assert(await p.isVisible('.kind-choice:has-text("Quiz")') && await p.isVisible('.kind-choice:has-text("Selecciona y empareja")'), 'new activity: choose Quiz or Selecciona y empareja');
-  await p.click('.kind-choice:has-text("Selecciona y empareja")'); await p.waitForTimeout(500);
+  assert(await p.isVisible('.kind-choice:has-text("Quiz")') && await p.isVisible('.kind-choice:has-text("Clasificación rápida")'), 'new activity: choose Quiz or Clasificación rápida');
+  await p.click('.kind-choice:has-text("Clasificación rápida")'); await p.waitForTimeout(500);
   assert(await p.isVisible('#edSort') && (await p.$$('.sort-group')).length === 2, 'sort editor opens with 2 groups');
   await p.fill('#edName', 'Clasificar A y M');
   const names = await p.$$('.sort-group-name'); await names[0].fill('A'); await names[1].fill('M');
@@ -49,7 +49,7 @@ const IMG_DIR = process.argv[4];
   assert(saved.config.questions[0].options.length === 2, 'the empty third card of group A was dropped on save');
   if (shots) await p.screenshot({ path: shots + '/sort-editor.png', fullPage: true });
   await p.click('text=⬅️ Mis actividades'); await p.waitForTimeout(400);
-  assert((await p.textContent('.card.quiz:has-text("Clasificar A y M") .meta')).includes('Selecciona y empareja · 2 grupos · 5 tarjetas'), 'library card says what it is');
+  assert((await p.textContent('.card.quiz:has-text("Clasificar A y M") .meta')).includes('Clasificación rápida · 2 grupos · 5 tarjetas'), 'library card says what it is');
   // Normal speed for the play test
   await p.evaluate(() => { const lib = LL.store.readLibrary(); const e = lib.find((x) => x.name === 'Clasificar A y M'); e.config.sort.speed = 'slow'; LL.store.writeLibrary(lib); LL.library.render(); });
 
@@ -142,7 +142,7 @@ const IMG_DIR = process.argv[4];
   await p.keyboard.press('Escape'); await p.click('.tab:has-text("Actividades")'); await p.waitForTimeout(300);
   await p.click('.card.quiz:has-text("Clasificar A y M") [aria-label^="Más opciones"]'); await p.click('.menu >> text=Duplicar'); await p.waitForTimeout(300);
   const copy = await p.evaluate(() => LL.store.quizzes().find((q) => q.name === 'Clasificar A y M (copia)'));
-  assert(copy && copy.type === 'sort', 'Duplicar keeps it as «Selecciona y empareja»');
+  assert(copy && copy.type === 'sort', 'Duplicar keeps it as «Clasificación rápida»');
   assert(!errs.length, 'no page errors ' + errs.join(' | '));
   await b.close();
 })();

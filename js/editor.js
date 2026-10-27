@@ -23,7 +23,7 @@ window.LL = window.LL || {};
   const isSort = () => !!quiz && quiz.type === 'sort';
   const draftKey = () => quiz.id || (isSort() ? 'new-sort' : 'new');
 
-  /** kind (new activities only): 'quiz' or 'sort' («Selecciona y empareja»). */
+  /** kind (new activities only): 'quiz' or 'sort' («Clasificación rápida»). */
   async function open(id, folderId, kind) {
     if (id) {
       const q = S.getQuiz(id);
@@ -100,7 +100,7 @@ window.LL = window.LL || {};
     const vis = el('input', { type: 'checkbox', checked: c.visibility === 'visible' });
     vis.addEventListener('change', () => { c.visibility = vis.checked ? 'visible' : 'hidden'; changed(); });
     p.append(el('div.field', el('label.switch', vis, 'Visible para estudiantes'), el('span.hint', 'Déjalo apagado mientras lo preparas. Los estudiantes solo ven las actividades visibles.')));
-    if (isSort()) p.append(el('p.type-tag', '🧺 Selecciona y empareja'));
+    if (isSort()) p.append(el('p.type-tag', '🧺 Clasificación rápida'));
 
     const voiceNote = el('span.hint.voice-note', { 'aria-live': 'polite' });
     const drawVoiceNote = () => {
@@ -507,7 +507,7 @@ window.LL = window.LL || {};
     return true;
   }
 
-  /** «Selecciona y empareja»: empty cards are dropped; it can be visible only when playable. */
+  /** «Clasificación rápida»: empty cards are dropped; it can be visible only when playable. */
   function saveSort() {
     const c = quiz.config;
     S.sortSettingsOf(c);

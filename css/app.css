@@ -746,7 +746,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 @keyframes exit-nudge { 20%, 60% { transform: translateX(-4px); } 40%, 80% { transform: translateX(4px); } }
 @media (prefers-reduced-motion: reduce) { #playerExit.nudge { animation: none; } }
 
-/* ---------- «Selecciona y empareja»: new-activity chooser ---------- */
+/* ---------- «Clasificación rápida»: new-activity chooser ---------- */
 .kind-choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 4px; }
 .kind-choice { display: grid; gap: 6px; justify-items: start; text-align: left; padding: 16px; border-radius: 18px; border: 3px solid var(--line); background: var(--surface); }
 .kind-choice:hover, .kind-choice:focus-visible { border-color: var(--primary); background: var(--primary-soft); }
@@ -755,7 +755,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 .kind-desc { font-size: 14px; font-weight: 700; color: var(--muted); }
 .type-tag { margin: -4px 0 0; font-weight: 900; color: var(--primary); }
 
-/* ---------- «Selecciona y empareja»: editor ---------- */
+/* ---------- «Clasificación rápida»: editor ---------- */
 .sort-layout { grid-template-columns: 290px 1fr; }
 .sort-editor { display: grid; gap: 14px; align-content: start; }
 .sort-editor-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
@@ -792,7 +792,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
   .sort-group-tools { grid-column: 1 / -1; justify-content: flex-end; }
 }
 
-/* ---------- «Selecciona y empareja»: the game ---------- */
+/* ---------- «Clasificación rápida»: the game ---------- */
 .sort-game { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: clamp(10px, 2.2vh, 24px); font-family: var(--font-kids); }
 .sort-instruction { margin: 0; text-align: center; font-weight: 900; font-size: clamp(18px, 2.8vh, 26px); }
 .sort-belt { position: relative; flex: 0 0 auto; height: clamp(130px, 30vh, 250px); overflow: hidden; border-radius: 26px; border: 6px solid #7C8EA8;

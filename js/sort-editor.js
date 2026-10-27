@@ -1,4 +1,4 @@
-/* Editor for «Selecciona y empareja» (activity type 'sort').
+/* Editor for «Clasificación rápida» (activity type 'sort').
  * Layout like the teacher's reference: one panel per group (its name, optionally a picture) with a
  * numbered list of cards (picture + word). Groups are stored as quiz "questions" and cards as their
  * "answers" (see store.js), so saving, pictures, voices and sync are shared with quizzes. */

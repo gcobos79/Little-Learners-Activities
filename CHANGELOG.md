@@ -1,11 +1,11 @@
 # Changelog
 
-## V126 — October 2026 (Selecciona y empareja)
-- New activity type **«🧺 Selecciona y empareja»** (from the Sonidos iniciales prototype, for any
+## V126 — October 2026 (Clasificación rápida)
+- New activity type **«🧺 Clasificación rápida»** (from the Sonidos iniciales prototype, for any
   topic): cards (picture and/or word) ride a conveyor belt; the child drags each one to its group.
   Right group: green blink; wrong group: red ✕, then the right group blinks green (the card is used);
   dropped outside: back to the belt. Mouse and touch. Picking a card says its word.
-- «＋ Nueva actividad» asks for the type (Quiz / Selecciona y empareja).
+- «＋ Nueva actividad» asks for the type (Quiz / Clasificación rápida).
 - Editor (like the Wordwall group-sort editor): one panel per group (name, optional picture), numbered
   cards with picture + word, ↑/↓, duplicate, delete, «🖼️ Varias imágenes» (one card per picture, the
   word comes from the file name), optional instruction. Settings: belt speed (Lenta / Normal / Rápida),

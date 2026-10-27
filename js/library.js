@@ -110,7 +110,7 @@ window.LL = window.LL || {};
         el('button.kind-choice', { type: 'button', onclick: pick('quiz') },
           el('span.kind-icon', '❓'), el('span.kind-name', 'Quiz'), el('span.kind-desc', 'Preguntas con respuestas para elegir.')),
         el('button.kind-choice', { type: 'button', onclick: pick('sort') },
-          el('span.kind-icon', '🧺'), el('span.kind-name', 'Selecciona y empareja'), el('span.kind-desc', 'Las tarjetas pasan por una banda y el niño lleva cada una a su grupo.'))),
+          el('span.kind-icon', '🧺'), el('span.kind-name', 'Clasificación rápida'), el('span.kind-desc', 'Las tarjetas pasan por una banda y el niño lleva cada una a su grupo.'))),
       actions: [{ label: 'Cancelar', kind: 'ghost', value: false }],
     });
   }
@@ -119,7 +119,7 @@ window.LL = window.LL || {};
     const qs = t.config?.questions || [];
     if (t.type === 'sort') {
       const cards = qs.reduce((s, g) => s + (g.options || []).filter(S.itemFilled).length, 0);
-      return 'Selecciona y empareja · ' + qs.length + ' grupos · ' + cards + (cards === 1 ? ' tarjeta' : ' tarjetas');
+      return 'Clasificación rápida · ' + qs.length + ' grupos · ' + cards + (cards === 1 ? ' tarjeta' : ' tarjetas');
     }
     return 'Quiz · ' + qs.length + (qs.length === 1 ? ' pregunta' : ' preguntas');
   }

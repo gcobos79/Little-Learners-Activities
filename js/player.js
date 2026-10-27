@@ -16,7 +16,7 @@ window.LL = window.LL || {};
   const root = () => $('#player');
   const body = () => $('#playerBody');
 
-  // «Selecciona y empareja» (type 'sort') runs the conveyor-belt game in the same player.
+  // «Clasificación rápida» (type 'sort') runs the conveyor-belt game in the same player.
   let sortTotal = 0, sortDone = 0;
   const isSort = () => !!quiz && quiz.type === 'sort';
 
