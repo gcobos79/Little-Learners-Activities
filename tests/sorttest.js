@@ -77,14 +77,14 @@ const IMG_DIR = process.argv[4];
   let id = await visibleCard();
   await p.evaluate(() => { window.__said = []; });
   await dragMouse(id, null); await p.waitForTimeout(300);
-  assert(!!(await p.$('.sort-card[data-id="' + id + '"]:not(.picked)')) && (await p.textContent('#playerProgress')).includes('0 / 5'), 'dropped outside the boxes: card goes back to the belt');
+  assert(!!(await p.$('.sort-card[data-id="' + id + '"]:not(.picked)')) && (await p.textContent('.sort-status')).includes('0 de 5'), 'dropped outside the boxes: card goes back to the belt');
   assert((await p.evaluate(() => window.__said)).length >= 1, 'picking up a card says its word');
   // 2) right group
   id = await visibleCard();
   await dragMouse(id, groupOf[id]); await p.waitForTimeout(150);
   assert(await p.isVisible('.sort-target.good'), 'right group blinks green');
   await p.waitForTimeout(700);
-  assert(!(await p.$('.sort-card[data-id="' + id + '"]')) && (await p.textContent('#playerProgress')).includes('1 / 5'), 'card is placed; counter 1 / 5');
+  assert(!(await p.$('.sort-card[data-id="' + id + '"]')) && (await p.textContent('.sort-status')).includes('1 de 5') && (await p.textContent('.sort-status')).includes('✓ 1'), 'card is placed; counter 1 / 5');
   // 3) wrong group
   id = await visibleCard();
   const wrong = groups.find((g) => g !== groupOf[id]);
@@ -97,7 +97,7 @@ const IMG_DIR = process.argv[4];
   // 4) the rest by touch (finger)
   const cdp = await ctx.newCDPSession(p);
   let guard = 0;
-  while ((await p.$$('.sort-card')).length && guard++ < 20) {
+  while ((await p.$$('.sort-card')).length && guard++ < 80) {
     id = await visibleCard();
     if (!id) { await p.waitForTimeout(500); continue; }
     const r = await (await p.$('.sort-card[data-id="' + id + '"]')).boundingBox();

@@ -11,7 +11,10 @@ window.LL = window.LL || {};
   const { el, shuffle, feedbackTone, confetti } = LL.ui;
   const S = LL.store;
   const SPEED = { slow: 0.24, normal: 0.38, fast: 0.6 }; // card widths per second (prototype: 28/45/70 px/s for 120 px cards)
-  const COLORS = ['#FDE2E7', '#FFE9CF', '#FFF4BF', '#DFF3D8', '#D9F1EE', '#DDE7FD', '#EBE0FB', '#F6E3D5'];
+  // Group tiles: warm, clearly different frames. Card frames: bright colours that cycle.
+  const COLORS = ['#FFD43B', '#74C0FC', '#8CE99A', '#FFA8A8', '#B197FC', '#FFC078', '#63E6BE', '#F783AC'];
+  const FRAMES = ['#2F5BD3', '#C04CD9', '#1F8A4C', '#F06A0F', '#13A3A3', '#D6336C', '#7048E8', '#E8A500'];
+  const clock = (ms) => { const s = Math.floor(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
 
   let game = null;
 
@@ -39,23 +42,28 @@ window.LL = window.LL || {};
     const g = game = { host, api, set, groups, cards, x: [], raf: 0, last: 0, locked: false, drag: null, done: 0, ok: 0, answers: [], startedAt: Date.now(), timers: [] };
 
     const belt = el('div.sort-belt', { 'aria-label': 'Banda con tarjetas' });
-    const targets = el('div.sort-targets' + (groups.length > 4 ? '.many' : ''));
-    targets.style.setProperty('--cols', String(groups.length <= 4 ? groups.length : Math.ceil(groups.length / 2)));
+    const targets = el('div.sort-targets');
     g.belt = belt; g.targets = targets;
+    g.stTime = el('span.st-time', '⏱️ 0:00');
+    g.stCount = el('span.st-count', '0 de ' + cards.length);
+    g.stOk = el('span.st-ok', '✓ 0');
 
     groups.forEach((grp, i) => {
       const box = el('button.sort-target', { type: 'button', dataset: { group: grp.id }, 'aria-label': 'Grupo ' + (grp.text || i + 1) });
       box.style.setProperty('--group', COLORS[i % COLORS.length]);
-      if (grp.image) box.append(el('img', { src: grp.image, alt: '' }));
-      if (String(grp.text || '').trim()) box.append(el('span.sort-target-label' + (grp.image ? '.small' : ''), grp.text));
-      box.append(el('span.sort-target-mark', { 'aria-hidden': 'true' }));
+      const face = el('span.sort-target-face');
+      const label = String(grp.text || '').trim();
+      if (grp.image) face.append(el('img', { src: grp.image, alt: '' }));
+      if (label) face.append(el('span.sort-target-label' + (grp.image ? '.small' : label.length > 3 ? '.long' : ''), label));
+      box.append(face, el('span.sort-target-mark', { 'aria-hidden': 'true' }));
       // Tapping a group reads its name.
       box.addEventListener('click', () => { if (!g.drag && String(grp.text || '').trim()) api.say(grp, grp.text); });
       targets.append(box);
     });
 
-    cards.forEach((card) => {
+    cards.forEach((card, i) => {
       const tile = el('div.sort-card' + (card.image ? '' : '.text-only'), { dataset: { id: card.id } });
+      tile.style.setProperty('--frame', FRAMES[i % FRAMES.length]);
       if (card.image) tile.append(el('img', { src: card.image, alt: card.text || '', draggable: 'false' }));
       if (!card.image || (set.showText && String(card.text || '').trim())) tile.append(el('span.sort-card-word', card.text));
       tile.addEventListener('pointerdown', (e) => pickup(e, card));
@@ -67,6 +75,7 @@ window.LL = window.LL || {};
     host.replaceChildren(el('div.sort-game',
       instruction ? el('p.sort-instruction', instruction) : null,
       belt, targets));
+    g.clock = setInterval(() => { if (game === g) g.stTime.textContent = '⏱️ ' + clock(Date.now() - g.startedAt); }, 500);
 
     // Size and place the cards once the belt has its size.
     requestAnimationFrame(() => {
@@ -79,14 +88,14 @@ window.LL = window.LL || {};
     g.onResize = () => layout();
     window.addEventListener('resize', g.onResize);
     api.onProgress && api.onProgress(0, cards.length, 0);
-    return { total: cards.length, instruction };
+    return { total: cards.length, instruction, status: el('div.sort-status', g.stTime, g.stCount, g.stOk) };
   }
 
   function layout() {
     const g = game; if (!g) return;
     const h = g.belt.clientHeight;
-    g.size = Math.max(70, Math.round(h - 28));
-    g.gap = Math.round(g.size * 1.28);
+    g.size = Math.max(70, Math.round(h - 40)); // room for the rails above and below
+    g.gap = Math.round(g.size * 1.32);
     g.belt.style.setProperty('--card', g.size + 'px');
   }
   function place(card) { card.el.style.transform = 'translateX(' + card.x + 'px)'; }
@@ -176,11 +185,14 @@ window.LL = window.LL || {};
       correct: good, response_ms: Date.now() - g.startedAt,
     });
     g.api.onProgress && g.api.onProgress(g.done, g.cards.length, g.ok);
+    g.stCount.textContent = g.done + ' de ' + g.cards.length;
+    g.stOk.textContent = '✓ ' + g.ok;
     const finished = g.cards.every((x) => x.done);
     g.locked = true;
     const later = (ms, fn) => g.timers.push(setTimeout(() => { if (game === g) fn(); }, ms));
     const blink = (b, kind) => { b.classList.remove('good', 'bad'); void b.offsetWidth; b.classList.add(kind); };
-    const end = () => { g.locked = false; if (finished) finish(); };
+    g.belt.classList.add('paused');
+    const end = () => { g.locked = false; g.belt.classList.remove('paused'); if (finished) finish(); };
     if (good) {
       feedbackTone(true);
       blink(box, 'good');
@@ -212,6 +224,7 @@ window.LL = window.LL || {};
     const g = game; if (!g) return;
     if (g.drag) endDrag();
     cancelAnimationFrame(g.raf);
+    clearInterval(g.clock);
     g.timers.forEach(clearTimeout);
     window.removeEventListener('resize', g.onResize);
     game = null;

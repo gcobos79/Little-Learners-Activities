@@ -76,7 +76,7 @@ window.LL = window.LL || {};
     const p = $('#playerProgress');
     p.replaceChildren();
     if (opts.preview) p.append(el('span.preview-banner', 'Vista previa del maestro'));
-    if (isSort()) { p.append(el('span.progress-text', { 'aria-label': sortDone + ' de ' + sortTotal + ' tarjetas' }, '🧺 ' + sortDone + ' / ' + sortTotal)); return; }
+    if (isSort()) return; // the belt game shows its own time and count
     if (questions.length <= 20) {
       questions.forEach((_, i) => p.append(el('span.dot' + (i < index ? '.done' : i === index ? '.now' : ''))));
     } else {
@@ -90,11 +90,12 @@ window.LL = window.LL || {};
     sortDone = 0;
     const info = LL.sortGame.start(body(), quiz, {
       say: (item, text) => sayItem(item, text),
-      onProgress: (done, total) => { sortDone = done; sortTotal = total; renderProgress(); },
+      onProgress: (done, total) => { sortDone = done; sortTotal = total; }, // the game updates its own counter
       onFinish: (r) => { attempt.answers = r.answers; sortTotal = r.total; finish(); },
     });
     sortTotal = info.total;
     renderProgress();
+    $('#playerProgress').append(info.status); // ⏱️ time · count · ✓ right, in the top bar
     const speakBtn = $('#playerSpeak');
     speakBtn.disabled = !info.instruction;
     speakBtn.onclick = () => speak(info.instruction, quiz.config?.lang, quiz.config?.voiceGender || 'female');

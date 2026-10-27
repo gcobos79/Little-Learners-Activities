@@ -1,6 +1,9 @@
 # Changelog
 
 ## V126 — October 2026 (Clasificación rápida)
+- Game screen redesigned after Wordwall's Speed Sorting, but roomier: a tall belt between moving
+  rails with big picture cards in coloured frames; compact, centred group tiles (white face on a
+  coloured frame); ⏱️ time · count · ✓ right answers in the top bar. Rails stop while feedback shows.
 - New activity type **«🧺 Clasificación rápida»** (from the Sonidos iniciales prototype, for any
   topic): cards (picture and/or word) ride a conveyor belt; the child drags each one to its group.
   Right group: green blink; wrong group: red ✕, then the right group blinks green (the card is used);
