@@ -1,6 +1,9 @@
 # Changelog
 
 ## V125 — October 2026 (voice type, storage)
+- Ajustes asks for the teacher PIN every time it is opened (tab, browser Back/Forward). A wrong PIN
+  shows «❌ PIN incorrecto» with «Aceptar» and the teacher stays where they were. Coming back from
+  «Información» opened inside Ajustes doesn't ask again. Without a PIN set, Ajustes opens directly.
 - Always up to date: every publish gets a build number (`tools/stamp_version.py`): scripts and styles
   load as `file.js?v=<build>` and `version.json` holds the newest build. The app checks it on start,
   when the tab comes back, and every 5 minutes, and reloads itself at a safe moment (never during an

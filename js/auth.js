@@ -186,19 +186,24 @@ window.LL = window.LL || {};
   }
 
   let fails = 0, lockedUntil = 0;
-  /** Ask for the PIN (if one is set). Resolves true when the teacher may enter. */
-  async function checkPin() {
+  /** Ask for the PIN (if one is set). Resolves true when the teacher may enter.
+   *  opts.title: heading of the PIN pad. opts.notice: show a wrong PIN in a box with «Aceptar». */
+  async function checkPin(opts = {}) {
     const saved = S.pinHash();
     if (!saved) return true;
-    if (Date.now() < lockedUntil) { toast('Demasiados intentos. Espera ' + Math.ceil((lockedUntil - Date.now()) / 1000) + ' segundos.', 'error'); return false; }
+    const tell = async (title, text) => {
+      if (opts.notice) await dialog({ title, body: el('p', text), actions: [{ label: 'Aceptar', kind: 'primary', value: true }] });
+      else toast(text, 'error');
+    };
+    if (Date.now() < lockedUntil) { await tell('⏳ Espera un momento', 'Demasiados intentos. Espera ' + Math.ceil((lockedUntil - Date.now()) / 1000) + ' segundos.'); return false; }
     const me = LL.cloud.user();
-    const pin = await pinPad('🔒 PIN del maestro', null, me ? [{ label: '¿Olvidaste el PIN?', kind: 'ghost', value: 'forgot' }] : []);
+    const pin = await pinPad(opts.title || '🔒 PIN del maestro', opts.hint || null, me ? [{ label: '¿Olvidaste el PIN?', kind: 'ghost', value: 'forgot' }] : []);
     if (pin == null) return false;
     if (pin === 'forgot') return forgotPin(me);
     if ((await hashPin(pin)) === saved) { fails = 0; return true; }
     fails++;
     if (fails >= 5) { lockedUntil = Date.now() + 30000; fails = 0; }
-    toast('PIN incorrecto.', 'error');
+    await tell('❌ PIN incorrecto', 'El PIN no es correcto.');
     return false;
   }
 

@@ -859,7 +859,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 window.LL = window.LL || {};
 LL.config = {
   // Set by tools/stamp_version.py on every publish.
-  build: '20261026234122',
+  build: '20261027002431',
   version: 'V125',
   // Who runs this site, e.g. 'Sra. García · Escuela Primaria Lincoln'
   owner: 'Geovanny Cobos',
@@ -4711,19 +4711,24 @@ window.LL = window.LL || {};
   }
 
   let fails = 0, lockedUntil = 0;
-  /** Ask for the PIN (if one is set). Resolves true when the teacher may enter. */
-  async function checkPin() {
+  /** Ask for the PIN (if one is set). Resolves true when the teacher may enter.
+   *  opts.title: heading of the PIN pad. opts.notice: show a wrong PIN in a box with «Aceptar». */
+  async function checkPin(opts = {}) {
     const saved = S.pinHash();
     if (!saved) return true;
-    if (Date.now() < lockedUntil) { toast('Demasiados intentos. Espera ' + Math.ceil((lockedUntil - Date.now()) / 1000) + ' segundos.', 'error'); return false; }
+    const tell = async (title, text) => {
+      if (opts.notice) await dialog({ title, body: el('p', text), actions: [{ label: 'Aceptar', kind: 'primary', value: true }] });
+      else toast(text, 'error');
+    };
+    if (Date.now() < lockedUntil) { await tell('⏳ Espera un momento', 'Demasiados intentos. Espera ' + Math.ceil((lockedUntil - Date.now()) / 1000) + ' segundos.'); return false; }
     const me = LL.cloud.user();
-    const pin = await pinPad('🔒 PIN del maestro', null, me ? [{ label: '¿Olvidaste el PIN?', kind: 'ghost', value: 'forgot' }] : []);
+    const pin = await pinPad(opts.title || '🔒 PIN del maestro', opts.hint || null, me ? [{ label: '¿Olvidaste el PIN?', kind: 'ghost', value: 'forgot' }] : []);
     if (pin == null) return false;
     if (pin === 'forgot') return forgotPin(me);
     if ((await hashPin(pin)) === saved) { fails = 0; return true; }
     fails++;
     if (fails >= 5) { lockedUntil = Date.now() + 30000; fails = 0; }
-    toast('PIN incorrecto.', 'error');
+    await tell('❌ PIN incorrecto', 'El PIN no es correcto.');
     return false;
   }
 
@@ -4774,7 +4779,11 @@ window.LL = window.LL || {};
   ];
 
   async function go(screen) {
-    if (state.screen === 'editor' && screen !== 'editor' && LL.editor && !(await LL.editor.canLeave())) return;
+    if (state.screen === 'editor' && screen !== 'editor' && LL.editor && !(await LL.editor.canLeave())) return false;
+    // Ajustes asks for the PIN again every time (coming back from «Información» opened there doesn't).
+    if (screen === 'backup' && state.screen !== 'backup' && !(state.screen === 'info' && infoReturn === 'backup')) {
+      if (!(await LL.auth.checkPin({ title: '🔒 PIN para entrar a Ajustes', notice: true }))) return false;
+    }
     state.screen = screen;
     for (const s of SCREENS) $('#screen-' + s).hidden = s !== screen;
     document.body.classList.toggle('mode-student', state.mode === 'student');
@@ -5035,8 +5044,9 @@ window.LL = window.LL || {};
         state.infoSection = target.info; await go('info');
       } else if (['sonidos', 'result'].includes(target.screen)) {
         stopSonidos(); await go(state.mode ? 'library' : 'students');
-      } else {
-        await go(target.screen || 'students');
+      } else if ((await go(target.screen || 'students')) === false) {
+        history.pushState(before, '', hashFor(before)); // stayed where we were (e.g. wrong PIN for Ajustes)
+        return;
       }
       if (target.player) {
         const q = S.getQuiz(target.player);

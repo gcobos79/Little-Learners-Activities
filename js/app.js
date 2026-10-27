@@ -15,7 +15,11 @@ window.LL = window.LL || {};
   ];
 
   async function go(screen) {
-    if (state.screen === 'editor' && screen !== 'editor' && LL.editor && !(await LL.editor.canLeave())) return;
+    if (state.screen === 'editor' && screen !== 'editor' && LL.editor && !(await LL.editor.canLeave())) return false;
+    // Ajustes asks for the PIN again every time (coming back from «Información» opened there doesn't).
+    if (screen === 'backup' && state.screen !== 'backup' && !(state.screen === 'info' && infoReturn === 'backup')) {
+      if (!(await LL.auth.checkPin({ title: '🔒 PIN para entrar a Ajustes', notice: true }))) return false;
+    }
     state.screen = screen;
     for (const s of SCREENS) $('#screen-' + s).hidden = s !== screen;
     document.body.classList.toggle('mode-student', state.mode === 'student');
@@ -276,8 +280,9 @@ window.LL = window.LL || {};
         state.infoSection = target.info; await go('info');
       } else if (['sonidos', 'result'].includes(target.screen)) {
         stopSonidos(); await go(state.mode ? 'library' : 'students');
-      } else {
-        await go(target.screen || 'students');
+      } else if ((await go(target.screen || 'students')) === false) {
+        history.pushState(before, '', hashFor(before)); // stayed where we were (e.g. wrong PIN for Ajustes)
+        return;
       }
       if (target.player) {
         const q = S.getQuiz(target.player);
