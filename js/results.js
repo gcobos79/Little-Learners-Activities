@@ -9,7 +9,7 @@
  * newest attempt of each month. The teacher sees a ranking per quiz and month. */
 window.LL = window.LL || {};
 (function () {
-  const { el, $, toast, dialog } = LL.ui;
+  const { el, $, toast, dialog, confirmDialog } = LL.ui;
   const S = LL.store;
   const KEY = 'll-v124-results';
   const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -108,6 +108,7 @@ window.LL = window.LL || {};
       try {
         const data = await LL.cloud.select('quiz_results', 'select=id,student_id,score,total,started_at,finished_at,duration_seconds,students(name,animal,avatar_path),quiz_result_answers(position,prompt,chosen_text,correct,response_ms)&quiz_id=eq.' + encodeURIComponent(quiz.id) + '&month=eq.' + month);
         rows = (data || []).map((r) => ({
+          id: r.id, quiz_id: quiz.id, month,
           student_id: r.student_id, student_name: r.students ? r.students.name : '¿?', student_animal: r.students ? r.students.animal : '', student_avatar: r.students ? LL.media.toRef(r.students.avatar_path) : '',
           score: r.score, total: r.total, finished_at: r.finished_at, duration_seconds: r.duration_seconds,
           answers: (r.quiz_result_answers || []).sort((a, b) => a.position - b.position),
@@ -180,15 +181,17 @@ window.LL = window.LL || {};
       const avg = Math.round(rows.reduce((s, r) => s + r.score / Math.max(1, r.total), 0) / rows.length * 100);
       panel.append(el('p.small.muted', rows.length + (rows.length === 1 ? ' estudiante' : ' estudiantes') + ' · promedio de la clase: ' + avg + ' %'));
       const table = el('div.results-table', { role: 'table', 'aria-label': 'Resultados: ' + periodLabel },
-        el('div.rt-row.rt-head', { role: 'row' }, el('span', { role: 'columnheader' }, 'Puesto'), el('span', { role: 'columnheader' }, 'Estudiante'), el('span', { role: 'columnheader' }, 'Puntaje'), el('span.rt-date', { role: 'columnheader' }, 'Fecha'), el('span', { role: 'columnheader' }, 'Tiempo')));
+        el('div.rt-row.rt-head', { role: 'row' }, el('span', { role: 'columnheader' }, 'Puesto'), el('span', { role: 'columnheader' }, 'Estudiante'), el('span', { role: 'columnheader' }, 'Puntaje'), el('span.rt-date', { role: 'columnheader' }, 'Fecha'), el('span.rt-time', { role: 'columnheader' }, 'Tiempo'), el('span.rt-del', { role: 'columnheader', 'aria-label': 'Borrar' })));
       for (const r of rows) {
         const pct = Math.round(r.score / Math.max(1, r.total) * 100);
-        const row = el('button.rt-row', { type: 'button', role: 'row', onclick: () => detail(r), 'aria-label': r.student_name + ': ' + r.score + ' de ' + r.total + '. Ver detalle' },
+        // The whole row opens the detail; the 🗑️ at the end deletes this result.
+        const row = el('div.rt-row.rt-click', { role: 'row', tabindex: '0', onclick: () => detail(r), onkeydown: (e) => { if (e.target === row && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); detail(r); } }, 'aria-label': r.student_name + ': ' + r.score + ' de ' + r.total + '. Ver detalle' },
           el('span.rt-place', medal(r.place) + ' ' + r.place),
           el('span.rt-student', LL.teacher.avatar({ animal: r.student_animal, avatar: r.student_avatar }), el('span', r.student_name), r.pending ? el('span.badge.hidden', { title: 'Se subirá cuando haya internet' }, '⏳') : null),
           el('span.rt-score', el('strong', r.score + ' / ' + r.total), el('span.rt-bar', el('span', { style: { width: pct + '%' } }))),
           el('span.rt-date', fmtDate(r.finished_at)),
-          el('span.rt-time', fmtTime(r.duration_seconds)));
+          el('span.rt-time', fmtTime(r.duration_seconds)),
+          el('button.icon-btn.rt-del.danger', { type: 'button', title: 'Borrar este resultado', 'aria-label': 'Borrar el resultado de ' + r.student_name, onclick: (e) => { e.stopPropagation(); deleteResult(r); } }, '🗑️'));
         table.append(row);
       }
       panel.append(table, el('p.small.muted', current.quiz && current.quiz.type === 'sort' ? 'Toca un estudiante para ver dónde llevó cada tarjeta.' : 'Toca un estudiante para ver cada pregunta.'));
@@ -205,6 +208,29 @@ window.LL = window.LL || {};
       panel.append(el('div.missing', el('strong', isDay ? '🎉 ¡Todos lo hicieron ' + (isToday ? 'hoy' : 'ese día') + '!' : '🎉 ¡Todos lo hicieron este mes!')));
     }
     if (isDay) panel.append(el('p.small.muted', 'Cada mes se guarda solo el último intento de cada niño. Si alguien la repitió otro día de este mes, aparece en el día de su último intento.'));
+  }
+
+  /** Delete one child's result for this activity and month: the child shows as pending again and
+   *  can do the activity again. Removes it from the database and from this device. */
+  async function deleteResult(r) {
+    const q = current.quiz;
+    const when = current.view === 'day' ? 'de ' + fmtDate(r.finished_at).split(' · ')[0] : 'de ' + monthLabel(r.month || current.month);
+    if (!(await confirmDialog('¿Borrar el resultado de ' + r.student_name + '?',
+      'Se borrará su puntaje ' + r.score + ' / ' + r.total + ' ' + when + ' en «' + (q ? q.name : '') + '». Volverá a aparecer como pendiente y podrá hacer la actividad otra vez. Esto no se puede deshacer.', 'Borrar', true))) return;
+    try {
+      if (r.id != null && LL.cloud.signedIn()) await LL.cloud.remove('quiz_results', 'id=eq.' + encodeURIComponent(r.id));
+      const all = readAll();
+      const month = r.month || current.month;
+      for (const [k, v] of Object.entries(all)) {
+        const same = v.quiz_id === (r.quiz_id || (q && q.id)) && v.month === month && (r.student_id != null ? v.student_id === r.student_id : v.student_name === r.student_name);
+        if (same) delete all[k];
+      }
+      writeAll(all);
+      toast('Resultado de ' + r.student_name + ' borrado. Ya puede hacer la actividad otra vez.', 'success');
+    } catch (e) {
+      toast('No se pudo borrar: ' + (LL.auth ? LL.auth.friendly(e) : e.message), 'error');
+    }
+    render();
   }
 
   function detail(r) {

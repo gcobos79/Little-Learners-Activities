@@ -145,7 +145,7 @@ const IMG_DIR = process.argv[4];
   await p.evaluate(() => LL.app.goHome()); await p.waitForTimeout(400);
   await p.focus('.teacher-gate'); await p.keyboard.press('Enter'); await p.waitForTimeout(400);
   await p.click('.card.quiz:has-text("Clasificar A y M") [aria-label^="Ver resultados"]'); await p.waitForTimeout(800);
-  await p.click('button.rt-row >> nth=0'); await p.waitForTimeout(300);
+  await p.click('.rt-row.rt-click >> nth=0'); await p.waitForTimeout(300);
   assert((await p.textContent('.modal')).includes('Lo llevó a:'), 'results detail: where each card was taken');
   await p.keyboard.press('Escape'); await p.click('.tab:has-text("Actividades")'); await p.waitForTimeout(300);
   await p.click('.card.quiz:has-text("Clasificar A y M") [aria-label^="Más opciones"]'); await p.click('.menu >> text=Duplicar'); await p.waitForTimeout(300);

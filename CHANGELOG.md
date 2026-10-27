@@ -1,6 +1,8 @@
 # Changelog
 
 ## V126 — October 2026 (Clasificación rápida)
+- Results page: a 🗑️ at the end of each row deletes that child's result (after confirming), in the
+  database and on the device. The child shows as pending again and can redo the activity.
 - Students: 40 animals (was 24). Adding or editing a student only offers animals no other child is
   using (plus the child's own), so no two children share one; a new student starts with a free one.
 - Activity instructions (header of every activity, column `quizzes.instructions`): the editor has
