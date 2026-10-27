@@ -1,6 +1,8 @@
 # Changelog
 
 ## V126 — October 2026 (Clasificación rápida)
+- Students: 40 animals (was 24). Adding or editing a student only offers animals no other child is
+  using (plus the child's own), so no two children share one; a new student starts with a free one.
 - Activity instructions (header of every activity, column `quizzes.instructions`): the editor has
   «📢 Instrucciones de la actividad» with 🔊 Escuchar; in the activity a 📢 button next to the child's
   name reads them (Clasificación rápida also reads them when it starts). `save_quiz` keeps them when an

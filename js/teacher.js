@@ -5,9 +5,10 @@ window.LL = window.LL || {};
   const S = LL.store;
 
   /* ---------- Students ---------- */
-  function animalPicker(selected, onPick) {
+  /** Only animals no other child is using (plus this child's own). */
+  function animalPicker(selected, onPick, choices) {
     const grid = el('div.animal-pick');
-    for (const a of S.ANIMALS) {
+    for (const a of choices || S.ANIMALS) {
       const b = el('button', { type: 'button', 'aria-pressed': String(a === selected), 'aria-label': a }, a);
       b.addEventListener('click', () => { grid.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); onPick(a); });
       grid.append(b);
@@ -23,7 +24,12 @@ window.LL = window.LL || {};
   }
 
   async function studentDialog(existing) {
-    let animal = existing ? existing.animal : S.ANIMALS[Math.floor(Math.random() * S.ANIMALS.length)];
+    const taken = new Set(S.roster().filter((s) => !existing || s !== existing && !(existing.id != null && s.id === existing.id) && s.name !== existing.name).map((s) => s.animal).filter(Boolean));
+    let choices = S.ANIMALS.filter((a) => !taken.has(a));
+    const allUsed = !choices.length;
+    if (allUsed) choices = S.ANIMALS.slice(); // more children than animals: allow repeats
+    if (existing && existing.animal && !choices.includes(existing.animal)) choices.unshift(existing.animal);
+    let animal = existing && existing.animal ? existing.animal : choices[Math.floor(Math.random() * choices.length)];
     let pic = existing ? existing.avatar || '' : '';
     const name = el('input', { type: 'text', maxlength: '40', placeholder: 'Nombre', value: existing ? existing.name : '' });
     const picRow = el('div.media-row');
@@ -41,7 +47,9 @@ window.LL = window.LL || {};
       title: existing ? 'Editar estudiante' : 'Agregar estudiante',
       body: el('div', { style: { display: 'grid', gap: '14px' } },
         el('label.field', 'Nombre', name),
-        el('div.field', 'Animalito', animalPicker(animal, (a) => { animal = a; })),
+        el('div.field', 'Animalito',
+          el('span.hint', allUsed ? 'Ya se usaron los ' + S.ANIMALS.length + ' animalitos; este se repetirá.' : 'Solo se muestran los que ningún otro niño está usando (' + (choices.length) + ').'),
+          animalPicker(animal, (a) => { animal = a; }, choices)),
         el('div.field', 'Foto o dibujo (opcional)', el('span.hint', 'Si eliges una, se muestra en lugar del animalito.'), picRow)),
       actions: [{ label: 'Cancelar', kind: 'ghost', value: false }, { label: existing ? 'Guardar' : 'Agregar', kind: 'primary', value: () => (name.value.trim() ? true : (name.focus(), undefined)) }],
     });
