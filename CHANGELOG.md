@@ -1,6 +1,10 @@
 # Changelog
 
 ## V126 — October 2026 (Clasificación rápida)
+- Full screen: when a student opens an activity, the app goes full screen (no browser bar or tabs),
+  and returns to the normal window when the child leaves the activity (holding ↩️ or «👋 Salir»). If
+  full screen is left another way (Esc, a system gesture), the next tap in the activity brings it back.
+  The teacher's preview stays in the window. iPhone Safari doesn't allow full screen for web pages.
 - Folder colours are more intense (Rosa, Naranja, Amarillo, Verde menta, Verde, Celeste, Azul, Lila,
   Fucsia, Gris; dark text keeps ≥ 5.4:1 contrast). Folders with an old soft colour show its intense
   version automatically.

@@ -20,6 +20,31 @@ window.LL = window.LL || {};
   let sortTotal = 0, sortDone = 0;
   const isSort = () => !!quiz && quiz.type === 'sort';
 
+  /* Full screen (V127): a student's activity fills the whole screen, so the browser bar and
+   * other tabs are out of reach. The teacher's preview stays in the window. Browsers only allow
+   * this right after a tap, which is the case here (the child just tapped the activity). iPhone
+   * Safari does not support it for web pages; there the activity simply opens as before. */
+  const fsElement = () => document.fullscreenElement || document.webkitFullscreenElement || null;
+  let fsByPlayer = false;
+  function enterFullscreen() {
+    if (fsElement()) return;
+    const d = document.documentElement;
+    const req = d.requestFullscreen || d.webkitRequestFullscreen;
+    if (!req) return;
+    try {
+      fsByPlayer = true;
+      const p = req.call(d, { navigationUI: 'hide' });
+      if (p && p.catch) p.catch(() => { fsByPlayer = false; });
+    } catch (e) { fsByPlayer = false; }
+  }
+  function leaveFullscreen() {
+    if (!fsByPlayer) return;
+    fsByPlayer = false;
+    if (!fsElement()) return;
+    const exit = document.exitFullscreen || document.webkitExitFullscreen;
+    try { const p = exit && exit.call(document); if (p && p.catch) p.catch(() => {}); } catch (e) { /* ignore */ }
+  }
+
   const instructions = () => LL.store.instructionsOf(quiz && quiz.config);
   function sayInstructions() {
     const t = instructions(); if (!t) return;
@@ -47,6 +72,7 @@ window.LL = window.LL || {};
     if (who && !options.preview) chip.append(LL.teacher.avatar(who), el('span', who.name));
     chip.setAttribute('aria-label', who ? 'Estudiante: ' + who.name : '');
     document.body.style.overflow = 'hidden';
+    if (!options.preview) enterFullscreen();
     render();
     document.dispatchEvent(new CustomEvent('ll-player-open', { detail: { quizId: entry.id || null, preview: !!options.preview } }));
   }
@@ -58,6 +84,7 @@ window.LL = window.LL || {};
     stopSound();
     if (LL.sortGame) LL.sortGame.stop();
     root().hidden = true;
+    leaveFullscreen();
     document.body.style.overflow = '';
     const cb = opts.onClose;
     const id = quiz && quiz.id;
@@ -381,6 +408,9 @@ window.LL = window.LL || {};
       if (['ArrowRight', 'ArrowDown'].includes(e.key) && index < questions.length - 1) { e.preventDefault(); index++; render(); }
       if (['ArrowLeft', 'ArrowUp'].includes(e.key) && index > 0) { e.preventDefault(); index--; render(); }
     });
+    // If the child leaves full screen some other way (Esc key, a system gesture), the next tap
+    // inside the activity brings it back.
+    root().addEventListener('click', () => { if (!root().hidden && !opts.preview && !fsElement()) enterFullscreen(); });
     let resizeTimer = null;
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimer);
