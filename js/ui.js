@@ -206,6 +206,7 @@ window.LL = window.LL || {};
     playToken++;
     if ('speechSynthesis' in window) speechSynthesis.cancel();
     if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    if (typeof stopCelebrate === 'function') stopCelebrate();
   }
 
   // One shared AudioContext (creating one per answer can fail on low-end tablets).
@@ -232,6 +233,85 @@ window.LL = window.LL || {};
         osc.start(now + n.t); osc.stop(now + n.t + n.d + 0.02);
       }
     } catch { /* sound is optional */ }
+  }
+
+  /* «¡Lo lograste!» jingle (V127): an original, cheerful ~4-second tune in C major for the end of
+   * every activity. Made with Web Audio (no file to download): a bright lead, bass, soft chords,
+   * light drums and a sparkle on the last chord. `ctx` lets the tests render it offline. */
+  let jingleOut = null;
+  function celebrateTune(ctx) {
+    const live = !ctx;
+    try {
+      if (live) {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return 0;
+        if (!audioCtx || audioCtx.state === 'closed') audioCtx = new Ctx();
+        if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+        ctx = audioCtx;
+        stopCelebrate();
+      }
+      const t0 = ctx.currentTime + 0.05;
+      const out = ctx.createGain();
+      out.gain.value = 0.9;
+      const comp = ctx.createDynamicsCompressor();
+      out.connect(comp); comp.connect(ctx.destination);
+      if (live) jingleOut = out;
+      const N = { G2: 98, A2: 110, C3: 130.81, E3: 164.81, F2: 87.31, G3: 196, C4: 261.63, E4: 329.63, F4: 349.23, G4: 392, A4: 440, B4: 493.88, C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, A5: 880, B5: 987.77, C6: 1046.5, D6: 1174.66, E6: 1318.51, G6: 1567.98, C7: 2093 };
+      const tone = (f, t, d, level, type, opt = {}) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = type; o.frequency.setValueAtTime(f, t0 + t);
+        if (opt.vibrato) { const l = ctx.createOscillator(), lg = ctx.createGain(); l.frequency.value = 6; lg.gain.value = f * 0.006; l.connect(lg); lg.connect(o.frequency); l.start(t0 + t + 0.15); l.stop(t0 + t + d + 0.05); }
+        let node = o;
+        if (opt.lp) { const fl = ctx.createBiquadFilter(); fl.type = 'lowpass'; fl.frequency.value = opt.lp; o.connect(fl); node = fl; }
+        const a = opt.attack || 0.012;
+        g.gain.setValueAtTime(0.0001, t0 + t);
+        g.gain.exponentialRampToValueAtTime(level, t0 + t + a);
+        g.gain.exponentialRampToValueAtTime(level * (opt.sustain || 0.55), t0 + t + Math.min(d * 0.5, 0.12));
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + t + d);
+        node.connect(g); g.connect(out);
+        o.start(t0 + t); o.stop(t0 + t + d + 0.05);
+      };
+      // Lead melody: a quick run up, a bouncy hook, a climb and a long happy ending.
+      const S = 0.15; // one eighth note (200 beats per minute)
+      const lead = [
+        ['G4', 0, 1], ['C5', 1, 1], ['E5', 2, 1], ['G5', 3, 1],
+        ['E5', 4, 1], ['G5', 5, 2],
+        ['A5', 7, 1], ['G5', 8, 1], ['E5', 9, 1], ['G5', 10, 3],
+        ['F5', 13, 1], ['A5', 14, 1], ['C6', 15, 1], ['D6', 16, 2],
+        ['B5', 18, 1], ['C6', 19, 7.5],
+      ];
+      for (const [n, at, len] of lead) {
+        const d = len * S * 0.95, long = len > 3;
+        tone(N[n], at * S, d, 0.13, 'square', { lp: 3200, vibrato: long, sustain: long ? 0.7 : 0.5 });
+        tone(N[n] * 2, at * S, d, 0.035, 'triangle', { sustain: 0.4 });
+      }
+      // Bass.
+      [['C3', 0, 3], ['E3', 4, 3], ['A2', 7, 3], ['G2', 10, 3], ['F2', 13, 3], ['G2', 16, 3], ['C3', 19, 7]]
+        .forEach(([n, at, len]) => tone(N[n], at * S, len * S * 0.9, 0.2, 'triangle', { sustain: 0.6 }));
+      // Soft off-beat chords.
+      const chords = [[0, ['C4', 'E4', 'G4']], [2, ['C4', 'E4', 'G4']], [5, ['C4', 'E4', 'G4']], [8, ['C4', 'E4', 'A4']], [11, ['B4', 'E4', 'G4']], [14, ['C4', 'F4', 'A4']], [17, ['B4', 'D5', 'G4']]];
+      for (const [at, ns] of chords) ns.forEach((n) => tone(N[n], at * S + 0.01, S * 0.8, 0.03, 'triangle'));
+      // Final chord, strummed, and a sparkle on top.
+      ['C4', 'E4', 'G4', 'C5', 'E5'].forEach((n, i) => tone(N[n], 19 * S + i * 0.025, 1.1, 0.05, 'triangle', { sustain: 0.8 }));
+      ['C6', 'E6', 'G6', 'C7', 'G6', 'C7'].forEach((n, i) => tone(N[n], 19 * S + 0.08 + i * 0.07, 0.35, 0.03, 'sine'));
+      // Light drums: kick on the beat, a clap between.
+      const noise = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.2), ctx.sampleRate);
+      const nd = noise.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+      const kick = (t) => { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(150, t0 + t); o.frequency.exponentialRampToValueAtTime(45, t0 + t + 0.12); g.gain.setValueAtTime(0.35, t0 + t); g.gain.exponentialRampToValueAtTime(0.0001, t0 + t + 0.16); o.connect(g); g.connect(out); o.start(t0 + t); o.stop(t0 + t + 0.2); };
+      const clap = (t) => { const b = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(); b.buffer = noise; f.type = 'bandpass'; f.frequency.value = 1800; g.gain.setValueAtTime(0.12, t0 + t); g.gain.exponentialRampToValueAtTime(0.0001, t0 + t + 0.12); b.connect(f); f.connect(g); g.connect(out); b.start(t0 + t); b.stop(t0 + t + 0.15); };
+      [0, 4, 7, 10, 13, 16, 19].forEach((at) => kick(at * S));
+      [2, 6, 9, 12, 15, 18].forEach((at) => clap(at * S));
+      clap(19 * S); clap(19 * S + 0.05);
+      // Fade out so it ends cleanly at ~4 s.
+      out.gain.setValueAtTime(0.9, t0 + 3.65);
+      out.gain.exponentialRampToValueAtTime(0.0001, t0 + 4);
+      return 4;
+    } catch { return 0; /* sound is optional */ }
+  }
+  function stopCelebrate() {
+    if (!jingleOut || !audioCtx) return;
+    try { jingleOut.gain.cancelScheduledValues(audioCtx.currentTime); jingleOut.gain.setValueAtTime(0.0001, audioCtx.currentTime); jingleOut.disconnect(); } catch { /* ignore */ }
+    jingleOut = null;
   }
 
   function shuffle(a) {
@@ -283,5 +363,5 @@ window.LL = window.LL || {};
     container.classList.add('animate-in');
   }
 
-  LL.ui = { $, $$, el, toast, dialog, confirmDialog, readFileAsDataURL, imageFileToDataURL, audioFileToDataURL, pickFile, download, formatBytes, speak, bestVoice, voicePlan, playAudio, stopSound, feedbackTone, shuffle, confetti, stagger };
+  LL.ui = { $, $$, el, toast, dialog, confirmDialog, readFileAsDataURL, imageFileToDataURL, audioFileToDataURL, pickFile, download, formatBytes, speak, bestVoice, voicePlan, playAudio, stopSound, feedbackTone, celebrateTune, stopCelebrate, shuffle, confetti, stagger };
 })();

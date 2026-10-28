@@ -319,7 +319,7 @@ window.LL = window.LL || {};
     index = questions.length;
     renderProgress();
     $('#playerSpeak').disabled = true;
-    feedbackTone(true);
+    LL.ui.celebrateTune(); // ~4 s «¡Lo lograste!» music
     setTimeout(() => confetti(null, innerHeight * 0.35, 40), 150);
     const who = LL.app.state.student;
     // Save the result (one per student, quiz and month; the newest replaces older ones).

@@ -1,6 +1,9 @@
 # Changelog
 
 ## V126 — October 2026 (Clasificación rápida)
+- End music: when a child finishes any activity, an original, cheerful ~4-second «¡Lo lograste!» tune
+  plays (made with Web Audio in js/ui.js `celebrateTune`, no audio file). It replaces the short ding
+  at the end and stops if the child taps «Otra vez» or leaves.
 - Work time: every activity shows ⏱️ m:ss next to the child's name in the top bar, from 0:00 when the
   activity appears. It stops (keeping the final time) when the activity ends and restarts with «Otra
   vez». Clasificación rápida no longer shows its own second clock.
