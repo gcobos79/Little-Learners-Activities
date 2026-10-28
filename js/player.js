@@ -181,8 +181,9 @@ window.LL = window.LL || {};
     if (q.text) qa.append(el('div.question-text', q.text));
     if (hasImg) {
       const img = el('img.question-image', { src: q.image, alt: 'Imagen de la pregunta' });
-      // Tapping the picture also reads the question (same as the 🔊 button).
-      if (hasPromptSound(q)) {
+      // Tapping the picture also reads the question (same as the 🔊 button), unless the teacher
+      // turned that off for this question (V127, «Al tocar la imagen, sonar la voz»).
+      if (hasPromptSound(q) && q.imageSpeaks !== false) {
         Object.assign(img, { tabIndex: 0, title: 'Toca para escuchar' });
         img.setAttribute('role', 'button');
         img.setAttribute('aria-label', 'Escuchar la pregunta');

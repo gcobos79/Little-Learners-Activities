@@ -102,7 +102,7 @@ window.LL = window.LL || {};
         if (o.tts) opt.tts = o.tts;
         return opt;
       });
-      const item = { id: q.id, text: q.prompt || '', emoji: q.emoji || '', image: ref(q.image_path), audioMode: q.audio_mode, audio: ref(q.audio_path), readTextEnabled: !!q.read_text_enabled, readText: q.read_text || '', correctCount: Math.max(1, options.filter((o) => o.correct).length), options };
+      const item = { id: q.id, text: q.prompt || '', emoji: q.emoji || '', image: ref(q.image_path), audioMode: q.audio_mode, audio: ref(q.audio_path), readTextEnabled: !!q.read_text_enabled, readText: q.read_text || '', imageSpeaks: q.image_speaks !== false, correctCount: Math.max(1, options.filter((o) => o.correct).length), options };
       if (q.tts) item.tts = q.tts;
       return item;
     });
@@ -138,7 +138,7 @@ window.LL = window.LL || {};
     (c.questions || []).forEach((q, qi) => {
       if (!q.id || seenQ.has(q.id)) q.id = newId('q');
       seenQ.add(q.id);
-      questions.push({ id: q.id, position: qi, prompt: q.text || '', emoji: q.emoji || '', image_path: path(q.image), audio_mode: q.audioMode || 'voice', audio_path: path(q.audio), read_text_enabled: !!q.readTextEnabled, read_text: q.readText || '', tts: q.tts || null });
+      questions.push({ id: q.id, position: qi, prompt: q.text || '', emoji: q.emoji || '', image_path: path(q.image), audio_mode: q.audioMode || 'voice', audio_path: path(q.audio), read_text_enabled: !!q.readTextEnabled, read_text: q.readText || '', tts: q.tts || null, image_speaks: q.imageSpeaks !== false });
       const seenO = new Set();
       (q.options || []).forEach((o, oi) => {
         if (!o.id || seenO.has(o.id)) o.id = newId('o');

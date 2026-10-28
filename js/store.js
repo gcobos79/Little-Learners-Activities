@@ -409,7 +409,7 @@ window.LL = window.LL || {};
     return { id: uid('quiz'), text: '', readTextEnabled: false, readText: '', audioMode: 'none', image: '', audio: '', correct: false };
   }
   function newQuestion(optionCount = 4) {
-    return { id: uid('quiz'), text: '', readTextEnabled: false, readText: '', audioMode: 'voice', emoji: '', image: '', audio: '', correctCount: 1, options: Array.from({ length: optionCount }, newOption) };
+    return { id: uid('quiz'), text: '', readTextEnabled: false, readText: '', audioMode: 'voice', emoji: '', image: '', imageSpeaks: true, audio: '', correctCount: 1, options: Array.from({ length: optionCount }, newOption) };
   }
   function newQuiz(folderId) {
     return { id: null, name: '', folderId: folderId || null, config: { lang: 'es', voiceGender: 'female', mode: 'practice', questionOrder: 'fixed', answerOrder: 'fixed', visibility: 'hidden', coverImage: '', questions: [newQuestion()] } };

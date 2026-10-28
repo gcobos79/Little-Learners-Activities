@@ -343,9 +343,16 @@ window.LL = window.LL || {};
         try { q.image = await store(await imageFileToDataURL(f, 1000, 0.8), 'images'); drawImg(); onEdit(); } catch (e) { toast(e.message, 'error'); }
       } }, q.image ? '🖼️ Cambiar imagen' : '🖼️ Agregar imagen'));
       if (q.image) imgRow.append(el('button.btn.sm.danger-ghost', { type: 'button', onclick: () => { q.image = ''; drawImg(); onEdit(); } }, 'Quitar'));
+      // V127: does tapping the picture play the question's sound? (on unless the teacher turns it off)
+      imgSpeak.hidden = !q.image;
     };
+    const speakBox = el('input', { type: 'checkbox', checked: q.imageSpeaks !== false });
+    speakBox.addEventListener('change', () => { q.imageSpeaks = speakBox.checked; onEdit(); });
+    const imgSpeak = el('div.image-speaks',
+      el('label.check', speakBox, '🔊 Al tocar la imagen, sonar la voz'),
+      el('p.small.muted', 'Suena lo mismo que el «Sonido de la pregunta» (la pregunta, el texto de «Leer en voz alta» o el audio). Sin marcar, la imagen no hace nada al tocarla.'));
     drawImg();
-    box.append(el('div.field', 'Imagen (opcional)', imgRow));
+    box.append(el('div.field', 'Imagen (opcional)', imgRow, imgSpeak));
 
     // Prompt sound
     box.append(soundEditor(q, 'pregunta', onEdit, [['none', 'Sin sonido'], ['voice', 'Voz automática'], ['file', 'Archivo de audio']], q.audioMode || 'voice'));

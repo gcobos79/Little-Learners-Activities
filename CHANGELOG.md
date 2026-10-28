@@ -1,6 +1,11 @@
 # Changelog
 
 ## V126 — October 2026 (Clasificación rápida)
+- Quiz editor: under each question's picture, «🔊 Al tocar la imagen, sonar la voz». Marked (default,
+  also for existing questions), tapping the picture plays the question's sound (the question, the «Leer
+  en voz alta» text or the audio file); unmarked, the picture does nothing. The automatic reading and
+  the 🔊 button are unchanged. Column `quiz_questions.image_speaks` (default true); `save_quiz` keeps it
+  when an older app saves without the field.
 - End music: when a child finishes any activity, an original, cheerful ~4-second «¡Lo lograste!» tune
   plays (made with Web Audio in js/ui.js `celebrateTune`, no audio file). It replaces the short ding
   at the end and stops if the child taps «Otra vez» or leaves.
