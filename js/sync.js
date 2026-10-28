@@ -102,7 +102,7 @@ window.LL = window.LL || {};
         if (o.tts) opt.tts = o.tts;
         return opt;
       });
-      const item = { id: q.id, text: q.prompt || '', emoji: q.emoji || '', image: ref(q.image_path), audioMode: q.audio_mode, audio: ref(q.audio_path), readTextEnabled: !!q.read_text_enabled, readText: q.read_text || '', imageSpeaks: q.image_speaks !== false, correctCount: Math.max(1, options.filter((o) => o.correct).length), options };
+      const item = { id: q.id, text: q.prompt || '', emoji: q.emoji || '', image: ref(q.image_path), audioMode: q.audio_mode, audio: ref(q.audio_path), readTextEnabled: !!q.read_text_enabled, readText: q.read_text || '', correctCount: Math.max(1, options.filter((o) => o.correct).length), options };
       if (q.tts) item.tts = q.tts;
       return item;
     });
@@ -111,6 +111,7 @@ window.LL = window.LL || {};
       createdAt: iso(r.created_at), updatedAt: iso(r.updated_at),
       config: { lang: r.language, voiceGender: r.voice_gender === 'male' ? 'male' : 'female', mode: 'practice', questionOrder: r.question_order, answerOrder: r.answer_order, visibility: r.visible ? 'visible' : 'hidden', coverImage: ref(r.cover_path), questions,
         instructions: r.instructions || (r.settings && r.settings.instruction) || '',
+        imageSpeaks: r.image_speaks !== false,
         ...(r.activity_type === 'sort' ? { sort: S.sortSettings({ sort: r.settings || {} }) } : {}) },
     };
   }
@@ -138,7 +139,7 @@ window.LL = window.LL || {};
     (c.questions || []).forEach((q, qi) => {
       if (!q.id || seenQ.has(q.id)) q.id = newId('q');
       seenQ.add(q.id);
-      questions.push({ id: q.id, position: qi, prompt: q.text || '', emoji: q.emoji || '', image_path: path(q.image), audio_mode: q.audioMode || 'voice', audio_path: path(q.audio), read_text_enabled: !!q.readTextEnabled, read_text: q.readText || '', tts: q.tts || null, image_speaks: q.imageSpeaks !== false });
+      questions.push({ id: q.id, position: qi, prompt: q.text || '', emoji: q.emoji || '', image_path: path(q.image), audio_mode: q.audioMode || 'voice', audio_path: path(q.audio), read_text_enabled: !!q.readTextEnabled, read_text: q.readText || '', tts: q.tts || null });
       const seenO = new Set();
       (q.options || []).forEach((o, oi) => {
         if (!o.id || seenO.has(o.id)) o.id = newId('o');
@@ -149,7 +150,7 @@ window.LL = window.LL || {};
     return {
       p_quiz: { id: entry.id, folder_id: entry.folderId && folderIds.has(entry.folderId) ? entry.folderId : null, name: String(entry.name || '').slice(0, 200), language: c.lang, voice_gender: c.voiceGender === 'male' ? 'male' : 'female', mode: 'practice', question_order: c.questionOrder, answer_order: c.answerOrder, visible: c.visibility === 'visible', cover_path: path(c.coverImage), created_at: entry.createdAt || entry.updatedAt, updated_at: entry.updatedAt,
         activity_type: entry.type === 'sort' ? 'sort' : 'quiz', settings: entry.type === 'sort' ? S.sortSettings(c) : {},
-        instructions: S.instructionsOf(c).slice(0, 300) },
+        instructions: S.instructionsOf(c).slice(0, 300), image_speaks: S.imageSpeaksOf(c) },
       p_questions: questions,
       p_options: options,
     };

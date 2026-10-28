@@ -409,7 +409,7 @@ window.LL = window.LL || {};
     return { id: uid('quiz'), text: '', readTextEnabled: false, readText: '', audioMode: 'none', image: '', audio: '', correct: false };
   }
   function newQuestion(optionCount = 4) {
-    return { id: uid('quiz'), text: '', readTextEnabled: false, readText: '', audioMode: 'voice', emoji: '', image: '', imageSpeaks: true, audio: '', correctCount: 1, options: Array.from({ length: optionCount }, newOption) };
+    return { id: uid('quiz'), text: '', readTextEnabled: false, readText: '', audioMode: 'voice', emoji: '', image: '', audio: '', correctCount: 1, options: Array.from({ length: optionCount }, newOption) };
   }
   function newQuiz(folderId) {
     return { id: null, name: '', folderId: folderId || null, config: { lang: 'es', voiceGender: 'female', mode: 'practice', questionOrder: 'fixed', answerOrder: 'fixed', visibility: 'hidden', coverImage: '', questions: [newQuestion()] } };
@@ -419,6 +419,13 @@ window.LL = window.LL || {};
   const SORT_DEFAULTS = { speed: 'normal', perGroup: 0, showText: false, speak: true };
   /** The activity's instructions (part of its header): what the 📢 button reads to the children.
    *  Early V126 sort activities kept them in config.sort.instruction. */
+  /** «🔊 Al tocar la imagen, sonar la voz» for the whole quiz (V127). On unless turned off; a quiz saved
+   *  while it was a per-question choice counts as off if any question had it off. */
+  const imageSpeaksOf = (c) => {
+    if (!c) return true;
+    if (typeof c.imageSpeaks === 'boolean') return c.imageSpeaks;
+    return !(c.questions || []).some((q) => q && q.imageSpeaks === false);
+  };
   const instructionsOf = (c) => String((c && (c.instructions || (c.sort && c.sort.instruction))) || '').trim();
   function newSortItem() { return { id: uid('quiz'), text: '', image: '', audioMode: 'voice', readTextEnabled: false, readText: '', audio: '', correct: true }; }
   function newSortGroup(label = '', items = 3) {
@@ -471,6 +478,6 @@ window.LL = window.LL || {};
     readDraft, writeDraft, clearDraft,
     exportBackup, importBackup, validateBackup, storageUsed, deleteAllData, freeSpace,
     newOption, newQuestion, newQuiz, questionProblem, isActivity,
-    newSort, newSortGroup, newSortItem, sortSettings, sortSettingsOf, sortProblem, itemFilled, instructionsOf,
+    newSort, newSortGroup, newSortItem, sortSettings, sortSettingsOf, sortProblem, itemFilled, instructionsOf, imageSpeaksOf,
   };
 })();

@@ -142,6 +142,14 @@ window.LL = window.LL || {};
     const ar = el('input', { type: 'checkbox', checked: c.answerOrder === 'random' });
     ar.addEventListener('change', () => { c.answerOrder = ar.checked ? 'random' : 'fixed'; changed(); });
     if (!isSort()) p.append(el('div.field', 'Orden', el('label.switch', qr, 'Mezclar preguntas'), el('label.switch', ar, 'Mezclar respuestas')));
+    // V127: one choice for the whole quiz: does tapping a question's picture play its sound?
+    if (!isSort()) {
+      const is = el('input', { type: 'checkbox', checked: S.imageSpeaksOf(c) });
+      is.addEventListener('change', () => { c.imageSpeaks = is.checked; changed(); });
+      p.append(el('div.field.image-speaks', 'Imagen de las preguntas',
+        el('label.switch', is, '🔊 Al tocar la imagen, sonar la voz'),
+        el('p.small.muted', 'Vale para todas las preguntas de esta actividad. Suena lo que tenga cada pregunta (la pregunta, el texto de «Leer en voz alta» o el archivo de audio). Sin marcar, las imágenes no hacen nada al tocarlas.')));
+    }
 
     const coverBox = el('div.media-row');
     const drawCover = () => {
@@ -343,16 +351,9 @@ window.LL = window.LL || {};
         try { q.image = await store(await imageFileToDataURL(f, 1000, 0.8), 'images'); drawImg(); onEdit(); } catch (e) { toast(e.message, 'error'); }
       } }, q.image ? '🖼️ Cambiar imagen' : '🖼️ Agregar imagen'));
       if (q.image) imgRow.append(el('button.btn.sm.danger-ghost', { type: 'button', onclick: () => { q.image = ''; drawImg(); onEdit(); } }, 'Quitar'));
-      // V127: does tapping the picture play the question's sound? (on unless the teacher turns it off)
-      imgSpeak.hidden = !q.image;
     };
-    const speakBox = el('input', { type: 'checkbox', checked: q.imageSpeaks !== false });
-    speakBox.addEventListener('change', () => { q.imageSpeaks = speakBox.checked; onEdit(); });
-    const imgSpeak = el('div.image-speaks',
-      el('label.check', speakBox, '🔊 Al tocar la imagen, sonar la voz'),
-      el('p.small.muted', 'Suena lo mismo que el «Sonido de la pregunta» (la pregunta, el texto de «Leer en voz alta» o el audio). Sin marcar, la imagen no hace nada al tocarla.'));
     drawImg();
-    box.append(el('div.field', 'Imagen (opcional)', imgRow, imgSpeak));
+    box.append(el('div.field', 'Imagen (opcional)', imgRow));
 
     // Prompt sound
     box.append(soundEditor(q, 'pregunta', onEdit, [['none', 'Sin sonido'], ['voice', 'Voz automática'], ['file', 'Archivo de audio']], q.audioMode || 'voice'));

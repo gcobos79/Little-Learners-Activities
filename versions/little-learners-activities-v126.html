@@ -946,7 +946,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 window.LL = window.LL || {};
 LL.config = {
   // Set by tools/stamp_version.py on every publish.
-  build: '20261028165430',
+  build: '20261028173712',
   version: 'V126',
   // Who runs this site, e.g. 'Sra. García · Escuela Primaria Lincoln'
   owner: 'Geovanny Cobos',
@@ -1377,7 +1377,7 @@ window.LL = window.LL || {};
     return { id: uid('quiz'), text: '', readTextEnabled: false, readText: '', audioMode: 'none', image: '', audio: '', correct: false };
   }
   function newQuestion(optionCount = 4) {
-    return { id: uid('quiz'), text: '', readTextEnabled: false, readText: '', audioMode: 'voice', emoji: '', image: '', imageSpeaks: true, audio: '', correctCount: 1, options: Array.from({ length: optionCount }, newOption) };
+    return { id: uid('quiz'), text: '', readTextEnabled: false, readText: '', audioMode: 'voice', emoji: '', image: '', audio: '', correctCount: 1, options: Array.from({ length: optionCount }, newOption) };
   }
   function newQuiz(folderId) {
     return { id: null, name: '', folderId: folderId || null, config: { lang: 'es', voiceGender: 'female', mode: 'practice', questionOrder: 'fixed', answerOrder: 'fixed', visibility: 'hidden', coverImage: '', questions: [newQuestion()] } };
@@ -1387,6 +1387,13 @@ window.LL = window.LL || {};
   const SORT_DEFAULTS = { speed: 'normal', perGroup: 0, showText: false, speak: true };
   /** The activity's instructions (part of its header): what the 📢 button reads to the children.
    *  Early V126 sort activities kept them in config.sort.instruction. */
+  /** «🔊 Al tocar la imagen, sonar la voz» for the whole quiz (V127). On unless turned off; a quiz saved
+   *  while it was a per-question choice counts as off if any question had it off. */
+  const imageSpeaksOf = (c) => {
+    if (!c) return true;
+    if (typeof c.imageSpeaks === 'boolean') return c.imageSpeaks;
+    return !(c.questions || []).some((q) => q && q.imageSpeaks === false);
+  };
   const instructionsOf = (c) => String((c && (c.instructions || (c.sort && c.sort.instruction))) || '').trim();
   function newSortItem() { return { id: uid('quiz'), text: '', image: '', audioMode: 'voice', readTextEnabled: false, readText: '', audio: '', correct: true }; }
   function newSortGroup(label = '', items = 3) {
@@ -1439,7 +1446,7 @@ window.LL = window.LL || {};
     readDraft, writeDraft, clearDraft,
     exportBackup, importBackup, validateBackup, storageUsed, deleteAllData, freeSpace,
     newOption, newQuestion, newQuiz, questionProblem, isActivity,
-    newSort, newSortGroup, newSortItem, sortSettings, sortSettingsOf, sortProblem, itemFilled, instructionsOf,
+    newSort, newSortGroup, newSortItem, sortSettings, sortSettingsOf, sortProblem, itemFilled, instructionsOf, imageSpeaksOf,
   };
 })();
 
@@ -2209,7 +2216,7 @@ window.LL = window.LL || {};
         if (o.tts) opt.tts = o.tts;
         return opt;
       });
-      const item = { id: q.id, text: q.prompt || '', emoji: q.emoji || '', image: ref(q.image_path), audioMode: q.audio_mode, audio: ref(q.audio_path), readTextEnabled: !!q.read_text_enabled, readText: q.read_text || '', imageSpeaks: q.image_speaks !== false, correctCount: Math.max(1, options.filter((o) => o.correct).length), options };
+      const item = { id: q.id, text: q.prompt || '', emoji: q.emoji || '', image: ref(q.image_path), audioMode: q.audio_mode, audio: ref(q.audio_path), readTextEnabled: !!q.read_text_enabled, readText: q.read_text || '', correctCount: Math.max(1, options.filter((o) => o.correct).length), options };
       if (q.tts) item.tts = q.tts;
       return item;
     });
@@ -2218,6 +2225,7 @@ window.LL = window.LL || {};
       createdAt: iso(r.created_at), updatedAt: iso(r.updated_at),
       config: { lang: r.language, voiceGender: r.voice_gender === 'male' ? 'male' : 'female', mode: 'practice', questionOrder: r.question_order, answerOrder: r.answer_order, visibility: r.visible ? 'visible' : 'hidden', coverImage: ref(r.cover_path), questions,
         instructions: r.instructions || (r.settings && r.settings.instruction) || '',
+        imageSpeaks: r.image_speaks !== false,
         ...(r.activity_type === 'sort' ? { sort: S.sortSettings({ sort: r.settings || {} }) } : {}) },
     };
   }
@@ -2245,7 +2253,7 @@ window.LL = window.LL || {};
     (c.questions || []).forEach((q, qi) => {
       if (!q.id || seenQ.has(q.id)) q.id = newId('q');
       seenQ.add(q.id);
-      questions.push({ id: q.id, position: qi, prompt: q.text || '', emoji: q.emoji || '', image_path: path(q.image), audio_mode: q.audioMode || 'voice', audio_path: path(q.audio), read_text_enabled: !!q.readTextEnabled, read_text: q.readText || '', tts: q.tts || null, image_speaks: q.imageSpeaks !== false });
+      questions.push({ id: q.id, position: qi, prompt: q.text || '', emoji: q.emoji || '', image_path: path(q.image), audio_mode: q.audioMode || 'voice', audio_path: path(q.audio), read_text_enabled: !!q.readTextEnabled, read_text: q.readText || '', tts: q.tts || null });
       const seenO = new Set();
       (q.options || []).forEach((o, oi) => {
         if (!o.id || seenO.has(o.id)) o.id = newId('o');
@@ -2256,7 +2264,7 @@ window.LL = window.LL || {};
     return {
       p_quiz: { id: entry.id, folder_id: entry.folderId && folderIds.has(entry.folderId) ? entry.folderId : null, name: String(entry.name || '').slice(0, 200), language: c.lang, voice_gender: c.voiceGender === 'male' ? 'male' : 'female', mode: 'practice', question_order: c.questionOrder, answer_order: c.answerOrder, visible: c.visibility === 'visible', cover_path: path(c.coverImage), created_at: entry.createdAt || entry.updatedAt, updated_at: entry.updatedAt,
         activity_type: entry.type === 'sort' ? 'sort' : 'quiz', settings: entry.type === 'sort' ? S.sortSettings(c) : {},
-        instructions: S.instructionsOf(c).slice(0, 300) },
+        instructions: S.instructionsOf(c).slice(0, 300), image_speaks: S.imageSpeaksOf(c) },
       p_questions: questions,
       p_options: options,
     };
@@ -3090,8 +3098,8 @@ window.LL = window.LL || {};
     if (hasImg) {
       const img = el('img.question-image', { src: q.image, alt: 'Imagen de la pregunta' });
       // Tapping the picture also reads the question (same as the 🔊 button), unless the teacher
-      // turned that off for this question (V127, «Al tocar la imagen, sonar la voz»).
-      if (hasPromptSound(q) && q.imageSpeaks !== false) {
+      // turned that off for the activity (V127, «Al tocar la imagen, sonar la voz»).
+      if (hasPromptSound(q) && LL.store.imageSpeaksOf(quiz.config)) {
         Object.assign(img, { tabIndex: 0, title: 'Toca para escuchar' });
         img.setAttribute('role', 'button');
         img.setAttribute('aria-label', 'Escuchar la pregunta');
@@ -4322,6 +4330,14 @@ window.LL = window.LL || {};
     const ar = el('input', { type: 'checkbox', checked: c.answerOrder === 'random' });
     ar.addEventListener('change', () => { c.answerOrder = ar.checked ? 'random' : 'fixed'; changed(); });
     if (!isSort()) p.append(el('div.field', 'Orden', el('label.switch', qr, 'Mezclar preguntas'), el('label.switch', ar, 'Mezclar respuestas')));
+    // V127: one choice for the whole quiz: does tapping a question's picture play its sound?
+    if (!isSort()) {
+      const is = el('input', { type: 'checkbox', checked: S.imageSpeaksOf(c) });
+      is.addEventListener('change', () => { c.imageSpeaks = is.checked; changed(); });
+      p.append(el('div.field.image-speaks', 'Imagen de las preguntas',
+        el('label.switch', is, '🔊 Al tocar la imagen, sonar la voz'),
+        el('p.small.muted', 'Vale para todas las preguntas de esta actividad. Suena lo que tenga cada pregunta (la pregunta, el texto de «Leer en voz alta» o el archivo de audio). Sin marcar, las imágenes no hacen nada al tocarlas.')));
+    }
 
     const coverBox = el('div.media-row');
     const drawCover = () => {
@@ -4523,16 +4539,9 @@ window.LL = window.LL || {};
         try { q.image = await store(await imageFileToDataURL(f, 1000, 0.8), 'images'); drawImg(); onEdit(); } catch (e) { toast(e.message, 'error'); }
       } }, q.image ? '🖼️ Cambiar imagen' : '🖼️ Agregar imagen'));
       if (q.image) imgRow.append(el('button.btn.sm.danger-ghost', { type: 'button', onclick: () => { q.image = ''; drawImg(); onEdit(); } }, 'Quitar'));
-      // V127: does tapping the picture play the question's sound? (on unless the teacher turns it off)
-      imgSpeak.hidden = !q.image;
     };
-    const speakBox = el('input', { type: 'checkbox', checked: q.imageSpeaks !== false });
-    speakBox.addEventListener('change', () => { q.imageSpeaks = speakBox.checked; onEdit(); });
-    const imgSpeak = el('div.image-speaks',
-      el('label.check', speakBox, '🔊 Al tocar la imagen, sonar la voz'),
-      el('p.small.muted', 'Suena lo mismo que el «Sonido de la pregunta» (la pregunta, el texto de «Leer en voz alta» o el audio). Sin marcar, la imagen no hace nada al tocarla.'));
     drawImg();
-    box.append(el('div.field', 'Imagen (opcional)', imgRow, imgSpeak));
+    box.append(el('div.field', 'Imagen (opcional)', imgRow));
 
     // Prompt sound
     box.append(soundEditor(q, 'pregunta', onEdit, [['none', 'Sin sonido'], ['voice', 'Voz automática'], ['file', 'Archivo de audio']], q.audioMode || 'voice'));
