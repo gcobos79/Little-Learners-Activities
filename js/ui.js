@@ -179,8 +179,12 @@ window.LL = window.LL || {};
   function bestVoice(lang, gender = 'female') { return voicePlan(lang, gender).voice; }
 
   /** gender is only a preference: any voice is better than silence. */
-  function speak(text, lang, gender) {
-    if (!text || !('speechSynthesis' in window)) return;
+  /** onDone(finished): optional; called once when the reading ends (true) or is cut off / fails (false).
+   *  Some browsers never send «end», so a generous timer (based on the text length) stands in for it. */
+  function speak(text, lang, gender, onDone) {
+    let called = false, guard = null;
+    const done = (ok) => { if (called) return; called = true; clearTimeout(guard); if (onDone) onDone(ok); };
+    if (!text || !('speechSynthesis' in window)) { if (onDone) setTimeout(() => done(true), 0); return; }
     try {
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(String(text));
@@ -188,8 +192,15 @@ window.LL = window.LL || {};
       if (plan.voice) { u.voice = plan.voice; u.lang = plan.voice.lang; } else u.lang = lang === 'en' ? 'en-US' : 'es-US';
       u.pitch = plan.pitch;
       u.rate = 0.9;
+      if (onDone) {
+        u.onend = () => done(true);
+        u.onerror = (e) => done(!(e && (e.error === 'interrupted' || e.error === 'canceled')));
+        const wait = 3000 + String(text).length * 110;
+        const check = () => { if (speechSynthesis.speaking) guard = setTimeout(check, 1000); else done(true); };
+        guard = setTimeout(check, wait);
+      }
       speechSynthesis.speak(u);
-    } catch (e) { console.warn('speech failed', e); }
+    } catch (e) { console.warn('speech failed', e); done(false); }
   }
 
   let currentAudio = null;

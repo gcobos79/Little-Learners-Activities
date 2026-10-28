@@ -1,6 +1,9 @@
 # Changelog
 
 ## V126 — October 2026 (Clasificación rápida)
+- Quiz start: when the activity has instructions, they are read first when it starts (and on «Otra
+  vez»), then question 1's sound (question, «Leer en voz alta» text or audio file). Only at the start,
+  not before every question. `LL.ui.speak` takes an optional onDone callback for this.
 - Quiz editor, activity options: «🔊 Al tocar la imagen, sonar la voz», one choice for the whole quiz.
   Marked (default, also for existing quizzes), tapping any question's picture plays that question's sound
   (the question, the «Leer en voz alta» text or the audio file); unmarked, no picture does anything. The

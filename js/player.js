@@ -11,7 +11,9 @@ window.LL = window.LL || {};
   let quiz = null, questions = [], index = 0, opts = {}, timer = null, run = 0, answered = false, selected = new Set();
   // What the child answered in this attempt (first answer of each question), for the results.
   let attempt = null, shownAt = 0;
-  const newAttempt = () => { attempt = { startedAt: new Date().toISOString(), answers: [] }; startClock(); };
+  // introPending: a quiz reads its instructions (when it has some) once, at the start, before question 1 (V127).
+  let introPending = false;
+  const newAttempt = () => { attempt = { startedAt: new Date().toISOString(), answers: [] }; introPending = true; startClock(); };
 
   /* Work time (V127): ⏱️ m:ss next to the child's name, from 0:00 when the activity appears.
    * It restarts with «Otra vez», stops (and keeps the final time) when the activity ends. */
@@ -63,11 +65,14 @@ window.LL = window.LL || {};
   }
 
   const instructions = () => LL.store.instructionsOf(quiz && quiz.config);
-  function sayInstructions() {
+  let introToken = 0;
+  /** then(): optional, called after the instructions finish (not if they are cut off). */
+  function sayInstructions(then) {
     const t = instructions(); if (!t) return;
     stopSound();
     const b = $('#playerHelp'); b.classList.remove('talking'); void b.offsetWidth; b.classList.add('talking');
-    speak(t, quiz.config?.lang, quiz.config?.voiceGender || 'female');
+    const mine = ++introToken;
+    speak(t, quiz.config?.lang, quiz.config?.voiceGender || 'female', then ? (ok) => { if (ok && mine === introToken) then(); } : undefined);
   }
 
   function open(entry, options = {}) {
@@ -123,7 +128,9 @@ window.LL = window.LL || {};
     if (LL.tts && (await LL.tts.play(item, gender))) return;
     speak(fallbackText, quiz && quiz.config?.lang, gender);
   }
+  let promptPlayed = false;
   function playPrompt(q) {
+    promptPlayed = true;
     if (q.audioMode === 'file' && q.audio) playAudio(q.audio);
     else if (q.audioMode === 'voice') sayItem(q, promptSpeech(q));
   }
@@ -244,8 +251,20 @@ window.LL = window.LL || {};
 
     if (LL.tts) LL.tts.prefetch([q, ...(q.options || [])], quiz.config?.voiceGender || 'female');
     // Read the question aloud automatically (needs a tap first, which the child just did).
+    // At the start of the activity, its instructions come first, then the question (V127).
     const myRun = run;
-    timer = setTimeout(() => { if (myRun === run && !root().hidden) playPrompt(q); }, 250);
+    promptPlayed = false;
+    const intro = introPending && !!instructions();
+    introPending = false;
+    const still = () => myRun === run && !root().hidden && !answered;
+    if (intro) {
+      timer = setTimeout(() => {
+        if (!still()) return;
+        sayInstructions(() => { if (still() && !promptPlayed) setTimeout(() => { if (still() && !promptPlayed) playPrompt(q); }, 400); });
+      }, 250);
+    } else {
+      timer = setTimeout(() => { if (still()) playPrompt(q); }, 250);
+    }
   }
 
   /** Shrink only the answer texts that don't fit their box. */
