@@ -158,7 +158,8 @@ main { padding: clamp(14px, 2.5vw, 28px); max-width: 1240px; margin: 0 auto; }
 .card .cover-placeholder { width: 100%; aspect-ratio: 4 / 3; border-radius: 14px; background: var(--primary-soft); display: grid; place-items: center; font-size: 46px; }
 .card .name { font-size: 21px; font-weight: 900; line-height: 1.15; overflow-wrap: anywhere; }
 .card .meta { font-size: 14px; font-weight: 800; color: var(--muted); }
-.card.folder { background: var(--folder, #F8EDB8); border-color: rgba(0, 0, 0, .1); }
+.card.folder { background: var(--folder, #FFD12E); border-color: rgba(0, 0, 0, .14); }
+.card.folder .meta { color: rgba(15, 23, 42, .72); }
 .card.folder .folder-icon { font-size: 58px; line-height: 1; filter: drop-shadow(0 2px 0 rgba(255,255,255,.6)); }
 .card.up { background: var(--surface-2); border-style: dashed; }
 .card.up .folder-icon { font-size: 44px; }
@@ -938,7 +939,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 window.LL = window.LL || {};
 LL.config = {
   // Set by tools/stamp_version.py on every publish.
-  build: '20261027155938',
+  build: '20261028040833',
   version: 'V126',
   // Who runs this site, e.g. 'Sra. García · Escuela Primaria Lincoln'
   owner: 'Geovanny Cobos',
@@ -1004,12 +1005,19 @@ window.LL = window.LL || {};
     letters: ['M', 'P', 'S', 'L', 'F'], fixedImages: null, showToStudents: false,
   };
 
+  // V126: more intense colours (dark text stays easy to read on all of them).
   const FOLDER_COLORS = [
-    ['Rosa', '#F6D6D6'], ['Melocotón', '#F9DEC9'], ['Amarillo', '#F8EDB8'],
-    ['Verde menta', '#CDEBDD'], ['Verde suave', '#DCECCB'], ['Celeste', '#CFE8F7'],
-    ['Azul lavanda', '#D9DDF7'], ['Lila', '#E9D5F5'], ['Lavanda rosada', '#F3D8E8'],
-    ['Gris claro', '#E7E9ED'],
+    ['Rosa', '#F7889F'], ['Naranja', '#FFA463'], ['Amarillo', '#FFD12E'],
+    ['Verde menta', '#4FD1A1'], ['Verde', '#93D35A'], ['Celeste', '#4EC0F2'],
+    ['Azul', '#7C9DF7'], ['Lila', '#BF8AF2'], ['Fucsia', '#F27BC8'],
+    ['Gris', '#AEB8C6'],
   ];
+  // The soft colours used before V126, same order: folders that still have one show the new one.
+  const OLD_FOLDER_COLORS = ['#F6D6D6', '#F9DEC9', '#F8EDB8', '#CDEBDD', '#DCECCB', '#CFE8F7', '#D9DDF7', '#E9D5F5', '#F3D8E8', '#E7E9ED'];
+  function folderColor(c) {
+    const k = OLD_FOLDER_COLORS.indexOf(String(c || '').toUpperCase());
+    return k >= 0 ? FOLDER_COLORS[k][1] : c || FOLDER_COLORS[2][1];
+  }
 
   // 40 animals, easy to tell apart (each child gets a different one).
   const ANIMALS = ['🐱', '🐶', '🦖', '🦆', '🐸', '🐼', '🦋', '🦁', '🐰', '🐻', '🐨', '🐯', '🐵', '🐧', '🐢', '🐙', '🦄', '🐝', '🐞', '🦊', '🐮', '🐷', '🐳', '🦒',
@@ -1417,7 +1425,7 @@ window.LL = window.LL || {};
   }
 
   LL.store = {
-    KEYS, FOLDER_COLORS, ANIMALS, clone, uid, byName,
+    KEYS, FOLDER_COLORS, folderColor, ANIMALS, clone, uid, byName,
     readLibrary, quizzes, getQuiz, isReady, saveQuiz, duplicateQuiz, deleteQuiz, moveQuiz,
     folders, getFolder, saveFolder, deleteFolder, moveFolder, folderNameTaken, mergeDuplicateFolders, folderTrail, folderPathLabel, folderHas,
     roster, saveRoster, sonidos, saveSonidos, pinHash, savePinHash, voice, saveVoice, settingsAt, quietly, readJSON, writeJSON, writeLibrary, writeFolders, todayChicago,
@@ -3569,7 +3577,7 @@ window.LL = window.LL || {};
         el('span.folder-icon', '📁'),
         el('span.name', f.name),
         el('span.meta', meta)));
-    card.style.setProperty('--folder', f.color || '#F8EDB8');
+    card.style.setProperty('--folder', S.folderColor(f.color));
     if (!student) {
       card.dataset.drop = f.id;
       card.append(el('div.card-tools',
@@ -3825,7 +3833,7 @@ window.LL = window.LL || {};
 
   async function editFolder(f) {
     const isNew = !f;
-    let color = f ? f.color : S.FOLDER_COLORS[0][1];
+    let color = f ? S.folderColor(f.color) : S.FOLDER_COLORS[0][1];
     const name = el('input', { type: 'text', maxlength: '90', placeholder: 'Ej. Español', value: f ? f.name : '' });
     const pal = el('div.palette');
     for (const [label, c] of S.FOLDER_COLORS) {

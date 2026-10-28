@@ -87,7 +87,7 @@ window.LL = window.LL || {};
         el('span.folder-icon', '📁'),
         el('span.name', f.name),
         el('span.meta', meta)));
-    card.style.setProperty('--folder', f.color || '#F8EDB8');
+    card.style.setProperty('--folder', S.folderColor(f.color));
     if (!student) {
       card.dataset.drop = f.id;
       card.append(el('div.card-tools',
@@ -343,7 +343,7 @@ window.LL = window.LL || {};
 
   async function editFolder(f) {
     const isNew = !f;
-    let color = f ? f.color : S.FOLDER_COLORS[0][1];
+    let color = f ? S.folderColor(f.color) : S.FOLDER_COLORS[0][1];
     const name = el('input', { type: 'text', maxlength: '90', placeholder: 'Ej. Español', value: f ? f.name : '' });
     const pal = el('div.palette');
     for (const [label, c] of S.FOLDER_COLORS) {

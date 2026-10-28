@@ -44,12 +44,19 @@ window.LL = window.LL || {};
     letters: ['M', 'P', 'S', 'L', 'F'], fixedImages: null, showToStudents: false,
   };
 
+  // V126: more intense colours (dark text stays easy to read on all of them).
   const FOLDER_COLORS = [
-    ['Rosa', '#F6D6D6'], ['Melocotón', '#F9DEC9'], ['Amarillo', '#F8EDB8'],
-    ['Verde menta', '#CDEBDD'], ['Verde suave', '#DCECCB'], ['Celeste', '#CFE8F7'],
-    ['Azul lavanda', '#D9DDF7'], ['Lila', '#E9D5F5'], ['Lavanda rosada', '#F3D8E8'],
-    ['Gris claro', '#E7E9ED'],
+    ['Rosa', '#F7889F'], ['Naranja', '#FFA463'], ['Amarillo', '#FFD12E'],
+    ['Verde menta', '#4FD1A1'], ['Verde', '#93D35A'], ['Celeste', '#4EC0F2'],
+    ['Azul', '#7C9DF7'], ['Lila', '#BF8AF2'], ['Fucsia', '#F27BC8'],
+    ['Gris', '#AEB8C6'],
   ];
+  // The soft colours used before V126, same order: folders that still have one show the new one.
+  const OLD_FOLDER_COLORS = ['#F6D6D6', '#F9DEC9', '#F8EDB8', '#CDEBDD', '#DCECCB', '#CFE8F7', '#D9DDF7', '#E9D5F5', '#F3D8E8', '#E7E9ED'];
+  function folderColor(c) {
+    const k = OLD_FOLDER_COLORS.indexOf(String(c || '').toUpperCase());
+    return k >= 0 ? FOLDER_COLORS[k][1] : c || FOLDER_COLORS[2][1];
+  }
 
   // 40 animals, easy to tell apart (each child gets a different one).
   const ANIMALS = ['🐱', '🐶', '🦖', '🦆', '🐸', '🐼', '🦋', '🦁', '🐰', '🐻', '🐨', '🐯', '🐵', '🐧', '🐢', '🐙', '🦄', '🐝', '🐞', '🦊', '🐮', '🐷', '🐳', '🦒',
@@ -457,7 +464,7 @@ window.LL = window.LL || {};
   }
 
   LL.store = {
-    KEYS, FOLDER_COLORS, ANIMALS, clone, uid, byName,
+    KEYS, FOLDER_COLORS, folderColor, ANIMALS, clone, uid, byName,
     readLibrary, quizzes, getQuiz, isReady, saveQuiz, duplicateQuiz, deleteQuiz, moveQuiz,
     folders, getFolder, saveFolder, deleteFolder, moveFolder, folderNameTaken, mergeDuplicateFolders, folderTrail, folderPathLabel, folderHas,
     roster, saveRoster, sonidos, saveSonidos, pinHash, savePinHash, voice, saveVoice, settingsAt, quietly, readJSON, writeJSON, writeLibrary, writeFolders, todayChicago,

@@ -1,6 +1,9 @@
 # Changelog
 
 ## V126 — October 2026 (Clasificación rápida)
+- Folder colours are more intense (Rosa, Naranja, Amarillo, Verde menta, Verde, Celeste, Azul, Lila,
+  Fucsia, Gris; dark text keeps ≥ 5.4:1 contrast). Folders with an old soft colour show its intense
+  version automatically.
 - Results page: a 🗑️ at the end of each row deletes that child's result (after confirming), in the
   database and on the device. The child shows as pending again and can redo the activity.
 - Students: 40 animals (was 24). Adding or editing a student only offers animals no other child is

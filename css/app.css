@@ -150,7 +150,8 @@ main { padding: clamp(14px, 2.5vw, 28px); max-width: 1240px; margin: 0 auto; }
 .card .cover-placeholder { width: 100%; aspect-ratio: 4 / 3; border-radius: 14px; background: var(--primary-soft); display: grid; place-items: center; font-size: 46px; }
 .card .name { font-size: 21px; font-weight: 900; line-height: 1.15; overflow-wrap: anywhere; }
 .card .meta { font-size: 14px; font-weight: 800; color: var(--muted); }
-.card.folder { background: var(--folder, #F8EDB8); border-color: rgba(0, 0, 0, .1); }
+.card.folder { background: var(--folder, #FFD12E); border-color: rgba(0, 0, 0, .14); }
+.card.folder .meta { color: rgba(15, 23, 42, .72); }
 .card.folder .folder-icon { font-size: 58px; line-height: 1; filter: drop-shadow(0 2px 0 rgba(255,255,255,.6)); }
 .card.up { background: var(--surface-2); border-style: dashed; }
 .card.up .folder-icon { font-size: 44px; }
