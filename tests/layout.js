@@ -12,6 +12,9 @@ const devices={
   for (const [name,[w,h,dpr,touch]] of Object.entries(devices)) {
     if (only && !only.split(',').includes(name)) continue;
     const ctx = await b.newContext({ viewport:{width:w,height:h}, deviceScaleFactor:1, hasTouch:touch, isMobile:touch&&w<1000 });
+    // Activities go full screen (V127), which would resize this window away from the device size being
+    // checked (and stall screenshots). Full screen has its own test (fullscreen.js), so it's off here.
+    await ctx.addInitScript(() => { Element.prototype.requestFullscreen = function () { return Promise.resolve(); }; });
     const p = await ctx.newPage();
     const errs=[]; p.on('pageerror', e=>errs.push(e.message));
     await p.goto('file://'+require('path').resolve(file));
