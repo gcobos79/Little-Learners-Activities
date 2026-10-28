@@ -11,7 +11,24 @@ window.LL = window.LL || {};
   let quiz = null, questions = [], index = 0, opts = {}, timer = null, run = 0, answered = false, selected = new Set();
   // What the child answered in this attempt (first answer of each question), for the results.
   let attempt = null, shownAt = 0;
-  const newAttempt = () => { attempt = { startedAt: new Date().toISOString(), answers: [] }; };
+  const newAttempt = () => { attempt = { startedAt: new Date().toISOString(), answers: [] }; startClock(); };
+
+  /* Work time (V127): ⏱️ m:ss next to the child's name, from 0:00 when the activity appears.
+   * It restarts with «Otra vez», stops (and keeps the final time) when the activity ends. */
+  let clockTimer = null, clockStart = 0;
+  function showClock(ms) {
+    const s = Math.max(0, Math.floor(ms / 1000)), m = Math.floor(s / 60), r = s % 60;
+    const box = $('#playerTime'); if (!box) return;
+    box.firstElementChild.textContent = m + ':' + String(r).padStart(2, '0');
+    box.setAttribute('aria-label', `Tiempo trabajando: ${m} ${m === 1 ? 'minuto' : 'minutos'} ${r} ${r === 1 ? 'segundo' : 'segundos'}`);
+  }
+  function startClock() {
+    stopClock();
+    clockStart = Date.now();
+    showClock(0);
+    clockTimer = setInterval(() => showClock(Date.now() - clockStart), 250);
+  }
+  function stopClock() { if (clockTimer) clearInterval(clockTimer); clockTimer = null; }
 
   const root = () => $('#player');
   const body = () => $('#playerBody');
@@ -81,6 +98,7 @@ window.LL = window.LL || {};
   function close(how) {
     if (root().hidden) return;
     clearTimer();
+    stopClock();
     stopSound();
     if (LL.sortGame) LL.sortGame.stop();
     root().hidden = true;
@@ -133,7 +151,7 @@ window.LL = window.LL || {};
     });
     sortTotal = info.total;
     renderProgress();
-    $('#playerProgress').append(info.status); // ⏱️ time · count · ✓ right, in the top bar
+    $('#playerProgress').append(info.status); // count · ✓ right, in the top bar (time: ⏱️ next to the name)
     // Nothing else to read here: the instructions (📢) are read once when the game starts.
     if (instructions()) { const myRun = run; timer = setTimeout(() => { if (myRun === run && !root().hidden) sayInstructions(); }, 300); }
     if (!info.total) body().replaceChildren(el('div.finish', el('div.stars', '🤔'), el('h1', 'Esta actividad todavía no tiene tarjetas.')));
@@ -296,6 +314,8 @@ window.LL = window.LL || {};
 
   function finish() {
     clearTimer();
+    stopClock();
+    if (attempt) showClock(Date.now() - Date.parse(attempt.startedAt));
     index = questions.length;
     renderProgress();
     $('#playerSpeak').disabled = true;

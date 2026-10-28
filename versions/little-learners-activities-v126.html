@@ -627,13 +627,19 @@ input[type=email]:focus, input[type=password]:focus { border-color: var(--primar
 .player-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .player-student { font-size: clamp(17px, 2.4vh, 22px); padding: 4px 14px 4px 6px; box-shadow: 0 2px 0 var(--line); }
 .player-student .animal { font-size: clamp(28px, 4.5vh, 40px); }
+.player-time { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 999px; background: var(--surface); box-shadow: 0 2px 0 var(--line); font-family: var(--font-kids); font-weight: 900; font-size: clamp(17px, 2.4vh, 22px); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.player-time span { min-width: 2.6em; text-align: center; }
+.player-left > #playerExit { flex: 0 0 auto; }
+.player-student { min-width: 0; }
 .player-student span:last-child { max-width: min(40vw, 380px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 640px) {
   .player-top { grid-template-columns: auto auto; grid-template-areas: 'left speak' 'prog prog'; row-gap: 6px; }
   .player-left { grid-area: left; }
   .player-progress { grid-area: prog; }
   #playerSpeak { grid-area: speak; justify-self: end; }
-  .player-student span:last-child { max-width: 42vw; }
+  .player-student span:last-child { max-width: 30vw; }
+  .player-left { gap: 6px; }
+  .player-time { font-size: 16px; padding: 3px 9px; gap: 2px; }
 }
 
 /* Student pictures (when the teacher adds one instead of an animal) */
@@ -920,6 +926,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
         <div class="player-left">
           <button type="button" class="icon-btn big" id="playerExit" aria-label="Volver a las actividades"><svg class="hold-ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" pathLength="100"/></svg><span class="exit-icon">↩️</span></button>
           <div class="student-chip player-student" id="playerStudent" hidden></div>
+          <div class="player-time" id="playerTime" role="timer" aria-label="Tiempo trabajando: 0 minutos 0 segundos">⏱️ <span>0:00</span></div>
           <button type="button" class="icon-btn big player-help" id="playerHelp" aria-label="Escuchar las instrucciones" title="Instrucciones" hidden>📢</button>
         </div>
         <div class="player-progress" id="playerProgress" aria-label="Progreso"></div>
@@ -939,7 +946,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 window.LL = window.LL || {};
 LL.config = {
   // Set by tools/stamp_version.py on every publish.
-  build: '20261028150752',
+  build: '20261028153801',
   version: 'V126',
   // Who runs this site, e.g. 'Sra. García · Escuela Primaria Lincoln'
   owner: 'Geovanny Cobos',
@@ -2586,7 +2593,6 @@ window.LL = window.LL || {};
   // Group tiles: warm, clearly different frames. Card frames: bright colours that cycle.
   const COLORS = ['#FFD43B', '#74C0FC', '#8CE99A', '#FFA8A8', '#B197FC', '#FFC078', '#63E6BE', '#F783AC'];
   const FRAMES = ['#2F5BD3', '#C04CD9', '#1F8A4C', '#F06A0F', '#13A3A3', '#D6336C', '#7048E8', '#E8A500'];
-  const clock = (ms) => { const s = Math.floor(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
 
   let game = null;
 
@@ -2616,7 +2622,6 @@ window.LL = window.LL || {};
     const belt = el('div.sort-belt', { 'aria-label': 'Banda con tarjetas' });
     const targets = el('div.sort-targets');
     g.belt = belt; g.targets = targets;
-    g.stTime = el('span.st-time', '⏱️ 0:00');
     g.stCount = el('span.st-count', '0 de ' + cards.length);
     g.stOk = el('span.st-ok', '✓ 0');
 
@@ -2645,7 +2650,6 @@ window.LL = window.LL || {};
 
     host.replaceChildren(el('div.sort-game',
       belt, targets));
-    g.clock = setInterval(() => { if (game === g) g.stTime.textContent = '⏱️ ' + clock(Date.now() - g.startedAt); }, 500);
 
     // Size and place the cards once the belt has its size.
     requestAnimationFrame(() => {
@@ -2658,7 +2662,7 @@ window.LL = window.LL || {};
     g.onResize = () => layout();
     window.addEventListener('resize', g.onResize);
     api.onProgress && api.onProgress(0, cards.length, 0);
-    return { total: cards.length, status: el('div.sort-status', g.stTime, g.stCount, g.stOk) };
+    return { total: cards.length, status: el('div.sort-status', g.stCount, g.stOk) };
   }
 
   function layout() {
@@ -2811,7 +2815,6 @@ window.LL = window.LL || {};
     const g = game; if (!g) return;
     if (g.drag) endDrag();
     cancelAnimationFrame(g.raf);
-    clearInterval(g.clock);
     g.timers.forEach(clearTimeout);
     window.removeEventListener('resize', g.onResize);
     game = null;
@@ -2836,7 +2839,24 @@ window.LL = window.LL || {};
   let quiz = null, questions = [], index = 0, opts = {}, timer = null, run = 0, answered = false, selected = new Set();
   // What the child answered in this attempt (first answer of each question), for the results.
   let attempt = null, shownAt = 0;
-  const newAttempt = () => { attempt = { startedAt: new Date().toISOString(), answers: [] }; };
+  const newAttempt = () => { attempt = { startedAt: new Date().toISOString(), answers: [] }; startClock(); };
+
+  /* Work time (V127): ⏱️ m:ss next to the child's name, from 0:00 when the activity appears.
+   * It restarts with «Otra vez», stops (and keeps the final time) when the activity ends. */
+  let clockTimer = null, clockStart = 0;
+  function showClock(ms) {
+    const s = Math.max(0, Math.floor(ms / 1000)), m = Math.floor(s / 60), r = s % 60;
+    const box = $('#playerTime'); if (!box) return;
+    box.firstElementChild.textContent = m + ':' + String(r).padStart(2, '0');
+    box.setAttribute('aria-label', `Tiempo trabajando: ${m} ${m === 1 ? 'minuto' : 'minutos'} ${r} ${r === 1 ? 'segundo' : 'segundos'}`);
+  }
+  function startClock() {
+    stopClock();
+    clockStart = Date.now();
+    showClock(0);
+    clockTimer = setInterval(() => showClock(Date.now() - clockStart), 250);
+  }
+  function stopClock() { if (clockTimer) clearInterval(clockTimer); clockTimer = null; }
 
   const root = () => $('#player');
   const body = () => $('#playerBody');
@@ -2906,6 +2926,7 @@ window.LL = window.LL || {};
   function close(how) {
     if (root().hidden) return;
     clearTimer();
+    stopClock();
     stopSound();
     if (LL.sortGame) LL.sortGame.stop();
     root().hidden = true;
@@ -2958,7 +2979,7 @@ window.LL = window.LL || {};
     });
     sortTotal = info.total;
     renderProgress();
-    $('#playerProgress').append(info.status); // ⏱️ time · count · ✓ right, in the top bar
+    $('#playerProgress').append(info.status); // count · ✓ right, in the top bar (time: ⏱️ next to the name)
     // Nothing else to read here: the instructions (📢) are read once when the game starts.
     if (instructions()) { const myRun = run; timer = setTimeout(() => { if (myRun === run && !root().hidden) sayInstructions(); }, 300); }
     if (!info.total) body().replaceChildren(el('div.finish', el('div.stars', '🤔'), el('h1', 'Esta actividad todavía no tiene tarjetas.')));
@@ -3121,6 +3142,8 @@ window.LL = window.LL || {};
 
   function finish() {
     clearTimer();
+    stopClock();
+    if (attempt) showClock(Date.now() - Date.parse(attempt.startedAt));
     index = questions.length;
     renderProgress();
     $('#playerSpeak').disabled = true;

@@ -14,7 +14,6 @@ window.LL = window.LL || {};
   // Group tiles: warm, clearly different frames. Card frames: bright colours that cycle.
   const COLORS = ['#FFD43B', '#74C0FC', '#8CE99A', '#FFA8A8', '#B197FC', '#FFC078', '#63E6BE', '#F783AC'];
   const FRAMES = ['#2F5BD3', '#C04CD9', '#1F8A4C', '#F06A0F', '#13A3A3', '#D6336C', '#7048E8', '#E8A500'];
-  const clock = (ms) => { const s = Math.floor(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
 
   let game = null;
 
@@ -44,7 +43,6 @@ window.LL = window.LL || {};
     const belt = el('div.sort-belt', { 'aria-label': 'Banda con tarjetas' });
     const targets = el('div.sort-targets');
     g.belt = belt; g.targets = targets;
-    g.stTime = el('span.st-time', '⏱️ 0:00');
     g.stCount = el('span.st-count', '0 de ' + cards.length);
     g.stOk = el('span.st-ok', '✓ 0');
 
@@ -73,7 +71,6 @@ window.LL = window.LL || {};
 
     host.replaceChildren(el('div.sort-game',
       belt, targets));
-    g.clock = setInterval(() => { if (game === g) g.stTime.textContent = '⏱️ ' + clock(Date.now() - g.startedAt); }, 500);
 
     // Size and place the cards once the belt has its size.
     requestAnimationFrame(() => {
@@ -86,7 +83,7 @@ window.LL = window.LL || {};
     g.onResize = () => layout();
     window.addEventListener('resize', g.onResize);
     api.onProgress && api.onProgress(0, cards.length, 0);
-    return { total: cards.length, status: el('div.sort-status', g.stTime, g.stCount, g.stOk) };
+    return { total: cards.length, status: el('div.sort-status', g.stCount, g.stOk) };
   }
 
   function layout() {
@@ -239,7 +236,6 @@ window.LL = window.LL || {};
     const g = game; if (!g) return;
     if (g.drag) endDrag();
     cancelAnimationFrame(g.raf);
-    clearInterval(g.clock);
     g.timers.forEach(clearTimeout);
     window.removeEventListener('resize', g.onResize);
     game = null;

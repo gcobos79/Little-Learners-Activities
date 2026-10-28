@@ -619,13 +619,19 @@ input[type=email]:focus, input[type=password]:focus { border-color: var(--primar
 .player-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .player-student { font-size: clamp(17px, 2.4vh, 22px); padding: 4px 14px 4px 6px; box-shadow: 0 2px 0 var(--line); }
 .player-student .animal { font-size: clamp(28px, 4.5vh, 40px); }
+.player-time { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 999px; background: var(--surface); box-shadow: 0 2px 0 var(--line); font-family: var(--font-kids); font-weight: 900; font-size: clamp(17px, 2.4vh, 22px); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.player-time span { min-width: 2.6em; text-align: center; }
+.player-left > #playerExit { flex: 0 0 auto; }
+.player-student { min-width: 0; }
 .player-student span:last-child { max-width: min(40vw, 380px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 640px) {
   .player-top { grid-template-columns: auto auto; grid-template-areas: 'left speak' 'prog prog'; row-gap: 6px; }
   .player-left { grid-area: left; }
   .player-progress { grid-area: prog; }
   #playerSpeak { grid-area: speak; justify-self: end; }
-  .player-student span:last-child { max-width: 42vw; }
+  .player-student span:last-child { max-width: 30vw; }
+  .player-left { gap: 6px; }
+  .player-time { font-size: 16px; padding: 3px 9px; gap: 2px; }
 }
 
 /* Student pictures (when the teacher adds one instead of an animal) */

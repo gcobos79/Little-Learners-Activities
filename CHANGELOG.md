@@ -1,6 +1,9 @@
 # Changelog
 
 ## V126 — October 2026 (Clasificación rápida)
+- Work time: every activity shows ⏱️ m:ss next to the child's name in the top bar, from 0:00 when the
+  activity appears. It stops (keeping the final time) when the activity ends and restarts with «Otra
+  vez». Clasificación rápida no longer shows its own second clock.
 - Full screen: when a student opens an activity, the app goes full screen (no browser bar or tabs),
   and returns to the normal window when the child leaves the activity (holding ↩️ or «👋 Salir»). If
   full screen is left another way (Esc, a system gesture), the next tap in the activity brings it back.
