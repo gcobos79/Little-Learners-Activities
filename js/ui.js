@@ -181,27 +181,72 @@ window.LL = window.LL || {};
   /** gender is only a preference: any voice is better than silence. */
   /** onDone(finished): optional; called once when the reading ends (true) or is cut off / fails (false).
    *  Some browsers never send «end», so a generous timer (based on the text length) stands in for it. */
+  /* Reliable speech (V127). On Chromebooks the Spanish voice is often an online «Google español» voice,
+   * and Chrome can silently drop a reading sent right after cancel(). So: cancel only when something is
+   * really speaking, wait a moment after a cancel, keep a reference to the reading (Chrome can lose it),
+   * and if a voice fails or stays silent, try once more with another voice of the same language. */
+  let speakSeq = 0, lastCancelAt = 0, currentUtter = null;
+  function hush() {
+    try {
+      if (speechSynthesis.speaking || speechSynthesis.pending) { speechSynthesis.cancel(); lastCancelAt = Date.now(); }
+    } catch { /* ignore */ }
+  }
+  /** Another voice for the language (device voices first), or null to let the system choose. */
+  function altVoice(lang, notThis) {
+    if (!voiceList.length) loadVoices();
+    const pre = lang === 'en' ? 'en' : 'es';
+    const same = voiceList.filter((v) => String(v.lang || '').toLowerCase().startsWith(pre) && v !== notThis);
+    return same.find((v) => v.localService) || same[0] || null;
+  }
+
+  /** onDone(finished): optional; called once when the reading ends (true) or is cut off / fails (false).
+   *  Some browsers never send «end», so a generous timer (based on the text length) stands in for it. */
   function speak(text, lang, gender, onDone) {
     let called = false, guard = null;
     const done = (ok) => { if (called) return; called = true; clearTimeout(guard); if (onDone) onDone(ok); };
     if (!text || !('speechSynthesis' in window)) { if (onDone) setTimeout(() => done(true), 0); return; }
-    try {
-      speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(String(text));
-      const plan = voicePlan(lang, gender === 'male' ? 'male' : 'female');
-      if (plan.voice) { u.voice = plan.voice; u.lang = plan.voice.lang; } else u.lang = lang === 'en' ? 'en-US' : 'es-US';
-      u.pitch = plan.pitch;
-      u.rate = 0.9;
-      if (onDone) {
-        u.onend = () => done(true);
-        u.onerror = (e) => done(!(e && (e.error === 'interrupted' || e.error === 'canceled')));
-        const wait = 3000 + String(text).length * 110;
-        const check = () => { if (speechSynthesis.speaking) guard = setTimeout(check, 1000); else done(true); };
-        guard = setTimeout(check, wait);
-      }
-      speechSynthesis.speak(u);
-    } catch (e) { console.warn('speech failed', e); done(false); }
+    const mySeq = ++speakSeq;
+    hush();
+    let plan;
+    try { plan = voicePlan(lang, gender === 'male' ? 'male' : 'female'); } catch { plan = { voice: null, pitch: 1 }; }
+    const start = (voice, retry) => {
+      if (mySeq !== speakSeq) { done(false); return; } // a newer reading (or a stop) replaced this one
+      try {
+        const u = new SpeechSynthesisUtterance(String(text));
+        if (voice) { u.voice = voice; u.lang = voice.lang; } else u.lang = lang === 'en' ? 'en-US' : 'es-US';
+        u.pitch = voice && voice === plan.voice ? plan.pitch : 1;
+        u.rate = 0.9;
+        let started = false;
+        const again = () => { if (retry || mySeq !== speakSeq) return false; const alt = altVoice(lang, voice); setTimeout(() => start(alt, true), 150); return true; };
+        u.onstart = () => { started = true; };
+        u.onend = () => { if (currentUtter === u) currentUtter = null; done(true); };
+        u.onerror = (e) => {
+          if (currentUtter === u) currentUtter = null;
+          const err = e && e.error;
+          if (err === 'interrupted' || err === 'canceled') { done(false); return; }
+          if (!again()) done(false); // the voice failed (often an online voice): try another one
+        };
+        currentUtter = u;
+        speechSynthesis.speak(u);
+        // Silently dropped (nothing started, nothing speaking): try once more with another voice.
+        setTimeout(() => {
+          if (started || mySeq !== speakSeq || currentUtter !== u) return;
+          let busy = false; try { busy = speechSynthesis.speaking; } catch { /* ignore */ }
+          if (!busy) { currentUtter = null; again(); }
+        }, 2500);
+        if (onDone) {
+          clearTimeout(guard);
+          const wait = 3000 + String(text).length * 110;
+          const check = () => { let busy = false; try { busy = speechSynthesis.speaking; } catch { /* ignore */ } if (busy) guard = setTimeout(check, 1000); else done(true); };
+          guard = setTimeout(check, wait);
+        }
+      } catch (e) { console.warn('speech failed', e); done(false); }
+    };
+    // Chrome can drop a reading sent right after cancel(): give it a moment.
+    const sinceCancel = Date.now() - lastCancelAt;
+    if (sinceCancel < 150) setTimeout(() => start(plan.voice, false), 150 - sinceCancel); else start(plan.voice, false);
   }
+
 
   let currentAudio = null;
   let playToken = 0;
@@ -215,7 +260,8 @@ window.LL = window.LL || {};
   }
   function stopSound() {
     playToken++;
-    if ('speechSynthesis' in window) speechSynthesis.cancel();
+    speakSeq++; // a reading waiting to start must not start any more
+    if ('speechSynthesis' in window) hush();
     if (currentAudio) { currentAudio.pause(); currentAudio = null; }
     if (typeof stopCelebrate === 'function') stopCelebrate();
   }

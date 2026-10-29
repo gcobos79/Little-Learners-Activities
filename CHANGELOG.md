@@ -1,6 +1,10 @@
 # Changelog
 
 ## V126 — October 2026 (Clasificación rápida)
+- Voice: fix silent Spanish on Chromebooks (online «Google español» voice). Speech now cancels only when
+  something is speaking, waits a moment after a cancel before speaking, keeps the reading referenced, and
+  if a voice fails or stays silent retries once with another voice of the same language. Test:
+  tests/voicerobust.js (imitates both Chrome problems).
 - Información → «🔊 Voces de este aparato»: which device voice is used for Spanish and English (and if it
   needs internet), with ▶️ Probar buttons and a warning when the device has no Spanish voice.
 - A student who leaves an activity with ↩️ (holding 3 s) goes straight back to «¿Quién eres?» (all the
