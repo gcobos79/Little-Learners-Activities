@@ -1,6 +1,9 @@
 # Changelog
 
 ## V126 — October 2026 (Clasificación rápida)
+- Información shows «Versión instalada» (the build, in Chicago time) to check a tablet is up to date.
+- An activity type this app version doesn't know (made with a newer app) is now kept hidden instead of
+  showing as a broken quiz (an old tablet showed only the text of «7.1 Teclado»), and is never uploaded.
 - Sign-in page: «Usar sin cuenta, solo en este dispositivo» removed (it confused visitors, who should
   use «Entrar como invitado»). It remains under Información → Acerca de → «Avanzado» when nobody is
   signed in.

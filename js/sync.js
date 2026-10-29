@@ -107,7 +107,9 @@ window.LL = window.LL || {};
       return item;
     });
     return {
-      id: r.id, familyId: r.id, type: S.typeOf(r.activity_type), name: r.name, version: 1, folderId: r.folder_id || null,
+      // A type this version doesn't know yet (made with a newer app) is kept as is: it stays hidden
+      // here instead of showing up as a broken quiz, and it's never uploaded back (V127).
+      id: r.id, familyId: r.id, type: r.activity_type && !S.isActivity({ type: r.activity_type }) ? String(r.activity_type) : S.typeOf(r.activity_type), name: r.name, version: 1, folderId: r.folder_id || null,
       createdAt: iso(r.created_at), updatedAt: iso(r.updated_at),
       config: { lang: r.language, voiceGender: r.voice_gender === 'male' ? 'male' : 'female', mode: 'practice', questionOrder: r.question_order, answerOrder: r.answer_order, visibility: r.visible ? 'visible' : 'hidden', coverImage: ref(r.cover_path), questions,
         instructions: r.instructions || (r.settings && r.settings.instruction) || '',

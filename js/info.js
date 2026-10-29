@@ -9,6 +9,14 @@ window.LL = window.LL || {};
     ['accesibilidad', 'Accesibilidad'], ['creditos', 'Créditos'],
   ];
 
+  /** '20261029060718' (UTC) → '29/10/26, 1:07 a. m. (20261029060718)' in the school's time zone. */
+  function buildLabel(b) {
+    const m = /^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})$/.exec(String(b));
+    if (!m) return String(b);
+    const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]));
+    return d.toLocaleString('es-US', { timeZone: 'America/Chicago', dateStyle: 'short', timeStyle: 'short' }) + ' (' + b + ')';
+  }
+
   function render(focusId) {
     const c = LL.config;
     const page = $('#screen-info');
@@ -19,7 +27,7 @@ window.LL = window.LL || {};
       : el('p', 'Si tienes preguntas, habla con el maestro o la escuela que usa esta página' + (c.owner ? ', o con ' + c.owner : '') + '.');
 
     page.replaceChildren(el('div.tool-page.info-page',
-      el('div', el('h1', 'ℹ️ Información'), el('p.lead', 'Little Learners Activities ' + c.version)),
+      el('div', el('h1', 'ℹ️ Información'), el('p.lead', 'Little Learners Activities ' + c.version), c.build ? el('p.small.muted.build-line', 'Versión instalada: ' + buildLabel(c.build)) : null),
       el('nav.info-toc', { 'aria-label': 'Secciones' }, SECTIONS.map(([id, label]) => el('a', { href: '#info-' + id, onclick: (e) => { e.preventDefault(); const t = $('#info-' + id); t.scrollIntoView({ behavior: 'smooth', block: 'start' }); t.focus({ preventScroll: true }); } }, label))),
 
       sec('acerca', 'Acerca de',
