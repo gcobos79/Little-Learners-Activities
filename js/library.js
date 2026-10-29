@@ -9,7 +9,8 @@ window.LL = window.LL || {};
   const S = LL.store;
   let currentFolder = null;
 
-  const isStudent = () => LL.app.state.mode === 'student';
+  // Guests (V127) see the library like a student: only playable activities, no teacher tools.
+  const isStudent = () => LL.app.state.mode === 'student' || LL.app.state.mode === 'guest';
 
   function setFolder(id) { currentFolder = id || null; render(); LL.app.pushRoute(); }
   function setFolderQuiet(id) { currentFolder = id || null; }
@@ -139,6 +140,7 @@ window.LL = window.LL || {};
       card.title = 'Arrastra la tarjeta a una carpeta para moverla';
       const ready = S.isReady(t);
       main.append(el('span.badge.' + (ready ? 'visible' : 'hidden'), ready ? '👀 Visible para estudiantes' : '🛠️ En preparación'));
+      if (t.config && t.config.sharedGuest) main.append(el('span.badge.shared', { title: ready ? 'Los invitados pueden hacer esta actividad' : 'Compartida con invitados, pero no aparece hasta que esté visible' }, '👋 Invitados' + (ready ? '' : ' (no visible)')));
       card.append(el('div.card-tools',
         el('button.btn.sm.soft', { type: 'button', onclick: () => LL.editor.open(t.id) }, '✏️ Editar'),
         el('button.icon-btn', { type: 'button', 'aria-label': 'Ver resultados de ' + t.name, title: 'Ver resultados', onclick: () => LL.results.open(t) }, '📊'),

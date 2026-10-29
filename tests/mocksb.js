@@ -53,7 +53,33 @@ module.exports = function makeMock() {
     if (p === '/auth/v1/user') { const u = who(req); return u ? json(route, { id: u.id, email: u.email }) : json(route, { msg: 'no' }, 401); }
     if (p === '/auth/v1/logout') return json(route, null, 204);
     const u = who(req);
-    if (!u) return json(route, { message: 'JWT required' }, 401);
+    // Guest mode (V127): without a session, only the guest catalog and the shared activities' files.
+    const sharedQuizzes = () => db.quizzes.filter((q) => q.visible && q.shared_guest && !q.deleted_at);
+    if (!u && p === '/rest/v1/rpc/guest_catalog') {
+      api.guestCalls = (api.guestCalls || 0) + 1;
+      const qs = sharedQuizzes();
+      const live = db.folders.filter((f) => !f.deleted_at);
+      const trail = new Map();
+      const addUp = (id) => { const f = live.find((x) => x.id === id); if (f && !trail.has(f.id)) { trail.set(f.id, f); addUp(f.parent_id); } };
+      qs.forEach((q) => q.folder_id && addUp(q.folder_id));
+      return json(route, {
+        folders: [...trail.values()].map((f) => ({ id: f.id, parent_id: f.parent_id || null, name: f.name, color: f.color })),
+        quizzes: qs.map((q) => ({ id: q.id, folder_id: q.folder_id, name: q.name, language: q.language, question_order: q.question_order, answer_order: q.answer_order, visible: true, cover_path: q.cover_path, voice_gender: q.voice_gender, activity_type: q.activity_type, settings: q.settings, instructions: q.instructions, image_speaks: q.image_speaks, created_at: q.created_at, updated_at: q.updated_at,
+          quiz_questions: db.quiz_questions.filter((x) => x.quiz_id === q.id).map((x) => ({ id: x.id, position: x.position, prompt: x.prompt, emoji: x.emoji, image_path: x.image_path, audio_mode: x.audio_mode, audio_path: x.audio_path, read_text_enabled: x.read_text_enabled, read_text: x.read_text,
+            quiz_options: db.quiz_options.filter((o) => o.quiz_id === q.id && o.question_id === x.id).map((o) => ({ id: o.id, position: o.position, text: o.text, image_path: o.image_path, audio_mode: o.audio_mode, audio_path: o.audio_path, read_text_enabled: o.read_text_enabled, read_text: o.read_text, is_correct: o.is_correct })) })) })),
+      });
+    }
+    let gm;
+    if (!u && m === 'GET' && (gm = /^\/storage\/v1\/object\/authenticated\/quiz-media\/(.+)$/.exec(p))) {
+      const name = decodeURIComponent(gm[1]);
+      const ok = sharedQuizzes().some((q) => q.cover_path === name
+        || db.quiz_questions.some((x) => x.quiz_id === q.id && (x.image_path === name || x.audio_path === name))
+        || db.quiz_options.some((o) => o.quiz_id === q.id && (o.image_path === name || o.audio_path === name)));
+      if (!ok || !files.has('quiz-media/' + name)) return json(route, { message: 'not found' }, 404);
+      api.guestFiles = (api.guestFiles || 0) + 1;
+      return route.fulfill({ status: 200, headers: { ...cors, 'Content-Type': 'image/png' }, body: files.get('quiz-media/' + name) });
+    }
+    if (!u) { api.anonDenied = (api.anonDenied || 0) + 1; return json(route, { message: 'JWT required' }, 401); }
 
     if (p === '/rest/v1/rpc/save_quiz') {
       const { p_quiz, p_questions, p_options } = JSON.parse(req.postData());

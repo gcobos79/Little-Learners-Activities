@@ -384,22 +384,34 @@ window.LL = window.LL || {};
     setTimeout(() => confetti(null, innerHeight * 0.35, 40), 150);
     const who = LL.app.state.student;
     // Save the result (one per student, quiz and month; the newest replaces older ones).
-    if (!opts.preview && who && quiz.id && attempt && LL.results) {
+    if (!opts.preview && who && quiz.id && attempt && LL.results && LL.app.state.mode !== 'guest') {
       LL.results.record({ quiz, student: who, answers: attempt.answers, total: isSort() ? sortTotal : questions.length, startedAt: attempt.startedAt, finishedAt: new Date().toISOString() });
     }
     const showBoard = !opts.preview && who && quiz.id && LL.results;
     const board = showBoard ? el('div.board', { 'aria-live': 'polite' }, el('p.muted', 'Cargando los resultados de hoy…')) : null;
+    // Guests (and the teacher's preview) have no class board: they see their own score, saved nowhere.
+    const guest = LL.app.state.mode === 'guest';
+    const total = isSort() ? sortTotal : questions.length;
+    const answers = (attempt && attempt.answers) || [];
+    const points = Math.round(answers.reduce((s, a) => s + (typeof a.points === 'number' ? a.points : a.correct ? 1 : 0), 0) * 100) / 100;
+    const scoreBox = !showBoard && total ? el('div.my-score', { role: 'status' },
+      el('span.my-score-label', 'Tu puntaje'),
+      el('span.my-score-value', LL.results.fmtScore(points) + ' / ' + total)) : null;
     body().replaceChildren(el('div.finish' + (showBoard ? '.with-board' : ''),
       el('div.stars', '⭐🌟⭐'),
       el('h1', who ? `¡Muy bien, ${who.name}!` : '¡Muy bien!'),
       el('p.lead', 'Terminaste «' + quiz.name + '».'),
+      scoreBox,
       board,
       el('div.finish-buttons',
         el('button.btn.ghost.big', { type: 'button', onclick: () => { index = 0; newAttempt(); render(); } }, '🔁 Otra vez'),
         // Students: «Salir» goes back to «¿Quién eres?» so the next child can pick their animal.
+        // Guests: back to the folder they were browsing.
         opts.preview
           ? el('button.btn.primary.big', { type: 'button', onclick: () => close() }, 'Cerrar vista previa')
-          : el('button.btn.primary.big', { type: 'button', onclick: () => LL.app.goHome() }, '👋 Salir')),
+          : guest
+            ? el('button.btn.primary.big', { type: 'button', onclick: () => close() }, '👋 Salir')
+            : el('button.btn.primary.big', { type: 'button', onclick: () => LL.app.goHome() }, '👋 Salir')),
     ));
     if (showBoard) fillBoard(board, quiz, who);
   }

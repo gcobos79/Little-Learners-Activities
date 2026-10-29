@@ -1022,6 +1022,30 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 .tp-mode-desc { font-size: 13px; color: var(--muted); }
 .answer-list li.part { background: var(--warn-soft); }
 
+/* =====================================================================
+ * Guest mode (V127): «Entrar como invitado» on the sign-in page, the guest chip, and the score a
+ * guest sees at the end (nothing is saved).
+ * ===================================================================== */
+.login-guest {
+  width: min(460px, 100%); display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 6px 14px; text-align: left;
+  border: 3px dashed #F4B740; background: linear-gradient(135deg, #FFF8E1, #FFFDF5); animation: popIn .45s .1s ease-out both;
+}
+.login-guest h2 { font-size: 20px; }
+.login-guest-icon { font-size: 40px; animation: wave 2.4s ease-in-out infinite; transform-origin: 70% 80%; }
+.login-guest .guest-btn { grid-column: 1 / -1; background: #F59E0B; border-color: #D97706; box-shadow: 0 3px 0 #B45309; }
+.login-guest .guest-btn:hover { background: #EA8D06; }
+.guest-chip .animal { font-size: 26px; }
+.badge.shared { background: #FFF1D6; color: #8A4B00; }
+.my-score { display: grid; justify-items: center; gap: 2px; padding: 10px 28px; border-radius: 22px; background: #FFF4CC; border: 3px solid #F4B740; box-shadow: 0 4px 0 #E6A21A; animation: popIn .5s .2s cubic-bezier(.3, 1.6, .5, 1) both; }
+.my-score-label { font-weight: 800; color: var(--muted); }
+.my-score-value { font-size: clamp(34px, 6vh, 56px); font-weight: 900; font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) { .login-guest, .login-guest-icon, .my-score { animation: none !important; } }
+
+/* Sign-in and «Guest / Invitado» side by side when there is room (both visible without scrolling). */
+.login-row { width: 100%; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 18px; }
+.login-row .login-guest { width: min(380px, 100%); grid-template-columns: auto 1fr; }
+@media (min-width: 900px) { .login-row .login-guest { align-self: center; } }
+
 </style>
 </head>
 <body class="mode-home">
@@ -1106,7 +1130,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 window.LL = window.LL || {};
 LL.config = {
   // Set by tools/stamp_version.py on every publish.
-  build: '20261029033835',
+  build: '20261029042611',
   version: 'V126',
   // Who runs this site, e.g. 'Sra. García · Escuela Primaria Lincoln'
   owner: 'Geovanny Cobos',
@@ -1219,11 +1243,18 @@ window.LL = window.LL || {};
   const byName = (a, b) => String(a.name).localeCompare(String(b.name), 'es', { sensitivity: 'base' });
 
   /* ---------- Library (quizzes) ---------- */
+  /* Guest mode (V127): the shared activities live only in memory while the guest is here. The device's
+   * own activities, folders and class list are neither shown nor changed. */
+  let guest = null;
+  function setGuest(data) { guest = data ? { library: data.library || [], folders: data.folders || [] } : null; }
+  const isGuest = () => !!guest;
+
   function readLibrary() {
+    if (guest) return guest.library;
     const a = readJSON(KEYS.library, []);
     return Array.isArray(a) ? a : [];
   }
-  function writeLibrary(a, opts) { return writeJSON(KEYS.library, a, opts); }
+  function writeLibrary(a, opts) { if (guest) return true; return writeJSON(KEYS.library, a, opts); }
 
   /** Activity types: 'quiz' (questions with answers) and 'sort' («Clasificación rápida»: put each
    *  card on the conveyor belt into its group). A sort activity is stored in the same shape as a quiz
@@ -1305,10 +1336,11 @@ window.LL = window.LL || {};
 
   /* ---------- Folders ---------- */
   function folders() {
+    if (guest) return guest.folders;
     const a = readJSON(KEYS.folders, []);
     return Array.isArray(a) ? a : [];
   }
-  function writeFolders(a) { return writeJSON(KEYS.folders, a); }
+  function writeFolders(a) { if (guest) return true; return writeJSON(KEYS.folders, a); }
   function getFolder(id) { return folders().find((f) => f.id === id) || null; }
 
   function saveFolder(folder) {
@@ -1409,12 +1441,13 @@ window.LL = window.LL || {};
 
   /* ---------- Roster ---------- */
   function roster() {
+    if (guest) return []; // guests never see the class list
     const r = readJSON(KEYS.roster, null);
     if (Array.isArray(r)) return r;
     // Signed in: the real class list comes from the database, never the sample names.
     return LL.cloud && LL.cloud.signedIn() ? [] : clone(DEFAULT_ROSTER);
   }
-  function saveRoster(r) { return writeJSON(KEYS.roster, r); }
+  function saveRoster(r) { if (guest) return true; return writeJSON(KEYS.roster, r); }
   /** A copy of the class list with `student` put where its name fits alphabetically (before the first
    *  name that comes after it), so a new child never jumps to the top of the list. */
   function placeByName(list, student) {
@@ -1644,7 +1677,7 @@ window.LL = window.LL || {};
     KEYS, FOLDER_COLORS, folderColor, ANIMALS, clone, uid, byName,
     readLibrary, quizzes, getQuiz, isReady, saveQuiz, duplicateQuiz, deleteQuiz, moveQuiz,
     folders, getFolder, saveFolder, deleteFolder, moveFolder, folderNameTaken, mergeDuplicateFolders, folderTrail, folderPathLabel, folderHas,
-    roster, saveRoster, placeByName, sonidos, saveSonidos, pinHash, savePinHash, voice, saveVoice, settingsAt, quietly, readJSON, writeJSON, writeLibrary, writeFolders, todayChicago,
+    roster, saveRoster, placeByName, setGuest, isGuest, sonidos, saveSonidos, pinHash, savePinHash, voice, saveVoice, settingsAt, quietly, readJSON, writeJSON, writeLibrary, writeFolders, todayChicago,
     readDraft, writeDraft, clearDraft,
     exportBackup, importBackup, validateBackup, storageUsed, deleteAllData, freeSpace,
     newOption, newQuestion, newQuiz, questionProblem, isActivity,
@@ -2171,7 +2204,9 @@ window.LL = window.LL || {};
 
   /* ---------- Storage & functions ---------- */
   async function download(bucket, path) {
-    const res = await call('/storage/v1/object/authenticated/' + bucket + '/' + path.split('/').map(encodeURIComponent).join('/'), { token: await token(), raw: true });
+    // Without a session (guest mode) the public key alone is used: the database only lets it read the
+    // pictures and audio of activities shared with guests.
+    const res = await call('/storage/v1/object/authenticated/' + bucket + '/' + path.split('/').map(encodeURIComponent).join('/'), { token: readSession() ? await token() : undefined, raw: true });
     return res.blob();
   }
   async function listFiles(bucket, prefix) {
@@ -2187,6 +2222,10 @@ window.LL = window.LL || {};
   async function rpc(fn, args) {
     return call('/rest/v1/rpc/' + fn, { method: 'POST', token: await token(), body: args });
   }
+  /** A database function anyone may call without an account (only guest_catalog). */
+  async function rpcPublic(fn, args) {
+    return call('/rest/v1/rpc/' + fn, { method: 'POST', body: args || {} });
+  }
   async function insert(table, rows, select) {
     return call('/rest/v1/' + table + (select ? '?select=' + select : ''), { method: 'POST', token: await token(), body: rows, headers: { Prefer: select ? 'return=representation' : 'return=minimal' } });
   }
@@ -2194,7 +2233,7 @@ window.LL = window.LL || {};
     return call('/functions/v1/' + name, { method: 'POST', token: await token(), body });
   }
 
-  LL.cloud = { enabled, signIn, signOut, refresh, token, sendPasswordReset, setPassword, handleRedirect, user, signedIn, select, upsert, patch, remove, download, uploadFile, listFiles, removeFiles, invoke, rpc, insert, CloudError };
+  LL.cloud = { enabled, signIn, signOut, refresh, token, sendPasswordReset, setPassword, handleRedirect, user, signedIn, select, upsert, patch, remove, download, uploadFile, listFiles, removeFiles, invoke, rpc, rpcPublic, insert, CloudError };
 })();
 
 </script>
@@ -2375,14 +2414,14 @@ window.LL = window.LL || {};
 
   /** Called by the store after every local change. */
   function schedule(delay = 1500) {
-    if (!LL.cloud.signedIn()) return;
+    if (!LL.cloud.signedIn() || S.isGuest()) return;
     clearTimeout(timer);
     timer = setTimeout(() => { timer = null; run(); }, delay);
     emit();
   }
 
   function run() {
-    if (!LL.cloud.signedIn()) return Promise.resolve(false);
+    if (!LL.cloud.signedIn() || S.isGuest()) return Promise.resolve(false);
     if (running) { again = true; return running; }
     running = (async () => {
       const st = state();
@@ -2440,6 +2479,7 @@ window.LL = window.LL || {};
       config: { lang: r.language, voiceGender: r.voice_gender === 'male' ? 'male' : 'female', mode: 'practice', questionOrder: r.question_order, answerOrder: r.answer_order, visibility: r.visible ? 'visible' : 'hidden', coverImage: ref(r.cover_path), questions,
         instructions: r.instructions || (r.settings && r.settings.instruction) || '',
         imageSpeaks: r.image_speaks !== false,
+        sharedGuest: !!r.shared_guest,
         ...(r.activity_type === 'sort' ? { sort: S.sortSettings({ sort: r.settings || {} }) } : {}),
         ...(r.activity_type === 'typing' ? { typing: S.typingSettings({ typing: r.settings || {} }) } : {}) },
     };
@@ -2479,7 +2519,7 @@ window.LL = window.LL || {};
     return {
       p_quiz: { id: entry.id, folder_id: entry.folderId && folderIds.has(entry.folderId) ? entry.folderId : null, name: String(entry.name || '').slice(0, 200), language: c.lang, voice_gender: c.voiceGender === 'male' ? 'male' : 'female', mode: 'practice', question_order: c.questionOrder, answer_order: c.answerOrder, visible: c.visibility === 'visible', cover_path: path(c.coverImage), created_at: entry.createdAt || entry.updatedAt, updated_at: entry.updatedAt,
         activity_type: S.typeOf(entry.type), settings: entry.type === 'sort' ? S.sortSettings(c) : entry.type === 'typing' ? S.typingSettings(c) : {},
-        instructions: S.instructionsOf(c).slice(0, 300), image_speaks: S.imageSpeaksOf(c) },
+        instructions: S.instructionsOf(c).slice(0, 300), image_speaks: S.imageSpeaksOf(c), shared_guest: !!c.sharedGuest },
       p_questions: questions,
       p_options: options,
     };
@@ -3969,22 +4009,34 @@ window.LL = window.LL || {};
     setTimeout(() => confetti(null, innerHeight * 0.35, 40), 150);
     const who = LL.app.state.student;
     // Save the result (one per student, quiz and month; the newest replaces older ones).
-    if (!opts.preview && who && quiz.id && attempt && LL.results) {
+    if (!opts.preview && who && quiz.id && attempt && LL.results && LL.app.state.mode !== 'guest') {
       LL.results.record({ quiz, student: who, answers: attempt.answers, total: isSort() ? sortTotal : questions.length, startedAt: attempt.startedAt, finishedAt: new Date().toISOString() });
     }
     const showBoard = !opts.preview && who && quiz.id && LL.results;
     const board = showBoard ? el('div.board', { 'aria-live': 'polite' }, el('p.muted', 'Cargando los resultados de hoy…')) : null;
+    // Guests (and the teacher's preview) have no class board: they see their own score, saved nowhere.
+    const guest = LL.app.state.mode === 'guest';
+    const total = isSort() ? sortTotal : questions.length;
+    const answers = (attempt && attempt.answers) || [];
+    const points = Math.round(answers.reduce((s, a) => s + (typeof a.points === 'number' ? a.points : a.correct ? 1 : 0), 0) * 100) / 100;
+    const scoreBox = !showBoard && total ? el('div.my-score', { role: 'status' },
+      el('span.my-score-label', 'Tu puntaje'),
+      el('span.my-score-value', LL.results.fmtScore(points) + ' / ' + total)) : null;
     body().replaceChildren(el('div.finish' + (showBoard ? '.with-board' : ''),
       el('div.stars', '⭐🌟⭐'),
       el('h1', who ? `¡Muy bien, ${who.name}!` : '¡Muy bien!'),
       el('p.lead', 'Terminaste «' + quiz.name + '».'),
+      scoreBox,
       board,
       el('div.finish-buttons',
         el('button.btn.ghost.big', { type: 'button', onclick: () => { index = 0; newAttempt(); render(); } }, '🔁 Otra vez'),
         // Students: «Salir» goes back to «¿Quién eres?» so the next child can pick their animal.
+        // Guests: back to the folder they were browsing.
         opts.preview
           ? el('button.btn.primary.big', { type: 'button', onclick: () => close() }, 'Cerrar vista previa')
-          : el('button.btn.primary.big', { type: 'button', onclick: () => LL.app.goHome() }, '👋 Salir')),
+          : guest
+            ? el('button.btn.primary.big', { type: 'button', onclick: () => close() }, '👋 Salir')
+            : el('button.btn.primary.big', { type: 'button', onclick: () => LL.app.goHome() }, '👋 Salir')),
     ));
     if (showBoard) fillBoard(board, quiz, who);
   }
@@ -4120,6 +4172,7 @@ window.LL = window.LL || {};
 
   /** Called by the player when a child finishes a quiz. */
   function record({ quiz, student, answers, total, startedAt, finishedAt }) {
+    if (S.isGuest()) return; // guests: nothing is ever saved
     // «Pantalla de Tablet» answers carry points (1, 0.75, 0.5, 0.25 or 0); the rest count 1 if right.
     const score = Math.round(answers.reduce((s, a) => s + (typeof a.points === 'number' ? a.points : a.correct ? 1 : 0), 0) * 100) / 100;
     const r = {
@@ -4381,7 +4434,8 @@ window.LL = window.LL || {};
   const S = LL.store;
   let currentFolder = null;
 
-  const isStudent = () => LL.app.state.mode === 'student';
+  // Guests (V127) see the library like a student: only playable activities, no teacher tools.
+  const isStudent = () => LL.app.state.mode === 'student' || LL.app.state.mode === 'guest';
 
   function setFolder(id) { currentFolder = id || null; render(); LL.app.pushRoute(); }
   function setFolderQuiet(id) { currentFolder = id || null; }
@@ -4511,6 +4565,7 @@ window.LL = window.LL || {};
       card.title = 'Arrastra la tarjeta a una carpeta para moverla';
       const ready = S.isReady(t);
       main.append(el('span.badge.' + (ready ? 'visible' : 'hidden'), ready ? '👀 Visible para estudiantes' : '🛠️ En preparación'));
+      if (t.config && t.config.sharedGuest) main.append(el('span.badge.shared', { title: ready ? 'Los invitados pueden hacer esta actividad' : 'Compartida con invitados, pero no aparece hasta que esté visible' }, '👋 Invitados' + (ready ? '' : ' (no visible)')));
       card.append(el('div.card-tools',
         el('button.btn.sm.soft', { type: 'button', onclick: () => LL.editor.open(t.id) }, '✏️ Editar'),
         el('button.icon-btn', { type: 'button', 'aria-label': 'Ver resultados de ' + t.name, title: 'Ver resultados', onclick: () => LL.results.open(t) }, '📊'),
@@ -5195,6 +5250,11 @@ window.LL = window.LL || {};
     const vis = el('input', { type: 'checkbox', checked: c.visibility === 'visible' });
     vis.addEventListener('change', () => { c.visibility = vis.checked ? 'visible' : 'hidden'; changed(); });
     p.append(el('div.field', el('label.switch', vis, 'Visible para estudiantes'), el('span.hint', 'Déjalo apagado mientras lo preparas. Los estudiantes solo ven las actividades visibles.')));
+    // V127: guests (people without an account) can try only the activities shared with them.
+    const share = el('input', { type: 'checkbox', checked: !!c.sharedGuest });
+    share.addEventListener('change', () => { c.sharedGuest = share.checked; changed(); });
+    p.append(el('div.field.share-guest', el('label.switch', share, '👋 Compartir con invitados'),
+      el('span.hint', 'Quien entra como invitado (sin cuenta) puede hacer esta actividad. No ve estudiantes ni resultados, y no se guarda nada. Solo aparece si también está visible.')));
     if (isSort()) p.append(el('p.type-tag', '🧺 Clasificación rápida'));
     if (isTyping()) p.append(...LL.typingEditor.settingsFields(quiz, { changed }));
 
@@ -5977,6 +6037,9 @@ window.LL = window.LL || {};
     page.replaceChildren(el('div.tool-page',
       el('div', el('h1', '⚙️ Ajustes'), el('p.lead', signed ? 'Tu cuenta, el PIN, la voz y los respaldos.' : 'El PIN, los respaldos y los datos de este dispositivo.')),
       accountPanel(),
+      LL.cloud.enabled() ? box(el('h2', '👋 Ver como invitado'),
+        el('p', 'Navega exactamente como lo hace un invitado (sin cuenta): solo verás las actividades marcadas «Compartir con invitados» y visibles. Nada se guarda. Para volver, toca «Volver al maestro» arriba.'),
+        el('button.btn.soft', { type: 'button', style: { justifySelf: 'start' }, onclick: (e) => LL.auth.enterGuest(e.currentTarget, { preview: true }) }, '👋 Ver como invitado')) : null,
       pinPanel(),
       voicePanel(),
       box(el('h2', '📥 Descargar respaldo'),
@@ -6215,7 +6278,40 @@ window.LL = window.LL || {};
   const setLocalMode = (on) => { try { if (on) localStorage.setItem(LOCAL_MODE, '1'); else localStorage.removeItem(LOCAL_MODE); } catch { /* ignore */ } };
 
   /** Should the app ask the teacher to sign in before anything else? */
-  function needsLogin() { return LL.cloud.enabled() && !LL.cloud.signedIn() && !localMode(); }
+  function needsLogin() { return LL.cloud.enabled() && !LL.cloud.signedIn() && !localMode() && !S.isGuest(); }
+
+  /* ---------- Guest mode (V127) ----------
+   * Anyone can try the activities the teacher marked «Compartir con invitados»: only activities and their
+   * folders, no students, no teacher tools, and nothing is saved (not in the database, not here).
+   * The guest stays a guest while this tab is open (sessionStorage), also after a reload. */
+  const GUEST = 'll-guest';
+  const guestFlag = (on) => { try { if (on) sessionStorage.setItem(GUEST, '1'); else sessionStorage.removeItem(GUEST); } catch { /* ignore */ } };
+  const guestRemembered = () => { try { return sessionStorage.getItem(GUEST) === '1'; } catch { return false; } };
+
+  /** preview: the teacher's «Ver como invitado» (Ajustes); «Volver al maestro» returns to the teacher area. */
+  async function enterGuest(btn, opts = {}) {
+    if (btn) { btn.disabled = true; btn.dataset.label = btn.textContent; btn.textContent = 'Entrando…'; }
+    try {
+      const data = await LL.cloud.rpcPublic('guest_catalog');
+      const library = ((data && data.quizzes) || []).map((r) => LL.sync._convert.rowToEntry(r));
+      const folders = ((data && data.folders) || []).map((f) => ({ id: f.id, name: f.name, parentId: f.parent_id || null, color: f.color }));
+      S.setGuest({ library, folders });
+      guestFlag(!opts.preview);
+      LL.app.enterGuest(!!opts.preview);
+      return true;
+    } catch (e) {
+      guestFlag(false);
+      toast('No se pudo entrar como invitado: ' + friendly(e), 'error');
+      if (!S.isGuest() && !opts.preview) LL.app.go('login');
+      return false;
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = btn.dataset.label || btn.textContent; }
+    }
+  }
+  function exitGuest() {
+    S.setGuest(null);
+    guestFlag(false);
+  }
 
   function friendly(e) {
     const m = String(e && e.message || e || '');
@@ -6252,6 +6348,7 @@ window.LL = window.LL || {};
       } finally { btn.disabled = false; btn.textContent = 'Entrar'; }
     });
     page.replaceChildren(el('div.login-wrap',
+      el('div.login-row',
       el('div.login-card.panel',
         el('div.login-logo', { 'aria-hidden': 'true' }, '✨'),
         el('h1', 'Little Learners'),
@@ -6260,6 +6357,12 @@ window.LL = window.LL || {};
         form,
         el('button.link-btn', { type: 'button', onclick: () => resetDialog(email.value) }, '¿Olvidaste tu contraseña?'),
         el('p.small.muted', 'Las cuentas son por invitación. Si necesitas una, pídela a quien administra esta página.')),
+      el('div.login-guest.panel',
+        el('div.login-guest-icon', { 'aria-hidden': 'true' }, '👋'),
+        el('div',
+          el('h2', 'Guest / Invitado'),
+          el('p.small.muted', '¿No tienes cuenta? Prueba las actividades compartidas. No se guarda nada.')),
+        el('button.btn.primary.big.guest-btn', { type: 'button', onclick: (e) => enterGuest(e.currentTarget) }, 'Entrar como invitado'))),
       el('div.login-alt',
         el('button.btn.ghost', { type: 'button', onclick: () => { setLocalMode(true); LL.app.go('students'); } }, 'Usar sin cuenta, solo en este dispositivo'),
         el('p.small.muted', 'Sin cuenta, las actividades se guardan solo en este navegador.')),
@@ -6436,7 +6539,7 @@ window.LL = window.LL || {};
     toast('PIN guardado' + (LL.cloud.signedIn() ? '. Se usará en todos tus dispositivos.' : '.'), 'success');
   }
 
-  LL.auth = { needsLogin, localMode, setLocalMode, renderLogin, renderSetPassword, afterSignIn, signOut, checkPin, setPinFlow, friendly };
+  LL.auth = { needsLogin, localMode, setLocalMode, enterGuest, exitGuest, guestRemembered, renderLogin, renderSetPassword, afterSignIn, signOut, checkPin, setPinFlow, friendly };
 })();
 
 </script>
@@ -6463,9 +6566,12 @@ window.LL = window.LL || {};
     if (screen === 'backup' && state.screen !== 'backup' && !(state.screen === 'info' && infoReturn === 'backup')) {
       if (!(await LL.auth.checkPin({ title: '🔒 PIN para entrar a Ajustes', notice: true }))) return false;
     }
+    // Guests only see activities: any other screen (sign-in included) ends guest mode.
+    if (state.mode === 'guest' && !['library', 'info'].includes(screen)) { const wasPreview = state.guestPreview; leaveGuest(); if (wasPreview && screen === 'login') screen = 'library'; }
     state.screen = screen;
     for (const s of SCREENS) $('#screen-' + s).hidden = s !== screen;
-    document.body.classList.toggle('mode-student', state.mode === 'student');
+    document.body.classList.toggle('mode-student', state.mode === 'student' || state.mode === 'guest');
+    document.body.classList.toggle('mode-guest', state.mode === 'guest');
     document.body.classList.toggle('mode-teacher', state.mode === 'teacher');
     document.body.classList.toggle('mode-home', !state.mode);
     document.body.classList.toggle('mode-login', screen === 'login' || screen === 'set-password');
@@ -6487,7 +6593,11 @@ window.LL = window.LL || {};
   function renderAppbar() {
     const center = $('#appbarCenter'), right = $('#appbarRight');
     center.replaceChildren(); right.replaceChildren();
-    if (state.mode === 'student' && state.student) {
+    if (state.mode === 'guest') {
+      center.append(el('div.student-chip.guest-chip', el('span.animal', { 'aria-hidden': 'true' }, '👋'), el('span', state.guestPreview ? 'Vista de invitado' : 'Invitado')));
+      if (state.guestPreview) right.append(el('button.btn.primary', { type: 'button', title: 'Volver al área del maestro', onclick: () => { leaveGuest(); go('library'); } }, '⬅️ Volver al maestro'));
+      else right.append(el('button.btn.ghost', { type: 'button', title: 'Salir del modo invitado', onclick: () => go('login') }, 'Salir ↩'));
+    } else if (state.mode === 'student' && state.student) {
       center.append(el('div.student-chip', LL.teacher.avatar(state.student), el('span', state.student.name)));
       right.append(el('button.icon-btn.big', { type: 'button', 'aria-label': 'Volver a ¿Quién eres?', title: 'Volver a ¿Quién eres?', onclick: goHome }, '🏠'));
     } else if (state.mode === 'teacher') {
@@ -6546,7 +6656,26 @@ window.LL = window.LL || {};
     go('library');
   }
 
+  /* ---------- Guest mode (V127) ---------- */
+  /** preview: a signed-in teacher looking at the guest view (Ajustes → «Ver como invitado»). */
+  function enterGuest(preview) {
+    state.guestPreview = !!preview;
+    state.mode = 'guest'; state.student = null;
+    if (!preview) state.teacherUnlocked = false;
+    LL.library.resetToRoot();
+    go('library');
+  }
+  function leaveGuest() {
+    if (LL.player.isOpen()) LL.player.close();
+    // The teacher who was previewing goes back to the teacher area (no PIN again).
+    state.mode = state.guestPreview && state.teacherUnlocked ? 'teacher' : null; state.student = null;
+    state.guestPreview = false;
+    LL.auth.exitGuest();
+    LL.library.resetToRoot();
+  }
+
   async function goHome() {
+    if (state.mode === 'guest') { if (state.guestPreview) { leaveGuest(); go('library'); } else go('login'); return; }
     if (state.screen === 'editor' && !(await LL.editor.canLeave())) return;
     if (LL.player.isOpen()) LL.player.close();
     state.mode = null; state.student = null; state.teacherUnlocked = false; state.screen = 'editor-left';
@@ -6611,7 +6740,7 @@ window.LL = window.LL || {};
     return r;
   }
   function hashFor(r) {
-    const base = r.mode === 'teacher' ? '#/maestro' : r.mode === 'student' ? '#/estudiante' : '#';
+    const base = r.mode === 'teacher' ? '#/maestro' : r.mode === 'student' ? '#/estudiante' : r.mode === 'guest' ? '#/invitado' : '#';
     const tail = {
       login: '/entrar', students: '/', library: r.folder ? '/carpeta/' + r.folder : '/actividades', editor: '/editar/' + (r.quiz || 'nuevo'),
       results: '/resultados/' + (r.quiz || '') + '/' + (r.month || ''), 'students-admin': '/estudiantes', backup: '/ajustes',
@@ -6660,6 +6789,10 @@ window.LL = window.LL || {};
 
       // Safety rules for shared tablets.
       const toHome = () => { state.mode = null; state.student = null; state.teacherUnlocked = false; LL.library.resetToRoot(); return go(LL.auth.needsLogin() ? 'login' : 'students'); };
+      // Guests: Back / Forward move between their folders; leaving the guest pages ends guest mode,
+      // and a guest page can't be re-entered from history (it needs the button again).
+      if (state.mode === 'guest' && target.mode !== 'guest') { const wasPreview = state.guestPreview; leaveGuest(); await go(wasPreview ? 'library' : 'login'); restoring = false; replaceRoute(); return; }
+      if (target.mode === 'guest' && state.mode !== 'guest') { await toHome(); restoring = false; replaceRoute(); return; }
       if (target.mode === 'teacher' && !state.teacherUnlocked) { await toHome(); restoring = false; replaceRoute(); return; }
       if (target.mode === 'student' && (!state.student || studentKey(state.student) !== target.student)) { await toHome(); restoring = false; replaceRoute(); return; }
       if (!target.mode && state.mode) { state.mode = null; state.student = null; state.teacherUnlocked = false; LL.library.resetToRoot(); }
@@ -6692,7 +6825,7 @@ window.LL = window.LL || {};
   function logoHome() {
     if (state.screen === 'login' || state.screen === 'set-password') return;
     if (LL.player.isOpen()) LL.player.close();
-    if (state.mode === 'teacher') { LL.library.setFolderQuiet(null); go('library'); return; }
+    if (state.mode === 'teacher' || state.mode === 'guest') { LL.library.setFolderQuiet(null); go('library'); return; }
     goHome();
   }
 
@@ -6704,6 +6837,8 @@ window.LL = window.LL || {};
     if (r && r.error) { state.loginMessage = null; go('login'); toast('El enlace no es válido o ya caducó. Pide uno nuevo.', 'error'); return; }
     if (r && (r.type === 'invite' || r.type === 'recovery')) { state.passwordKind = r.type; go('set-password'); return; }
     if (r) { LL.auth.afterSignIn(); return; }
+    // A guest who reloads the page (or the app updated itself) stays a guest in this tab.
+    if (!LL.cloud.signedIn() && LL.auth.guestRemembered()) { if (await LL.auth.enterGuest()) { checkUpdate(); return; } }
     if (LL.auth.needsLogin()) { go('login'); return; }
     go('students');
     if (LL.cloud.signedIn()) LL.sync.run();
@@ -6749,7 +6884,7 @@ window.LL = window.LL || {};
     if (!LL.player.isOpen() && state.screen !== 'editor' && !state.mode) go('login');
   });
 
-  LL.app = { state, go, goHome, openInfo, pushRoute, replaceRoute, checkUpdate };
+  LL.app = { state, go, goHome, openInfo, pushRoute, replaceRoute, checkUpdate, enterGuest };
 })();
 
 </script>

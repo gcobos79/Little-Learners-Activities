@@ -1,6 +1,14 @@
 # Changelog
 
 ## V126 — October 2026 (Clasificación rápida)
+- Guest mode: on the sign-in page, «Guest / Invitado» → «Entrar como invitado». Guests see only the
+  activities marked «👋 Compartir con invitados» (new switch in each activity's Ajustes; it also has to
+  be visible) and the folders on the way to them; they can play them (pictures included), see «Tu
+  puntaje» at the end with «Otra vez» / «Salir» (back to the folder they were in). No students, no
+  teacher tools, no class board, nothing saved (not in the database, not on the device; the device's own
+  activities stay untouched). Ajustes → «👋 Ver como invitado» lets the teacher check the guest view and
+  come back with «Volver al maestro». Database: `quizzes.shared_guest`, read-only `guest_catalog()`
+  and a storage policy that lets guests read only the files of shared activities. Test: tests/guesttest.js.
 - Students: a new student takes its alphabetical place in the list (before it got the next number and,
   since the others had none, jumped to the top). With a hand-made order (⬆️) it goes before the first
   name that comes after it. «Zone Guest» was fixed in the database.

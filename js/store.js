@@ -91,11 +91,18 @@ window.LL = window.LL || {};
   const byName = (a, b) => String(a.name).localeCompare(String(b.name), 'es', { sensitivity: 'base' });
 
   /* ---------- Library (quizzes) ---------- */
+  /* Guest mode (V127): the shared activities live only in memory while the guest is here. The device's
+   * own activities, folders and class list are neither shown nor changed. */
+  let guest = null;
+  function setGuest(data) { guest = data ? { library: data.library || [], folders: data.folders || [] } : null; }
+  const isGuest = () => !!guest;
+
   function readLibrary() {
+    if (guest) return guest.library;
     const a = readJSON(KEYS.library, []);
     return Array.isArray(a) ? a : [];
   }
-  function writeLibrary(a, opts) { return writeJSON(KEYS.library, a, opts); }
+  function writeLibrary(a, opts) { if (guest) return true; return writeJSON(KEYS.library, a, opts); }
 
   /** Activity types: 'quiz' (questions with answers) and 'sort' («Clasificación rápida»: put each
    *  card on the conveyor belt into its group). A sort activity is stored in the same shape as a quiz
@@ -177,10 +184,11 @@ window.LL = window.LL || {};
 
   /* ---------- Folders ---------- */
   function folders() {
+    if (guest) return guest.folders;
     const a = readJSON(KEYS.folders, []);
     return Array.isArray(a) ? a : [];
   }
-  function writeFolders(a) { return writeJSON(KEYS.folders, a); }
+  function writeFolders(a) { if (guest) return true; return writeJSON(KEYS.folders, a); }
   function getFolder(id) { return folders().find((f) => f.id === id) || null; }
 
   function saveFolder(folder) {
@@ -281,12 +289,13 @@ window.LL = window.LL || {};
 
   /* ---------- Roster ---------- */
   function roster() {
+    if (guest) return []; // guests never see the class list
     const r = readJSON(KEYS.roster, null);
     if (Array.isArray(r)) return r;
     // Signed in: the real class list comes from the database, never the sample names.
     return LL.cloud && LL.cloud.signedIn() ? [] : clone(DEFAULT_ROSTER);
   }
-  function saveRoster(r) { return writeJSON(KEYS.roster, r); }
+  function saveRoster(r) { if (guest) return true; return writeJSON(KEYS.roster, r); }
   /** A copy of the class list with `student` put where its name fits alphabetically (before the first
    *  name that comes after it), so a new child never jumps to the top of the list. */
   function placeByName(list, student) {
@@ -516,7 +525,7 @@ window.LL = window.LL || {};
     KEYS, FOLDER_COLORS, folderColor, ANIMALS, clone, uid, byName,
     readLibrary, quizzes, getQuiz, isReady, saveQuiz, duplicateQuiz, deleteQuiz, moveQuiz,
     folders, getFolder, saveFolder, deleteFolder, moveFolder, folderNameTaken, mergeDuplicateFolders, folderTrail, folderPathLabel, folderHas,
-    roster, saveRoster, placeByName, sonidos, saveSonidos, pinHash, savePinHash, voice, saveVoice, settingsAt, quietly, readJSON, writeJSON, writeLibrary, writeFolders, todayChicago,
+    roster, saveRoster, placeByName, setGuest, isGuest, sonidos, saveSonidos, pinHash, savePinHash, voice, saveVoice, settingsAt, quietly, readJSON, writeJSON, writeLibrary, writeFolders, todayChicago,
     readDraft, writeDraft, clearDraft,
     exportBackup, importBackup, validateBackup, storageUsed, deleteAllData, freeSpace,
     newOption, newQuestion, newQuiz, questionProblem, isActivity,

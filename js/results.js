@@ -28,6 +28,7 @@ window.LL = window.LL || {};
 
   /** Called by the player when a child finishes a quiz. */
   function record({ quiz, student, answers, total, startedAt, finishedAt }) {
+    if (S.isGuest()) return; // guests: nothing is ever saved
     // «Pantalla de Tablet» answers carry points (1, 0.75, 0.5, 0.25 or 0); the rest count 1 if right.
     const score = Math.round(answers.reduce((s, a) => s + (typeof a.points === 'number' ? a.points : a.correct ? 1 : 0), 0) * 100) / 100;
     const r = {

@@ -131,7 +131,9 @@ window.LL = window.LL || {};
 
   /* ---------- Storage & functions ---------- */
   async function download(bucket, path) {
-    const res = await call('/storage/v1/object/authenticated/' + bucket + '/' + path.split('/').map(encodeURIComponent).join('/'), { token: await token(), raw: true });
+    // Without a session (guest mode) the public key alone is used: the database only lets it read the
+    // pictures and audio of activities shared with guests.
+    const res = await call('/storage/v1/object/authenticated/' + bucket + '/' + path.split('/').map(encodeURIComponent).join('/'), { token: readSession() ? await token() : undefined, raw: true });
     return res.blob();
   }
   async function listFiles(bucket, prefix) {
@@ -147,6 +149,10 @@ window.LL = window.LL || {};
   async function rpc(fn, args) {
     return call('/rest/v1/rpc/' + fn, { method: 'POST', token: await token(), body: args });
   }
+  /** A database function anyone may call without an account (only guest_catalog). */
+  async function rpcPublic(fn, args) {
+    return call('/rest/v1/rpc/' + fn, { method: 'POST', body: args || {} });
+  }
   async function insert(table, rows, select) {
     return call('/rest/v1/' + table + (select ? '?select=' + select : ''), { method: 'POST', token: await token(), body: rows, headers: { Prefer: select ? 'return=representation' : 'return=minimal' } });
   }
@@ -154,5 +160,5 @@ window.LL = window.LL || {};
     return call('/functions/v1/' + name, { method: 'POST', token: await token(), body });
   }
 
-  LL.cloud = { enabled, signIn, signOut, refresh, token, sendPasswordReset, setPassword, handleRedirect, user, signedIn, select, upsert, patch, remove, download, uploadFile, listFiles, removeFiles, invoke, rpc, insert, CloudError };
+  LL.cloud = { enabled, signIn, signOut, refresh, token, sendPasswordReset, setPassword, handleRedirect, user, signedIn, select, upsert, patch, remove, download, uploadFile, listFiles, removeFiles, invoke, rpc, rpcPublic, insert, CloudError };
 })();

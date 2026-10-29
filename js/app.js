@@ -19,9 +19,12 @@ window.LL = window.LL || {};
     if (screen === 'backup' && state.screen !== 'backup' && !(state.screen === 'info' && infoReturn === 'backup')) {
       if (!(await LL.auth.checkPin({ title: '🔒 PIN para entrar a Ajustes', notice: true }))) return false;
     }
+    // Guests only see activities: any other screen (sign-in included) ends guest mode.
+    if (state.mode === 'guest' && !['library', 'info'].includes(screen)) { const wasPreview = state.guestPreview; leaveGuest(); if (wasPreview && screen === 'login') screen = 'library'; }
     state.screen = screen;
     for (const s of SCREENS) $('#screen-' + s).hidden = s !== screen;
-    document.body.classList.toggle('mode-student', state.mode === 'student');
+    document.body.classList.toggle('mode-student', state.mode === 'student' || state.mode === 'guest');
+    document.body.classList.toggle('mode-guest', state.mode === 'guest');
     document.body.classList.toggle('mode-teacher', state.mode === 'teacher');
     document.body.classList.toggle('mode-home', !state.mode);
     document.body.classList.toggle('mode-login', screen === 'login' || screen === 'set-password');
@@ -43,7 +46,11 @@ window.LL = window.LL || {};
   function renderAppbar() {
     const center = $('#appbarCenter'), right = $('#appbarRight');
     center.replaceChildren(); right.replaceChildren();
-    if (state.mode === 'student' && state.student) {
+    if (state.mode === 'guest') {
+      center.append(el('div.student-chip.guest-chip', el('span.animal', { 'aria-hidden': 'true' }, '👋'), el('span', state.guestPreview ? 'Vista de invitado' : 'Invitado')));
+      if (state.guestPreview) right.append(el('button.btn.primary', { type: 'button', title: 'Volver al área del maestro', onclick: () => { leaveGuest(); go('library'); } }, '⬅️ Volver al maestro'));
+      else right.append(el('button.btn.ghost', { type: 'button', title: 'Salir del modo invitado', onclick: () => go('login') }, 'Salir ↩'));
+    } else if (state.mode === 'student' && state.student) {
       center.append(el('div.student-chip', LL.teacher.avatar(state.student), el('span', state.student.name)));
       right.append(el('button.icon-btn.big', { type: 'button', 'aria-label': 'Volver a ¿Quién eres?', title: 'Volver a ¿Quién eres?', onclick: goHome }, '🏠'));
     } else if (state.mode === 'teacher') {
@@ -102,7 +109,26 @@ window.LL = window.LL || {};
     go('library');
   }
 
+  /* ---------- Guest mode (V127) ---------- */
+  /** preview: a signed-in teacher looking at the guest view (Ajustes → «Ver como invitado»). */
+  function enterGuest(preview) {
+    state.guestPreview = !!preview;
+    state.mode = 'guest'; state.student = null;
+    if (!preview) state.teacherUnlocked = false;
+    LL.library.resetToRoot();
+    go('library');
+  }
+  function leaveGuest() {
+    if (LL.player.isOpen()) LL.player.close();
+    // The teacher who was previewing goes back to the teacher area (no PIN again).
+    state.mode = state.guestPreview && state.teacherUnlocked ? 'teacher' : null; state.student = null;
+    state.guestPreview = false;
+    LL.auth.exitGuest();
+    LL.library.resetToRoot();
+  }
+
   async function goHome() {
+    if (state.mode === 'guest') { if (state.guestPreview) { leaveGuest(); go('library'); } else go('login'); return; }
     if (state.screen === 'editor' && !(await LL.editor.canLeave())) return;
     if (LL.player.isOpen()) LL.player.close();
     state.mode = null; state.student = null; state.teacherUnlocked = false; state.screen = 'editor-left';
@@ -167,7 +193,7 @@ window.LL = window.LL || {};
     return r;
   }
   function hashFor(r) {
-    const base = r.mode === 'teacher' ? '#/maestro' : r.mode === 'student' ? '#/estudiante' : '#';
+    const base = r.mode === 'teacher' ? '#/maestro' : r.mode === 'student' ? '#/estudiante' : r.mode === 'guest' ? '#/invitado' : '#';
     const tail = {
       login: '/entrar', students: '/', library: r.folder ? '/carpeta/' + r.folder : '/actividades', editor: '/editar/' + (r.quiz || 'nuevo'),
       results: '/resultados/' + (r.quiz || '') + '/' + (r.month || ''), 'students-admin': '/estudiantes', backup: '/ajustes',
@@ -216,6 +242,10 @@ window.LL = window.LL || {};
 
       // Safety rules for shared tablets.
       const toHome = () => { state.mode = null; state.student = null; state.teacherUnlocked = false; LL.library.resetToRoot(); return go(LL.auth.needsLogin() ? 'login' : 'students'); };
+      // Guests: Back / Forward move between their folders; leaving the guest pages ends guest mode,
+      // and a guest page can't be re-entered from history (it needs the button again).
+      if (state.mode === 'guest' && target.mode !== 'guest') { const wasPreview = state.guestPreview; leaveGuest(); await go(wasPreview ? 'library' : 'login'); restoring = false; replaceRoute(); return; }
+      if (target.mode === 'guest' && state.mode !== 'guest') { await toHome(); restoring = false; replaceRoute(); return; }
       if (target.mode === 'teacher' && !state.teacherUnlocked) { await toHome(); restoring = false; replaceRoute(); return; }
       if (target.mode === 'student' && (!state.student || studentKey(state.student) !== target.student)) { await toHome(); restoring = false; replaceRoute(); return; }
       if (!target.mode && state.mode) { state.mode = null; state.student = null; state.teacherUnlocked = false; LL.library.resetToRoot(); }
@@ -248,7 +278,7 @@ window.LL = window.LL || {};
   function logoHome() {
     if (state.screen === 'login' || state.screen === 'set-password') return;
     if (LL.player.isOpen()) LL.player.close();
-    if (state.mode === 'teacher') { LL.library.setFolderQuiet(null); go('library'); return; }
+    if (state.mode === 'teacher' || state.mode === 'guest') { LL.library.setFolderQuiet(null); go('library'); return; }
     goHome();
   }
 
@@ -260,6 +290,8 @@ window.LL = window.LL || {};
     if (r && r.error) { state.loginMessage = null; go('login'); toast('El enlace no es válido o ya caducó. Pide uno nuevo.', 'error'); return; }
     if (r && (r.type === 'invite' || r.type === 'recovery')) { state.passwordKind = r.type; go('set-password'); return; }
     if (r) { LL.auth.afterSignIn(); return; }
+    // A guest who reloads the page (or the app updated itself) stays a guest in this tab.
+    if (!LL.cloud.signedIn() && LL.auth.guestRemembered()) { if (await LL.auth.enterGuest()) { checkUpdate(); return; } }
     if (LL.auth.needsLogin()) { go('login'); return; }
     go('students');
     if (LL.cloud.signedIn()) LL.sync.run();
@@ -305,5 +337,5 @@ window.LL = window.LL || {};
     if (!LL.player.isOpen() && state.screen !== 'editor' && !state.mode) go('login');
   });
 
-  LL.app = { state, go, goHome, openInfo, pushRoute, replaceRoute, checkUpdate };
+  LL.app = { state, go, goHome, openInfo, pushRoute, replaceRoute, checkUpdate, enterGuest };
 })();

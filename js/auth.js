@@ -10,7 +10,40 @@ window.LL = window.LL || {};
   const setLocalMode = (on) => { try { if (on) localStorage.setItem(LOCAL_MODE, '1'); else localStorage.removeItem(LOCAL_MODE); } catch { /* ignore */ } };
 
   /** Should the app ask the teacher to sign in before anything else? */
-  function needsLogin() { return LL.cloud.enabled() && !LL.cloud.signedIn() && !localMode(); }
+  function needsLogin() { return LL.cloud.enabled() && !LL.cloud.signedIn() && !localMode() && !S.isGuest(); }
+
+  /* ---------- Guest mode (V127) ----------
+   * Anyone can try the activities the teacher marked «Compartir con invitados»: only activities and their
+   * folders, no students, no teacher tools, and nothing is saved (not in the database, not here).
+   * The guest stays a guest while this tab is open (sessionStorage), also after a reload. */
+  const GUEST = 'll-guest';
+  const guestFlag = (on) => { try { if (on) sessionStorage.setItem(GUEST, '1'); else sessionStorage.removeItem(GUEST); } catch { /* ignore */ } };
+  const guestRemembered = () => { try { return sessionStorage.getItem(GUEST) === '1'; } catch { return false; } };
+
+  /** preview: the teacher's «Ver como invitado» (Ajustes); «Volver al maestro» returns to the teacher area. */
+  async function enterGuest(btn, opts = {}) {
+    if (btn) { btn.disabled = true; btn.dataset.label = btn.textContent; btn.textContent = 'Entrando…'; }
+    try {
+      const data = await LL.cloud.rpcPublic('guest_catalog');
+      const library = ((data && data.quizzes) || []).map((r) => LL.sync._convert.rowToEntry(r));
+      const folders = ((data && data.folders) || []).map((f) => ({ id: f.id, name: f.name, parentId: f.parent_id || null, color: f.color }));
+      S.setGuest({ library, folders });
+      guestFlag(!opts.preview);
+      LL.app.enterGuest(!!opts.preview);
+      return true;
+    } catch (e) {
+      guestFlag(false);
+      toast('No se pudo entrar como invitado: ' + friendly(e), 'error');
+      if (!S.isGuest() && !opts.preview) LL.app.go('login');
+      return false;
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = btn.dataset.label || btn.textContent; }
+    }
+  }
+  function exitGuest() {
+    S.setGuest(null);
+    guestFlag(false);
+  }
 
   function friendly(e) {
     const m = String(e && e.message || e || '');
@@ -47,6 +80,7 @@ window.LL = window.LL || {};
       } finally { btn.disabled = false; btn.textContent = 'Entrar'; }
     });
     page.replaceChildren(el('div.login-wrap',
+      el('div.login-row',
       el('div.login-card.panel',
         el('div.login-logo', { 'aria-hidden': 'true' }, '✨'),
         el('h1', 'Little Learners'),
@@ -55,6 +89,12 @@ window.LL = window.LL || {};
         form,
         el('button.link-btn', { type: 'button', onclick: () => resetDialog(email.value) }, '¿Olvidaste tu contraseña?'),
         el('p.small.muted', 'Las cuentas son por invitación. Si necesitas una, pídela a quien administra esta página.')),
+      el('div.login-guest.panel',
+        el('div.login-guest-icon', { 'aria-hidden': 'true' }, '👋'),
+        el('div',
+          el('h2', 'Guest / Invitado'),
+          el('p.small.muted', '¿No tienes cuenta? Prueba las actividades compartidas. No se guarda nada.')),
+        el('button.btn.primary.big.guest-btn', { type: 'button', onclick: (e) => enterGuest(e.currentTarget) }, 'Entrar como invitado'))),
       el('div.login-alt',
         el('button.btn.ghost', { type: 'button', onclick: () => { setLocalMode(true); LL.app.go('students'); } }, 'Usar sin cuenta, solo en este dispositivo'),
         el('p.small.muted', 'Sin cuenta, las actividades se guardan solo en este navegador.')),
@@ -231,5 +271,5 @@ window.LL = window.LL || {};
     toast('PIN guardado' + (LL.cloud.signedIn() ? '. Se usará en todos tus dispositivos.' : '.'), 'success');
   }
 
-  LL.auth = { needsLogin, localMode, setLocalMode, renderLogin, renderSetPassword, afterSignIn, signOut, checkPin, setPinFlow, friendly };
+  LL.auth = { needsLogin, localMode, setLocalMode, enterGuest, exitGuest, guestRemembered, renderLogin, renderSetPassword, afterSignIn, signOut, checkPin, setPinFlow, friendly };
 })();
