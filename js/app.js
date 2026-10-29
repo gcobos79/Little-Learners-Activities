@@ -25,6 +25,7 @@ window.LL = window.LL || {};
     for (const s of SCREENS) $('#screen-' + s).hidden = s !== screen;
     document.body.classList.toggle('mode-student', state.mode === 'student' || state.mode === 'guest');
     document.body.classList.toggle('mode-guest', state.mode === 'guest');
+    document.documentElement.lang = state.mode === 'guest' ? LL.ui.guestLang() : 'es';
     document.body.classList.toggle('mode-teacher', state.mode === 'teacher');
     document.body.classList.toggle('mode-home', !state.mode);
     document.body.classList.toggle('mode-login', screen === 'login' || screen === 'set-password');
@@ -47,9 +48,14 @@ window.LL = window.LL || {};
     const center = $('#appbarCenter'), right = $('#appbarRight');
     center.replaceChildren(); right.replaceChildren();
     if (state.mode === 'guest') {
-      center.append(el('div.student-chip.guest-chip', el('span.animal', { 'aria-hidden': 'true' }, '👋'), el('span', state.guestPreview ? 'Vista de invitado' : 'Invitado')));
+      const tr = LL.ui.tr;
+      center.append(el('div.student-chip.guest-chip', el('span.animal', { 'aria-hidden': 'true' }, '👋'), el('span', state.guestPreview ? tr('Vista de invitado', 'Guest view') : tr('Invitado', 'Guest'))));
+      // Language switch for guests (V127): Español ⇄ English
+      const other = LL.ui.guestLang() === 'en' ? 'es' : 'en';
+      right.append(el('button.btn.ghost.lang-btn', { type: 'button', title: other === 'en' ? 'Switch to English' : 'Cambiar a español', 'aria-label': other === 'en' ? 'Switch to English' : 'Cambiar a español',
+        onclick: () => { LL.ui.setGuestLang(other); document.documentElement.lang = other; go(state.screen); } }, other === 'en' ? '🌐 English' : '🌐 Español'));
       if (state.guestPreview) right.append(el('button.btn.primary', { type: 'button', title: 'Volver al área del maestro', onclick: () => { leaveGuest(); go('library'); } }, '⬅️ Volver al maestro'));
-      else right.append(el('button.btn.ghost', { type: 'button', title: 'Salir del modo invitado', onclick: () => go('login') }, 'Salir ↩'));
+      else right.append(el('button.btn.ghost', { type: 'button', title: tr('Salir del modo invitado', 'Leave guest mode'), onclick: () => go('login') }, tr('Salir ↩', 'Exit ↩')));
     } else if (state.mode === 'student' && state.student) {
       center.append(el('div.student-chip', LL.teacher.avatar(state.student), el('span', state.student.name)));
       right.append(el('button.icon-btn.big', { type: 'button', 'aria-label': 'Volver a ¿Quién eres?', title: 'Volver a ¿Quién eres?', onclick: goHome }, '🏠'));

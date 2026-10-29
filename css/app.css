@@ -1067,3 +1067,6 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 @keyframes ggGlow { 50% { box-shadow: 0 0 0 6px rgba(244, 183, 64, .45), var(--shadow); } }
 @media (max-width: 640px) { .gg-main { padding-right: 0; padding-top: 30px; } .gg-close { top: 8px; right: 8px; } }
 @media (prefers-reduced-motion: reduce) { .gg-hand, .card.invite, .card.invite::after { animation: none !important; } }
+.guest-btns { grid-column: 1 / -1; display: grid; gap: 8px; }
+.login-guest .guest-btn-en { background: #fff; border: 2px solid #F59E0B; color: #8A4B00; }
+.lang-btn { white-space: nowrap; }

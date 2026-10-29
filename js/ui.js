@@ -374,5 +374,15 @@ window.LL = window.LL || {};
     container.classList.add('animate-in');
   }
 
-  LL.ui = { $, $$, el, toast, dialog, confirmDialog, readFileAsDataURL, imageFileToDataURL, audioFileToDataURL, pickFile, download, formatBytes, speak, bestVoice, voicePlan, playAudio, stopSound, feedbackTone, celebrateTune, stopCelebrate, shuffle, confetti, stagger };
+  /* Guest language (V127): guests can switch the interface to English. Teachers and students keep
+   * Spanish. tr(es, en) gives the English text only to a guest who chose English (this tab). */
+  const GUEST_LANG = 'll-guest-lang';
+  function guestLang() {
+    try { const v = sessionStorage.getItem(GUEST_LANG); if (v === 'en' || v === 'es') return v; } catch { /* ignore */ }
+    return 'es'; // English only when the guest chooses it (button on the sign-in page or «🌐 English»)
+  }
+  function setGuestLang(l) { try { sessionStorage.setItem(GUEST_LANG, l === 'en' ? 'en' : 'es'); } catch { /* ignore */ } }
+  const tr = (es, en) => (window.LL && LL.app && LL.app.state.mode === 'guest' && guestLang() === 'en' ? en : es);
+
+  LL.ui = { tr, guestLang, setGuestLang, $, $$, el, toast, dialog, confirmDialog, readFileAsDataURL, imageFileToDataURL, audioFileToDataURL, pickFile, download, formatBytes, speak, bestVoice, voicePlan, playAudio, stopSound, feedbackTone, celebrateTune, stopCelebrate, shuffle, confetti, stagger };
 })();

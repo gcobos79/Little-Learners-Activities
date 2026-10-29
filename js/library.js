@@ -47,7 +47,7 @@ window.LL = window.LL || {};
     if (nothing) {
       empty.replaceChildren(
         el('div.big-emoji', student ? '🌱' : '📂'),
-        el('div', student ? 'Todavía no hay actividades aquí.' : currentFolder ? 'Esta carpeta está vacía.' : 'Todavía no tienes actividades.'),
+        el('div', student ? LL.ui.tr('Todavía no hay actividades aquí.', 'There are no activities here yet.') : currentFolder ? 'Esta carpeta está vacía.' : 'Todavía no tienes actividades.'),
         student ? null : el('div.muted.small', 'Usa «＋ Nueva actividad» o «📁 Nueva carpeta» para agregar algo aquí.'),
       );
     }
@@ -67,29 +67,30 @@ window.LL = window.LL || {};
     try { small = sessionStorage.getItem(GUIDE_KEY) === '1'; } catch { /* ignore */ }
     const fold = (v) => { try { if (v) sessionStorage.setItem(GUIDE_KEY, '1'); else sessionStorage.removeItem(GUIDE_KEY); } catch { /* ignore */ } guestGuide(nFolders, nItems); };
     const atRoot = !currentFolder;
+    const tr = LL.ui.tr;
     const tip = atRoot
-      ? (nFolders ? 'Toca una carpeta 📁 para entrar y ver lo que tiene adentro.' : 'Toca una actividad para empezar.')
-      : (nFolders && nItems ? 'Toca una carpeta para seguir bajando, o una actividad para jugar.' : nFolders ? 'Aquí hay más carpetas: toca una para entrar.' : 'Toca una actividad para jugar.');
-    const back = atRoot ? null : el('p.gg-back', '⬅️ Para regresar, toca la flecha ⬅️ o la tarjeta ⬆️ «Carpeta anterior». También puedes tocar los nombres de arriba (', el('b', '📚 Actividades › …'), ').');
+      ? (nFolders ? tr('Toca una carpeta 📁 para entrar y ver lo que tiene adentro.', 'Tap a folder 📁 to open it and see what is inside.') : tr('Toca una actividad para empezar.', 'Tap an activity to start.'))
+      : (nFolders && nItems ? tr('Toca una carpeta para seguir bajando, o una actividad para jugar.', 'Tap a folder to go further, or an activity to play.') : nFolders ? tr('Aquí hay más carpetas: toca una para entrar.', 'There are more folders here: tap one to open it.') : tr('Toca una actividad para jugar.', 'Tap an activity to play.'));
+    const back = atRoot ? null : el('p.gg-back', tr('⬅️ Para regresar, toca la flecha ⬅️ o la tarjeta ⬆️ «Carpeta anterior». También puedes tocar los nombres de arriba (', '⬅️ To go back, tap the ⬅️ arrow or the ⬆️ «Previous folder» card. You can also tap the names at the top ('), el('b', tr('📚 Actividades › …', '📚 Activities › …')), ').');
     if (small) {
       box.className = 'guest-guide small';
       box.replaceChildren(el('span.gg-hand', { 'aria-hidden': 'true' }, '👆'), el('span.gg-tip', tip),
-        el('button.link-btn', { type: 'button', onclick: () => fold(false) }, '¿Cómo funciona?'));
+        el('button.link-btn', { type: 'button', onclick: () => fold(false) }, tr('¿Cómo funciona?', 'How does it work?')));
     } else {
       box.className = 'guest-guide';
       box.replaceChildren(
         el('div.gg-main',
           el('span.gg-hand.big', { 'aria-hidden': 'true' }, '👆'),
           el('div',
-            el('h2', atRoot ? '¡Bienvenido! Las actividades están dentro de carpetas' : '¡Muy bien! Ya estás dentro de una carpeta'),
+            el('h2', atRoot ? tr('¡Bienvenido! Las actividades están dentro de carpetas', 'Welcome! The activities are inside folders') : tr('¡Muy bien! Ya estás dentro de una carpeta', 'Great! You are inside a folder')),
             el('p.gg-tip', tip),
             back)),
-        el('div.gg-tree', { 'aria-label': 'Así están organizadas las actividades' },
-          el('span.gg-step', '📚 Actividades'), el('span.gg-arrow', { 'aria-hidden': 'true' }, '›'),
-          el('span.gg-step', '📁 Carpeta'), el('span.gg-arrow', { 'aria-hidden': 'true' }, '›'),
-          el('span.gg-step', '📂 Más carpetas'), el('span.gg-arrow', { 'aria-hidden': 'true' }, '›'),
-          el('span.gg-step.gg-goal', '🎮 Actividad')),
-        el('button.gg-close', { type: 'button', 'aria-label': 'Hacer la guía más pequeña', title: 'Entendido', onclick: () => fold(true) }, 'Entendido ✓'));
+        el('div.gg-tree', { 'aria-label': tr('Así están organizadas las actividades', 'How the activities are organized') },
+          el('span.gg-step', tr('📚 Actividades', '📚 Activities')), el('span.gg-arrow', { 'aria-hidden': 'true' }, '›'),
+          el('span.gg-step', tr('📁 Carpeta', '📁 Folder')), el('span.gg-arrow', { 'aria-hidden': 'true' }, '›'),
+          el('span.gg-step', tr('📂 Más carpetas', '📂 More folders')), el('span.gg-arrow', { 'aria-hidden': 'true' }, '›'),
+          el('span.gg-step.gg-goal', tr('🎮 Actividad', '🎮 Activity'))),
+        el('button.gg-close', { type: 'button', 'aria-label': tr('Hacer la guía más pequeña', 'Make the guide smaller'), title: tr('Entendido', 'Got it'), onclick: () => fold(true) }, tr('Entendido ✓', 'Got it ✓')));
     }
     // The hand on the first folder (or on «Carpeta anterior» when there is nothing else to open).
     const grid = $('#cardGrid');
@@ -104,9 +105,9 @@ window.LL = window.LL || {};
     const trail = S.folderTrail(currentFolder);
     if (currentFolder) {
       const parent = trail.length > 1 ? trail[trail.length - 2].id : null;
-      c.append(el('button.icon-btn.back-btn' + (isStudent() ? '.big' : ''), { type: 'button', 'aria-label': 'Volver a la carpeta anterior', dataset: { drop: parent || '' }, onclick: () => setFolder(parent) }, '⬅️'));
+      c.append(el('button.icon-btn.back-btn' + (isStudent() ? '.big' : ''), { type: 'button', 'aria-label': LL.ui.tr('Volver a la carpeta anterior', 'Back to the previous folder'), dataset: { drop: parent || '' }, onclick: () => setFolder(parent) }, '⬅️'));
     }
-    const rootLabel = isStudent() ? '📚 Actividades' : '📚 Mis actividades';
+    const rootLabel = isStudent() ? LL.ui.tr('📚 Actividades', '📚 Activities') : '📚 Mis actividades';
     if (!trail.length) { c.append(el('span.here', rootLabel)); return; }
     c.append(el('button', { type: 'button', dataset: { drop: '' }, onclick: () => setFolder(null) }, rootLabel));
     trail.forEach((f, i) => {
@@ -119,16 +120,17 @@ window.LL = window.LL || {};
   function upCard(folders) {
     const f = folders.find((x) => x.id === currentFolder);
     return el('div.card.up', { dataset: { drop: (f && f.parentId) || '' } },
-      el('button.card-main', { type: 'button', onclick: () => setFolder(f ? f.parentId : null), 'aria-label': 'Carpeta anterior' },
+      el('button.card-main', { type: 'button', onclick: () => setFolder(f ? f.parentId : null), 'aria-label': LL.ui.tr('Carpeta anterior', 'Previous folder') },
         el('span.folder-icon', '⬆️'),
-        el('span.name', 'Carpeta anterior'),
-        el('span.meta', 'Volver a la carpeta superior')));
+        el('span.name', LL.ui.tr('Carpeta anterior', 'Previous folder')),
+        el('span.meta', LL.ui.tr('Volver a la carpeta superior', 'Back to the folder above'))));
   }
 
   function folderCard(f, folders, entries, student) {
     const subCount = folders.filter((x) => x.parentId === f.id && (!student || S.folderHas(x.id, folders, entries))).length;
     const actCount = entries.filter((t) => t.folderId === f.id).length;
-    const meta = [subCount ? subCount + (subCount === 1 ? ' carpeta' : ' carpetas') : '', actCount + (actCount === 1 ? ' actividad' : ' actividades')].filter(Boolean).join(' · ');
+    const tr = LL.ui.tr;
+    const meta = [subCount ? subCount + (subCount === 1 ? tr(' carpeta', ' folder') : tr(' carpetas', ' folders')) : '', actCount + (actCount === 1 ? tr(' actividad', ' activity') : tr(' actividades', ' activities'))].filter(Boolean).join(' · ');
     const card = el('div.card.folder',
       el('button.card-main', { type: 'button', onclick: (e) => { const c = e.currentTarget.closest('.card'); c.classList.add('opening'); setTimeout(() => setFolder(f.id), 180); } },
         el('span.folder-icon', '📁'),
@@ -165,13 +167,13 @@ window.LL = window.LL || {};
     const qs = t.config?.questions || [];
     if (t.type === 'sort') {
       const cards = qs.reduce((s, g) => s + (g.options || []).filter(S.itemFilled).length, 0);
-      return 'Clasificación rápida · ' + qs.length + ' grupos · ' + cards + (cards === 1 ? ' tarjeta' : ' tarjetas');
+      return LL.ui.tr('Clasificación rápida · ' + qs.length + ' grupos · ' + cards + (cards === 1 ? ' tarjeta' : ' tarjetas'), 'Speed sorting · ' + qs.length + ' groups · ' + cards + (cards === 1 ? ' card' : ' cards'));
     }
     if (t.type === 'typing') {
       const n = qs.filter((q) => String(q.text || '').trim()).length;
-      return 'Pantalla de Tablet · ' + n + (n === 1 ? ' palabra' : ' palabras');
+      return LL.ui.tr('Pantalla de Tablet · ' + n + (n === 1 ? ' palabra' : ' palabras'), 'Tablet Screen · ' + n + (n === 1 ? ' word' : ' words'));
     }
-    return 'Quiz · ' + qs.length + (qs.length === 1 ? ' pregunta' : ' preguntas');
+    return LL.ui.tr('Quiz · ' + qs.length + (qs.length === 1 ? ' pregunta' : ' preguntas'), 'Quiz · ' + qs.length + (qs.length === 1 ? ' question' : ' questions'));
   }
 
   function quizCard(t, student) {

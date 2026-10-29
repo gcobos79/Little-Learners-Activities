@@ -1075,6 +1075,9 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 @keyframes ggGlow { 50% { box-shadow: 0 0 0 6px rgba(244, 183, 64, .45), var(--shadow); } }
 @media (max-width: 640px) { .gg-main { padding-right: 0; padding-top: 30px; } .gg-close { top: 8px; right: 8px; } }
 @media (prefers-reduced-motion: reduce) { .gg-hand, .card.invite, .card.invite::after { animation: none !important; } }
+.guest-btns { grid-column: 1 / -1; display: grid; gap: 8px; }
+.login-guest .guest-btn-en { background: #fff; border: 2px solid #F59E0B; color: #8A4B00; }
+.lang-btn { white-space: nowrap; }
 
 </style>
 </head>
@@ -1160,7 +1163,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 window.LL = window.LL || {};
 LL.config = {
   // Set by tools/stamp_version.py on every publish.
-  build: '20261029051539',
+  build: '20261029055720',
   version: 'V126',
   // Who runs this site, e.g. 'Sra. García · Escuela Primaria Lincoln'
   owner: 'Geovanny Cobos',
@@ -2095,7 +2098,17 @@ window.LL = window.LL || {};
     container.classList.add('animate-in');
   }
 
-  LL.ui = { $, $$, el, toast, dialog, confirmDialog, readFileAsDataURL, imageFileToDataURL, audioFileToDataURL, pickFile, download, formatBytes, speak, bestVoice, voicePlan, playAudio, stopSound, feedbackTone, celebrateTune, stopCelebrate, shuffle, confetti, stagger };
+  /* Guest language (V127): guests can switch the interface to English. Teachers and students keep
+   * Spanish. tr(es, en) gives the English text only to a guest who chose English (this tab). */
+  const GUEST_LANG = 'll-guest-lang';
+  function guestLang() {
+    try { const v = sessionStorage.getItem(GUEST_LANG); if (v === 'en' || v === 'es') return v; } catch { /* ignore */ }
+    return 'es'; // English only when the guest chooses it (button on the sign-in page or «🌐 English»)
+  }
+  function setGuestLang(l) { try { sessionStorage.setItem(GUEST_LANG, l === 'en' ? 'en' : 'es'); } catch { /* ignore */ } }
+  const tr = (es, en) => (window.LL && LL.app && LL.app.state.mode === 'guest' && guestLang() === 'en' ? en : es);
+
+  LL.ui = { tr, guestLang, setGuestLang, $, $$, el, toast, dialog, confirmDialog, readFileAsDataURL, imageFileToDataURL, audioFileToDataURL, pickFile, download, formatBytes, speak, bestVoice, voicePlan, playAudio, stopSound, feedbackTone, celebrateTune, stopCelebrate, shuffle, confetti, stagger };
 })();
 
 </script>
@@ -3003,7 +3016,7 @@ window.LL = window.LL || {};
     const belt = el('div.sort-belt', { 'aria-label': 'Banda con tarjetas' });
     const targets = el('div.sort-targets');
     g.belt = belt; g.targets = targets;
-    g.stCount = el('span.st-count', '0 de ' + cards.length);
+    g.stCount = el('span.st-count', '0' + LL.ui.tr(' de ', ' of ') + cards.length);
     g.stOk = el('span.st-ok', '✓ 0');
 
     groups.forEach((grp, i) => {
@@ -3157,7 +3170,7 @@ window.LL = window.LL || {};
       correct: good, response_ms: Date.now() - g.startedAt,
     });
     g.api.onProgress && g.api.onProgress(g.done, g.cards.length, g.ok);
-    g.stCount.textContent = g.done + ' de ' + g.cards.length;
+    g.stCount.textContent = g.done + LL.ui.tr(' de ', ' of ') + g.cards.length;
     g.stOk.textContent = '✓ ' + g.ok;
     const finished = g.cards.every((x) => x.done);
     g.locked = true;
@@ -3316,7 +3329,7 @@ window.LL = window.LL || {};
 
     // Top: the word to copy (modes 1 and 2) or only the picture (mode 3).
     const hasImg = LL.media.isImage(q.image);
-    const img = hasImg ? el('button.tp-img', { type: 'button', 'aria-label': 'Escuchar la palabra', title: 'Toca para escuchar' }, el('img', { src: q.image, alt: '' })) : null;
+    const img = hasImg ? el('button.tp-img', { type: 'button', 'aria-label': LL.ui.tr('Escuchar la palabra', 'Listen to the word'), title: LL.ui.tr('Toca para escuchar', 'Tap to listen') }, el('img', { src: q.image, alt: '' })) : null;
     if (img) img.addEventListener('click', () => { o.say && o.say(); img.classList.remove('pop'); void img.offsetWidth; img.classList.add('pop'); });
     const word = el('div.tp-word', { 'aria-label': g.mode === 3 ? '' : 'Copia: ' + text });
     g.chars = [];
@@ -3334,16 +3347,16 @@ window.LL = window.LL || {};
       (group || word).append(enter);
     }
     const listen = g.mode === 3 && !hasImg
-      ? el('button.tp-listen', { type: 'button', onclick: () => o.say && o.say() }, el('span', '🔊'), el('span', 'Escucha'))
+      ? el('button.tp-listen', { type: 'button', onclick: () => o.say && o.say() }, el('span', '🔊'), el('span', LL.ui.tr('Escucha', 'Listen')))
       : null;
     const top = el('div.tp-target.mode-' + g.mode + (hasImg ? '.has-img' : ''),
-      el('span.tp-tag', g.mode === 3 ? '👂 Escucha y escribe' : '👀 Copia'),
+      el('span.tp-tag', g.mode === 3 ? LL.ui.tr('👂 Escucha y escribe', '👂 Listen and write') : LL.ui.tr('👀 Copia', '👀 Copy')),
       el('div.tp-target-in', img, g.mode === 3 ? listen : word));
 
     // Middle: where the child writes.
     g.out = el('div.tp-out', { 'aria-live': 'polite' });
     g.caret = el('span.tp-caret', { 'aria-hidden': 'true' });
-    const outBox = el('div.tp-typed', el('span.tp-tag', '✏️ Escribe aquí'), el('div.tp-typed-in', g.out));
+    const outBox = el('div.tp-typed', el('span.tp-tag', LL.ui.tr('✏️ Escribe aquí', '✏️ Write here')), el('div.tp-typed-in', g.out));
     g.outBox = outBox;
 
     // Bottom: the keyboard.
@@ -3606,7 +3619,7 @@ window.LL = window.LL || {};
     drawOut(g);
     if (g.stepErr >= 2 && !g.hint) {
       g.hint = true;
-      later(g, 350, () => { applyHint(g); toast(g.pending != null ? 'Toca la tecla verde ⌫ para borrar.' : 'Toca la tecla verde.'); });
+      later(g, 350, () => { applyHint(g); toast(g.pending != null ? LL.ui.tr('Toca la tecla verde ⌫ para borrar.', 'Tap the green ⌫ key to erase.') : LL.ui.tr('Toca la tecla verde.', 'Tap the green key.')); });
     } else applyHint(g);
   }
 
@@ -3620,7 +3633,7 @@ window.LL = window.LL || {};
     g.root.querySelector('.tp-target').classList.add('win');
     const r = g.outBox.getBoundingClientRect();
     confetti(r.left + r.width / 2, r.top + r.height / 2);
-    g.outBox.append(el('span.tp-points' + (points === 1 ? '.full' : ''), points === 1 ? '⭐ ¡Perfecto!' : points > 0 ? '⭐ ¡Muy bien!' : '👍 ¡Lo lograste!'));
+    g.outBox.append(el('span.tp-points' + (points === 1 ? '.full' : ''), points === 1 ? LL.ui.tr('⭐ ¡Perfecto!', '⭐ Perfect!') : points > 0 ? LL.ui.tr('⭐ ¡Muy bien!', '⭐ Great job!') : LL.ui.tr('👍 ¡Lo lograste!', '👍 You did it!')));
     later(g, 1600, () => { const o = g.o; const res = { typed: g.typed.join(''), errors: g.errors, points, ms: Date.now() - g.startedAt }; stop(); o.onDone && o.onDone(res); });
   }
 
@@ -3821,7 +3834,7 @@ window.LL = window.LL || {};
     $('#playerProgress').append(info.status); // count · ✓ right, in the top bar (time: ⏱️ next to the name)
     // Nothing else to read here: the instructions (📢) are read once when the game starts.
     if (instructions()) { const myRun = run; timer = setTimeout(() => { if (myRun === run && !root().hidden) sayInstructions(); }, 300); }
-    if (!info.total) body().replaceChildren(el('div.finish', el('div.stars', '🤔'), el('h1', 'Esta actividad todavía no tiene tarjetas.')));
+    if (!info.total) body().replaceChildren(el('div.finish', el('div.stars', '🤔'), el('h1', LL.ui.tr('Esta actividad todavía no tiene tarjetas.', 'This activity has no cards yet.'))));
   }
 
   function render() {
@@ -3836,7 +3849,7 @@ window.LL = window.LL || {};
     b.replaceChildren();
     if (!q) {
       renderProgress();
-      b.append(el('div.finish', el('div.stars', '🤔'), el('h1', isTyping() ? 'Esta actividad todavía no tiene palabras.' : 'Esta actividad todavía no tiene preguntas.')));
+      b.append(el('div.finish', el('div.stars', '🤔'), el('h1', isTyping() ? LL.ui.tr('Esta actividad todavía no tiene palabras.', 'This activity has no words yet.') : LL.ui.tr('Esta actividad todavía no tiene preguntas.', 'This activity has no questions yet.'))));
       $('#playerSpeak').disabled = true;
       return;
     }
@@ -4050,22 +4063,22 @@ window.LL = window.LL || {};
     const answers = (attempt && attempt.answers) || [];
     const points = Math.round(answers.reduce((s, a) => s + (typeof a.points === 'number' ? a.points : a.correct ? 1 : 0), 0) * 100) / 100;
     const scoreBox = !showBoard && total ? el('div.my-score', { role: 'status' },
-      el('span.my-score-label', 'Tu puntaje'),
+      el('span.my-score-label', LL.ui.tr('Tu puntaje', 'Your score')),
       el('span.my-score-value', LL.results.fmtScore(points) + ' / ' + total)) : null;
     body().replaceChildren(el('div.finish' + (showBoard ? '.with-board' : ''),
       el('div.stars', '⭐🌟⭐'),
-      el('h1', who ? `¡Muy bien, ${who.name}!` : '¡Muy bien!'),
-      el('p.lead', 'Terminaste «' + quiz.name + '».'),
+      el('h1', who ? `¡Muy bien, ${who.name}!` : LL.ui.tr('¡Muy bien!', 'Great job!')),
+      el('p.lead', LL.ui.tr('Terminaste «' + quiz.name + '».', 'You finished «' + quiz.name + '».')),
       scoreBox,
       board,
       el('div.finish-buttons',
-        el('button.btn.ghost.big', { type: 'button', onclick: () => { index = 0; newAttempt(); render(); } }, '🔁 Otra vez'),
+        el('button.btn.ghost.big', { type: 'button', onclick: () => { index = 0; newAttempt(); render(); } }, LL.ui.tr('🔁 Otra vez', '🔁 Again')),
         // Students: «Salir» goes back to «¿Quién eres?» so the next child can pick their animal.
         // Guests: back to the folder they were browsing.
         opts.preview
           ? el('button.btn.primary.big', { type: 'button', onclick: () => close() }, 'Cerrar vista previa')
           : guest
-            ? el('button.btn.primary.big', { type: 'button', onclick: () => close() }, '👋 Salir')
+            ? el('button.btn.primary.big', { type: 'button', onclick: () => close() }, LL.ui.tr('👋 Salir', '👋 Exit'))
             : el('button.btn.primary.big', { type: 'button', onclick: () => LL.app.goHome() }, '👋 Salir')),
     ));
     if (showBoard) fillBoard(board, quiz, who);
@@ -4114,7 +4127,7 @@ window.LL = window.LL || {};
     const studentMode = () => !opts.preview;
     const hint = () => {
       exitBtn.classList.remove('nudge'); void exitBtn.offsetWidth; exitBtn.classList.add('nudge');
-      toast('Para salir, deja el dedo sobre ↩️ hasta que se llene el círculo.');
+      toast(LL.ui.tr('Para salir, deja el dedo sobre ↩️ hasta que se llene el círculo.', 'To leave, keep your finger on ↩️ until the circle fills up.'));
     };
     const stopHold = (showHint) => {
       if (!holdTimer) return;
@@ -4502,7 +4515,7 @@ window.LL = window.LL || {};
     if (nothing) {
       empty.replaceChildren(
         el('div.big-emoji', student ? '🌱' : '📂'),
-        el('div', student ? 'Todavía no hay actividades aquí.' : currentFolder ? 'Esta carpeta está vacía.' : 'Todavía no tienes actividades.'),
+        el('div', student ? LL.ui.tr('Todavía no hay actividades aquí.', 'There are no activities here yet.') : currentFolder ? 'Esta carpeta está vacía.' : 'Todavía no tienes actividades.'),
         student ? null : el('div.muted.small', 'Usa «＋ Nueva actividad» o «📁 Nueva carpeta» para agregar algo aquí.'),
       );
     }
@@ -4522,29 +4535,30 @@ window.LL = window.LL || {};
     try { small = sessionStorage.getItem(GUIDE_KEY) === '1'; } catch { /* ignore */ }
     const fold = (v) => { try { if (v) sessionStorage.setItem(GUIDE_KEY, '1'); else sessionStorage.removeItem(GUIDE_KEY); } catch { /* ignore */ } guestGuide(nFolders, nItems); };
     const atRoot = !currentFolder;
+    const tr = LL.ui.tr;
     const tip = atRoot
-      ? (nFolders ? 'Toca una carpeta 📁 para entrar y ver lo que tiene adentro.' : 'Toca una actividad para empezar.')
-      : (nFolders && nItems ? 'Toca una carpeta para seguir bajando, o una actividad para jugar.' : nFolders ? 'Aquí hay más carpetas: toca una para entrar.' : 'Toca una actividad para jugar.');
-    const back = atRoot ? null : el('p.gg-back', '⬅️ Para regresar, toca la flecha ⬅️ o la tarjeta ⬆️ «Carpeta anterior». También puedes tocar los nombres de arriba (', el('b', '📚 Actividades › …'), ').');
+      ? (nFolders ? tr('Toca una carpeta 📁 para entrar y ver lo que tiene adentro.', 'Tap a folder 📁 to open it and see what is inside.') : tr('Toca una actividad para empezar.', 'Tap an activity to start.'))
+      : (nFolders && nItems ? tr('Toca una carpeta para seguir bajando, o una actividad para jugar.', 'Tap a folder to go further, or an activity to play.') : nFolders ? tr('Aquí hay más carpetas: toca una para entrar.', 'There are more folders here: tap one to open it.') : tr('Toca una actividad para jugar.', 'Tap an activity to play.'));
+    const back = atRoot ? null : el('p.gg-back', tr('⬅️ Para regresar, toca la flecha ⬅️ o la tarjeta ⬆️ «Carpeta anterior». También puedes tocar los nombres de arriba (', '⬅️ To go back, tap the ⬅️ arrow or the ⬆️ «Previous folder» card. You can also tap the names at the top ('), el('b', tr('📚 Actividades › …', '📚 Activities › …')), ').');
     if (small) {
       box.className = 'guest-guide small';
       box.replaceChildren(el('span.gg-hand', { 'aria-hidden': 'true' }, '👆'), el('span.gg-tip', tip),
-        el('button.link-btn', { type: 'button', onclick: () => fold(false) }, '¿Cómo funciona?'));
+        el('button.link-btn', { type: 'button', onclick: () => fold(false) }, tr('¿Cómo funciona?', 'How does it work?')));
     } else {
       box.className = 'guest-guide';
       box.replaceChildren(
         el('div.gg-main',
           el('span.gg-hand.big', { 'aria-hidden': 'true' }, '👆'),
           el('div',
-            el('h2', atRoot ? '¡Bienvenido! Las actividades están dentro de carpetas' : '¡Muy bien! Ya estás dentro de una carpeta'),
+            el('h2', atRoot ? tr('¡Bienvenido! Las actividades están dentro de carpetas', 'Welcome! The activities are inside folders') : tr('¡Muy bien! Ya estás dentro de una carpeta', 'Great! You are inside a folder')),
             el('p.gg-tip', tip),
             back)),
-        el('div.gg-tree', { 'aria-label': 'Así están organizadas las actividades' },
-          el('span.gg-step', '📚 Actividades'), el('span.gg-arrow', { 'aria-hidden': 'true' }, '›'),
-          el('span.gg-step', '📁 Carpeta'), el('span.gg-arrow', { 'aria-hidden': 'true' }, '›'),
-          el('span.gg-step', '📂 Más carpetas'), el('span.gg-arrow', { 'aria-hidden': 'true' }, '›'),
-          el('span.gg-step.gg-goal', '🎮 Actividad')),
-        el('button.gg-close', { type: 'button', 'aria-label': 'Hacer la guía más pequeña', title: 'Entendido', onclick: () => fold(true) }, 'Entendido ✓'));
+        el('div.gg-tree', { 'aria-label': tr('Así están organizadas las actividades', 'How the activities are organized') },
+          el('span.gg-step', tr('📚 Actividades', '📚 Activities')), el('span.gg-arrow', { 'aria-hidden': 'true' }, '›'),
+          el('span.gg-step', tr('📁 Carpeta', '📁 Folder')), el('span.gg-arrow', { 'aria-hidden': 'true' }, '›'),
+          el('span.gg-step', tr('📂 Más carpetas', '📂 More folders')), el('span.gg-arrow', { 'aria-hidden': 'true' }, '›'),
+          el('span.gg-step.gg-goal', tr('🎮 Actividad', '🎮 Activity'))),
+        el('button.gg-close', { type: 'button', 'aria-label': tr('Hacer la guía más pequeña', 'Make the guide smaller'), title: tr('Entendido', 'Got it'), onclick: () => fold(true) }, tr('Entendido ✓', 'Got it ✓')));
     }
     // The hand on the first folder (or on «Carpeta anterior» when there is nothing else to open).
     const grid = $('#cardGrid');
@@ -4559,9 +4573,9 @@ window.LL = window.LL || {};
     const trail = S.folderTrail(currentFolder);
     if (currentFolder) {
       const parent = trail.length > 1 ? trail[trail.length - 2].id : null;
-      c.append(el('button.icon-btn.back-btn' + (isStudent() ? '.big' : ''), { type: 'button', 'aria-label': 'Volver a la carpeta anterior', dataset: { drop: parent || '' }, onclick: () => setFolder(parent) }, '⬅️'));
+      c.append(el('button.icon-btn.back-btn' + (isStudent() ? '.big' : ''), { type: 'button', 'aria-label': LL.ui.tr('Volver a la carpeta anterior', 'Back to the previous folder'), dataset: { drop: parent || '' }, onclick: () => setFolder(parent) }, '⬅️'));
     }
-    const rootLabel = isStudent() ? '📚 Actividades' : '📚 Mis actividades';
+    const rootLabel = isStudent() ? LL.ui.tr('📚 Actividades', '📚 Activities') : '📚 Mis actividades';
     if (!trail.length) { c.append(el('span.here', rootLabel)); return; }
     c.append(el('button', { type: 'button', dataset: { drop: '' }, onclick: () => setFolder(null) }, rootLabel));
     trail.forEach((f, i) => {
@@ -4574,16 +4588,17 @@ window.LL = window.LL || {};
   function upCard(folders) {
     const f = folders.find((x) => x.id === currentFolder);
     return el('div.card.up', { dataset: { drop: (f && f.parentId) || '' } },
-      el('button.card-main', { type: 'button', onclick: () => setFolder(f ? f.parentId : null), 'aria-label': 'Carpeta anterior' },
+      el('button.card-main', { type: 'button', onclick: () => setFolder(f ? f.parentId : null), 'aria-label': LL.ui.tr('Carpeta anterior', 'Previous folder') },
         el('span.folder-icon', '⬆️'),
-        el('span.name', 'Carpeta anterior'),
-        el('span.meta', 'Volver a la carpeta superior')));
+        el('span.name', LL.ui.tr('Carpeta anterior', 'Previous folder')),
+        el('span.meta', LL.ui.tr('Volver a la carpeta superior', 'Back to the folder above'))));
   }
 
   function folderCard(f, folders, entries, student) {
     const subCount = folders.filter((x) => x.parentId === f.id && (!student || S.folderHas(x.id, folders, entries))).length;
     const actCount = entries.filter((t) => t.folderId === f.id).length;
-    const meta = [subCount ? subCount + (subCount === 1 ? ' carpeta' : ' carpetas') : '', actCount + (actCount === 1 ? ' actividad' : ' actividades')].filter(Boolean).join(' · ');
+    const tr = LL.ui.tr;
+    const meta = [subCount ? subCount + (subCount === 1 ? tr(' carpeta', ' folder') : tr(' carpetas', ' folders')) : '', actCount + (actCount === 1 ? tr(' actividad', ' activity') : tr(' actividades', ' activities'))].filter(Boolean).join(' · ');
     const card = el('div.card.folder',
       el('button.card-main', { type: 'button', onclick: (e) => { const c = e.currentTarget.closest('.card'); c.classList.add('opening'); setTimeout(() => setFolder(f.id), 180); } },
         el('span.folder-icon', '📁'),
@@ -4620,13 +4635,13 @@ window.LL = window.LL || {};
     const qs = t.config?.questions || [];
     if (t.type === 'sort') {
       const cards = qs.reduce((s, g) => s + (g.options || []).filter(S.itemFilled).length, 0);
-      return 'Clasificación rápida · ' + qs.length + ' grupos · ' + cards + (cards === 1 ? ' tarjeta' : ' tarjetas');
+      return LL.ui.tr('Clasificación rápida · ' + qs.length + ' grupos · ' + cards + (cards === 1 ? ' tarjeta' : ' tarjetas'), 'Speed sorting · ' + qs.length + ' groups · ' + cards + (cards === 1 ? ' card' : ' cards'));
     }
     if (t.type === 'typing') {
       const n = qs.filter((q) => String(q.text || '').trim()).length;
-      return 'Pantalla de Tablet · ' + n + (n === 1 ? ' palabra' : ' palabras');
+      return LL.ui.tr('Pantalla de Tablet · ' + n + (n === 1 ? ' palabra' : ' palabras'), 'Tablet Screen · ' + n + (n === 1 ? ' word' : ' words'));
     }
-    return 'Quiz · ' + qs.length + (qs.length === 1 ? ' pregunta' : ' preguntas');
+    return LL.ui.tr('Quiz · ' + qs.length + (qs.length === 1 ? ' pregunta' : ' preguntas'), 'Quiz · ' + qs.length + (qs.length === 1 ? ' question' : ' questions'));
   }
 
   function quizCard(t, student) {
@@ -6491,8 +6506,11 @@ window.LL = window.LL || {};
         el('div.login-guest-icon', { 'aria-hidden': 'true' }, '👋'),
         el('div',
           el('h2', 'Guest / Invitado'),
-          el('p.small.muted', '¿No tienes cuenta? Prueba las actividades compartidas. No se guarda nada.')),
-        el('button.btn.primary.big.guest-btn', { type: 'button', onclick: (e) => enterGuest(e.currentTarget) }, 'Entrar como invitado'))),
+          el('p.small.muted', '¿No tienes cuenta? Prueba las actividades compartidas. No se guarda nada.'),
+          el('p.small.muted', { lang: 'en' }, 'No account? Try the shared activities. Nothing is saved.')),
+        el('div.guest-btns',
+          el('button.btn.primary.big.guest-btn', { type: 'button', onclick: (e) => { LL.ui.setGuestLang('es'); enterGuest(e.currentTarget); } }, 'Entrar como invitado'),
+          el('button.btn.soft.big.guest-btn-en', { type: 'button', lang: 'en', onclick: (e) => { LL.ui.setGuestLang('en'); enterGuest(e.currentTarget); } }, 'Enter as guest (English)')))),
       el('div.login-alt',
         el('button.btn.ghost', { type: 'button', onclick: () => { setLocalMode(true); LL.app.go('students'); } }, 'Usar sin cuenta, solo en este dispositivo'),
         el('p.small.muted', 'Sin cuenta, las actividades se guardan solo en este navegador.')),
@@ -6703,6 +6721,7 @@ window.LL = window.LL || {};
     for (const s of SCREENS) $('#screen-' + s).hidden = s !== screen;
     document.body.classList.toggle('mode-student', state.mode === 'student' || state.mode === 'guest');
     document.body.classList.toggle('mode-guest', state.mode === 'guest');
+    document.documentElement.lang = state.mode === 'guest' ? LL.ui.guestLang() : 'es';
     document.body.classList.toggle('mode-teacher', state.mode === 'teacher');
     document.body.classList.toggle('mode-home', !state.mode);
     document.body.classList.toggle('mode-login', screen === 'login' || screen === 'set-password');
@@ -6725,9 +6744,14 @@ window.LL = window.LL || {};
     const center = $('#appbarCenter'), right = $('#appbarRight');
     center.replaceChildren(); right.replaceChildren();
     if (state.mode === 'guest') {
-      center.append(el('div.student-chip.guest-chip', el('span.animal', { 'aria-hidden': 'true' }, '👋'), el('span', state.guestPreview ? 'Vista de invitado' : 'Invitado')));
+      const tr = LL.ui.tr;
+      center.append(el('div.student-chip.guest-chip', el('span.animal', { 'aria-hidden': 'true' }, '👋'), el('span', state.guestPreview ? tr('Vista de invitado', 'Guest view') : tr('Invitado', 'Guest'))));
+      // Language switch for guests (V127): Español ⇄ English
+      const other = LL.ui.guestLang() === 'en' ? 'es' : 'en';
+      right.append(el('button.btn.ghost.lang-btn', { type: 'button', title: other === 'en' ? 'Switch to English' : 'Cambiar a español', 'aria-label': other === 'en' ? 'Switch to English' : 'Cambiar a español',
+        onclick: () => { LL.ui.setGuestLang(other); document.documentElement.lang = other; go(state.screen); } }, other === 'en' ? '🌐 English' : '🌐 Español'));
       if (state.guestPreview) right.append(el('button.btn.primary', { type: 'button', title: 'Volver al área del maestro', onclick: () => { leaveGuest(); go('library'); } }, '⬅️ Volver al maestro'));
-      else right.append(el('button.btn.ghost', { type: 'button', title: 'Salir del modo invitado', onclick: () => go('login') }, 'Salir ↩'));
+      else right.append(el('button.btn.ghost', { type: 'button', title: tr('Salir del modo invitado', 'Leave guest mode'), onclick: () => go('login') }, tr('Salir ↩', 'Exit ↩')));
     } else if (state.mode === 'student' && state.student) {
       center.append(el('div.student-chip', LL.teacher.avatar(state.student), el('span', state.student.name)));
       right.append(el('button.icon-btn.big', { type: 'button', 'aria-label': 'Volver a ¿Quién eres?', title: 'Volver a ¿Quién eres?', onclick: goHome }, '🏠'));

@@ -1,6 +1,9 @@
 # Changelog
 
 ## V126 — October 2026 (Clasificación rápida)
+- Guests can use the app in English: «Enter as guest (English)» on the sign-in page and a «🌐 English /
+  🌐 Español» switch in the guest bar. Guide, folders, card details, end screen, Pantalla de Tablet and
+  sorting texts follow it (`LL.ui.tr`). Spanish unless the guest chooses English (this tab only).
 - Ajustes opens without the PIN. Actions that change, create, delete or take data out (Cerrar sesión,
   Crear/Cambiar/Quitar PIN, voz natural on/off and voices, Preparar voces, Descargar respaldo, Importar,
   Liberar espacio, Borrar este dispositivo, Borrar mis datos de la nube) ask for the PIN once per visit;

@@ -166,7 +166,7 @@ window.LL = window.LL || {};
     $('#playerProgress').append(info.status); // count · ✓ right, in the top bar (time: ⏱️ next to the name)
     // Nothing else to read here: the instructions (📢) are read once when the game starts.
     if (instructions()) { const myRun = run; timer = setTimeout(() => { if (myRun === run && !root().hidden) sayInstructions(); }, 300); }
-    if (!info.total) body().replaceChildren(el('div.finish', el('div.stars', '🤔'), el('h1', 'Esta actividad todavía no tiene tarjetas.')));
+    if (!info.total) body().replaceChildren(el('div.finish', el('div.stars', '🤔'), el('h1', LL.ui.tr('Esta actividad todavía no tiene tarjetas.', 'This activity has no cards yet.'))));
   }
 
   function render() {
@@ -181,7 +181,7 @@ window.LL = window.LL || {};
     b.replaceChildren();
     if (!q) {
       renderProgress();
-      b.append(el('div.finish', el('div.stars', '🤔'), el('h1', isTyping() ? 'Esta actividad todavía no tiene palabras.' : 'Esta actividad todavía no tiene preguntas.')));
+      b.append(el('div.finish', el('div.stars', '🤔'), el('h1', isTyping() ? LL.ui.tr('Esta actividad todavía no tiene palabras.', 'This activity has no words yet.') : LL.ui.tr('Esta actividad todavía no tiene preguntas.', 'This activity has no questions yet.'))));
       $('#playerSpeak').disabled = true;
       return;
     }
@@ -395,22 +395,22 @@ window.LL = window.LL || {};
     const answers = (attempt && attempt.answers) || [];
     const points = Math.round(answers.reduce((s, a) => s + (typeof a.points === 'number' ? a.points : a.correct ? 1 : 0), 0) * 100) / 100;
     const scoreBox = !showBoard && total ? el('div.my-score', { role: 'status' },
-      el('span.my-score-label', 'Tu puntaje'),
+      el('span.my-score-label', LL.ui.tr('Tu puntaje', 'Your score')),
       el('span.my-score-value', LL.results.fmtScore(points) + ' / ' + total)) : null;
     body().replaceChildren(el('div.finish' + (showBoard ? '.with-board' : ''),
       el('div.stars', '⭐🌟⭐'),
-      el('h1', who ? `¡Muy bien, ${who.name}!` : '¡Muy bien!'),
-      el('p.lead', 'Terminaste «' + quiz.name + '».'),
+      el('h1', who ? `¡Muy bien, ${who.name}!` : LL.ui.tr('¡Muy bien!', 'Great job!')),
+      el('p.lead', LL.ui.tr('Terminaste «' + quiz.name + '».', 'You finished «' + quiz.name + '».')),
       scoreBox,
       board,
       el('div.finish-buttons',
-        el('button.btn.ghost.big', { type: 'button', onclick: () => { index = 0; newAttempt(); render(); } }, '🔁 Otra vez'),
+        el('button.btn.ghost.big', { type: 'button', onclick: () => { index = 0; newAttempt(); render(); } }, LL.ui.tr('🔁 Otra vez', '🔁 Again')),
         // Students: «Salir» goes back to «¿Quién eres?» so the next child can pick their animal.
         // Guests: back to the folder they were browsing.
         opts.preview
           ? el('button.btn.primary.big', { type: 'button', onclick: () => close() }, 'Cerrar vista previa')
           : guest
-            ? el('button.btn.primary.big', { type: 'button', onclick: () => close() }, '👋 Salir')
+            ? el('button.btn.primary.big', { type: 'button', onclick: () => close() }, LL.ui.tr('👋 Salir', '👋 Exit'))
             : el('button.btn.primary.big', { type: 'button', onclick: () => LL.app.goHome() }, '👋 Salir')),
     ));
     if (showBoard) fillBoard(board, quiz, who);
@@ -459,7 +459,7 @@ window.LL = window.LL || {};
     const studentMode = () => !opts.preview;
     const hint = () => {
       exitBtn.classList.remove('nudge'); void exitBtn.offsetWidth; exitBtn.classList.add('nudge');
-      toast('Para salir, deja el dedo sobre ↩️ hasta que se llene el círculo.');
+      toast(LL.ui.tr('Para salir, deja el dedo sobre ↩️ hasta que se llene el círculo.', 'To leave, keep your finger on ↩️ until the circle fills up.'));
     };
     const stopHold = (showHint) => {
       if (!holdTimer) return;

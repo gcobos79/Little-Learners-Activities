@@ -46,6 +46,7 @@ const T = 'u-1111';
   const before = await p.evaluate(() => JSON.stringify(Object.keys(localStorage).sort().map((k) => [k, localStorage.getItem(k)])));
 
   assert(await p.isVisible('.login-guest button:has-text("Entrar como invitado")'), 'sign-in page has «Entrar como invitado» under the sign-in');
+  assert(await p.isVisible('.login-guest button:has-text("Enter as guest (English)")'), 'sign-in page also has «Enter as guest (English)»');
   await p.click('.login-guest button'); await p.waitForTimeout(700);
   assert(await p.isVisible('#screen-library'), 'the guest goes straight to the activities');
   assert(await p.isVisible('.guest-chip:has-text("Invitado")'), 'top bar says «Invitado»');
@@ -72,6 +73,21 @@ const T = 'u-1111';
   assert(await p.isVisible('button:has-text("Otra vez")') && await p.isVisible('.finish button:has-text("Salir")'), 'end: «Otra vez» and «Salir»');
   await p.click('.finish button:has-text("Salir")'); await p.waitForTimeout(500);
   assert(!(await p.isVisible('#player')) && await p.isVisible('.card:has-text("Colores compartido")') && await p.isVisible('#crumbs:has-text("Saludos")'), '«Salir» goes back to the folder the guest was in');
+
+  // English for guests (V127): switch and texts
+  await p.click('#brandHome'); await p.waitForTimeout(300);
+  await p.click('.lang-btn:has-text("English")'); await p.waitForTimeout(400);
+  assert(await p.isVisible('.guest-chip:has-text("Guest")') && await p.isVisible('#guestGuide:has-text("Tap a folder")'), 'English: chip and guide in English');
+  assert(await p.isVisible('#crumbs:has-text("Activities")') && await p.isVisible('.card .meta:has-text("1 folder")'), 'English: titles and card details in English');
+  assert(await p.isVisible('.lang-btn:has-text("Español")') && await p.isVisible('.appbar button:has-text("Exit")'), 'English: «🌐 Español» to switch back, «Exit»');
+  await p.click('.card:has-text("Inglés")'); await p.waitForTimeout(300); await p.click('.card:has-text("Saludos")'); await p.waitForTimeout(300);
+  assert(await p.isVisible('.card .name:has-text("Previous folder")'), 'English: «Previous folder» card');
+  await p.click('.card:has-text("Colores compartido")'); await p.waitForTimeout(700);
+  await p.click('.option:has-text("Sí")'); await p.waitForTimeout(2600);
+  assert(await p.isVisible('.my-score:has-text("Your score")') && await p.isVisible('button:has-text("Again")') && await p.isVisible('.finish button:has-text("Exit")'), 'English: end screen «Your score», «Again», «Exit»');
+  await p.click('.finish button:has-text("Exit")'); await p.waitForTimeout(400);
+  await p.click('.lang-btn:has-text("Español")'); await p.waitForTimeout(400);
+  assert(await p.isVisible('.guest-chip:has-text("Invitado")') && await p.isVisible('#crumbs:has-text("Actividades")'), 'back to Spanish with «🌐 Español»');
 
   // Typing activity works too, nothing saved
   await p.click('#brandHome'); await p.waitForTimeout(400);

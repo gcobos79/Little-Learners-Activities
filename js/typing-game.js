@@ -107,7 +107,7 @@ window.LL = window.LL || {};
 
     // Top: the word to copy (modes 1 and 2) or only the picture (mode 3).
     const hasImg = LL.media.isImage(q.image);
-    const img = hasImg ? el('button.tp-img', { type: 'button', 'aria-label': 'Escuchar la palabra', title: 'Toca para escuchar' }, el('img', { src: q.image, alt: '' })) : null;
+    const img = hasImg ? el('button.tp-img', { type: 'button', 'aria-label': LL.ui.tr('Escuchar la palabra', 'Listen to the word'), title: LL.ui.tr('Toca para escuchar', 'Tap to listen') }, el('img', { src: q.image, alt: '' })) : null;
     if (img) img.addEventListener('click', () => { o.say && o.say(); img.classList.remove('pop'); void img.offsetWidth; img.classList.add('pop'); });
     const word = el('div.tp-word', { 'aria-label': g.mode === 3 ? '' : 'Copia: ' + text });
     g.chars = [];
@@ -125,16 +125,16 @@ window.LL = window.LL || {};
       (group || word).append(enter);
     }
     const listen = g.mode === 3 && !hasImg
-      ? el('button.tp-listen', { type: 'button', onclick: () => o.say && o.say() }, el('span', '🔊'), el('span', 'Escucha'))
+      ? el('button.tp-listen', { type: 'button', onclick: () => o.say && o.say() }, el('span', '🔊'), el('span', LL.ui.tr('Escucha', 'Listen')))
       : null;
     const top = el('div.tp-target.mode-' + g.mode + (hasImg ? '.has-img' : ''),
-      el('span.tp-tag', g.mode === 3 ? '👂 Escucha y escribe' : '👀 Copia'),
+      el('span.tp-tag', g.mode === 3 ? LL.ui.tr('👂 Escucha y escribe', '👂 Listen and write') : LL.ui.tr('👀 Copia', '👀 Copy')),
       el('div.tp-target-in', img, g.mode === 3 ? listen : word));
 
     // Middle: where the child writes.
     g.out = el('div.tp-out', { 'aria-live': 'polite' });
     g.caret = el('span.tp-caret', { 'aria-hidden': 'true' });
-    const outBox = el('div.tp-typed', el('span.tp-tag', '✏️ Escribe aquí'), el('div.tp-typed-in', g.out));
+    const outBox = el('div.tp-typed', el('span.tp-tag', LL.ui.tr('✏️ Escribe aquí', '✏️ Write here')), el('div.tp-typed-in', g.out));
     g.outBox = outBox;
 
     // Bottom: the keyboard.
@@ -397,7 +397,7 @@ window.LL = window.LL || {};
     drawOut(g);
     if (g.stepErr >= 2 && !g.hint) {
       g.hint = true;
-      later(g, 350, () => { applyHint(g); toast(g.pending != null ? 'Toca la tecla verde ⌫ para borrar.' : 'Toca la tecla verde.'); });
+      later(g, 350, () => { applyHint(g); toast(g.pending != null ? LL.ui.tr('Toca la tecla verde ⌫ para borrar.', 'Tap the green ⌫ key to erase.') : LL.ui.tr('Toca la tecla verde.', 'Tap the green key.')); });
     } else applyHint(g);
   }
 
@@ -411,7 +411,7 @@ window.LL = window.LL || {};
     g.root.querySelector('.tp-target').classList.add('win');
     const r = g.outBox.getBoundingClientRect();
     confetti(r.left + r.width / 2, r.top + r.height / 2);
-    g.outBox.append(el('span.tp-points' + (points === 1 ? '.full' : ''), points === 1 ? '⭐ ¡Perfecto!' : points > 0 ? '⭐ ¡Muy bien!' : '👍 ¡Lo lograste!'));
+    g.outBox.append(el('span.tp-points' + (points === 1 ? '.full' : ''), points === 1 ? LL.ui.tr('⭐ ¡Perfecto!', '⭐ Perfect!') : points > 0 ? LL.ui.tr('⭐ ¡Muy bien!', '⭐ Great job!') : LL.ui.tr('👍 ¡Lo lograste!', '👍 You did it!')));
     later(g, 1600, () => { const o = g.o; const res = { typed: g.typed.join(''), errors: g.errors, points, ms: Date.now() - g.startedAt }; stop(); o.onDone && o.onDone(res); });
   }
 

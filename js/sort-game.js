@@ -43,7 +43,7 @@ window.LL = window.LL || {};
     const belt = el('div.sort-belt', { 'aria-label': 'Banda con tarjetas' });
     const targets = el('div.sort-targets');
     g.belt = belt; g.targets = targets;
-    g.stCount = el('span.st-count', '0 de ' + cards.length);
+    g.stCount = el('span.st-count', '0' + LL.ui.tr(' de ', ' of ') + cards.length);
     g.stOk = el('span.st-ok', '✓ 0');
 
     groups.forEach((grp, i) => {
@@ -197,7 +197,7 @@ window.LL = window.LL || {};
       correct: good, response_ms: Date.now() - g.startedAt,
     });
     g.api.onProgress && g.api.onProgress(g.done, g.cards.length, g.ok);
-    g.stCount.textContent = g.done + ' de ' + g.cards.length;
+    g.stCount.textContent = g.done + LL.ui.tr(' de ', ' of ') + g.cards.length;
     g.stOk.textContent = '✓ ' + g.ok;
     const finished = g.cards.every((x) => x.done);
     g.locked = true;
