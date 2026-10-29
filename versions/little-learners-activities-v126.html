@@ -1080,6 +1080,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 .lang-btn { white-space: nowrap; }
 .local-mode-box { margin-top: 6px; padding: 10px 14px; border-radius: 14px; background: var(--surface-2); display: grid; gap: 8px; }
 .local-mode-box summary { cursor: pointer; font-weight: 800; color: var(--muted); }
+.voice-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: 12px; background: var(--surface-2); }
 
 </style>
 </head>
@@ -1165,7 +1166,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 window.LL = window.LL || {};
 LL.config = {
   // Set by tools/stamp_version.py on every publish.
-  build: '20261029155436',
+  build: '20261029155936',
   version: 'V126',
   // Who runs this site, e.g. 'Sra. García · Escuela Primaria Lincoln'
   owner: 'Geovanny Cobos',
@@ -6314,7 +6315,7 @@ window.LL = window.LL || {};
 
   const SECTIONS = [
     ['acerca', 'Acerca de'], ['privacidad', 'Privacidad'], ['terminos', 'Términos de uso'],
-    ['accesibilidad', 'Accesibilidad'], ['creditos', 'Créditos'],
+    ['voces', 'Voces'], ['accesibilidad', 'Accesibilidad'], ['creditos', 'Créditos'],
   ];
 
   /** '20261029060718' (UTC) → '29/10/26, 1:07 a. m. (20261029060718)' in the school's time zone. */
@@ -6323,6 +6324,35 @@ window.LL = window.LL || {};
     if (!m) return String(b);
     const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]));
     return d.toLocaleString('es-US', { timeZone: 'America/Chicago', dateStyle: 'short', timeStyle: 'short' }) + ' (' + b + ')';
+  }
+
+  /** 🔊 Which device voice is used for Spanish and English, with buttons to try them (V127). Helps find
+   *  out why a tablet is silent in one language: it may have no voice for it, or only an online one. */
+  function voicesPanel() {
+    const box = el('section.panel.info-section.voices-panel', { id: 'info-voces' }, el('h2', '🔊 Voces de este aparato'));
+    const body = el('div', { style: { display: 'grid', gap: '8px' } });
+    box.append(body);
+    const draw = () => {
+      body.replaceChildren();
+      const all = ('speechSynthesis' in window) ? speechSynthesis.getVoices() : [];
+      if (!('speechSynthesis' in window)) { body.append(el('p.problem-box', 'Este navegador no tiene voz (speechSynthesis).')); return; }
+      const es = all.filter((v) => /^es/i.test(v.lang)), en = all.filter((v) => /^en/i.test(v.lang));
+      body.append(el('p', 'Este aparato tiene ' + all.length + ' voces: ' + es.length + ' en español y ' + en.length + ' en inglés.'));
+      const row = (label, lang, gender) => {
+        const plan = LL.ui.voicePlan(lang, gender);
+        const v = plan.voice;
+        const name = v ? v.name + ' (' + v.lang + (v.localService ? ', sin internet' : ', necesita internet') + ')' : 'ninguna';
+        const ok = v && (lang === 'en' ? /^en/i.test(v.lang) : /^es/i.test(v.lang));
+        return el('div.voice-row',
+          el('span', el('strong', label + ': '), name, ok ? '' : ' ⚠️'),
+          el('button.btn.sm.soft', { type: 'button', onclick: () => LL.ui.speak(lang === 'en' ? 'Hello! Select the color red.' : '¡Hola! ¿Cuántos cerditos puedes contar?', lang, gender) }, '▶️ Probar'));
+      };
+      body.append(row('Español · mujer', 'es', 'female'), row('Español · hombre', 'es', 'male'), row('Inglés · mujer', 'en', 'female'), row('Inglés · hombre', 'en', 'male'));
+      if (!es.length) body.append(el('p.problem-box', '⚠️ Este aparato no tiene voces en español. Agrega una en la configuración del sistema (Chromebook: Configuración → Accesibilidad → Texto a voz → Voces).'));
+    };
+    draw();
+    try { speechSynthesis.addEventListener('voiceschanged', () => { if (box.isConnected) draw(); }); } catch { /* no voices */ }
+    return box;
   }
 
   function render(focusId) {
@@ -6350,6 +6380,8 @@ window.LL = window.LL || {};
             el('p.small.muted', 'Abre la app vacía, sin tus actividades de la nube. Todo lo que se cree queda solo en este navegador (no va a la base de datos ni a otras tabletas). Para visitantes, usa mejor «Entrar como invitado».'),
             el('button.btn.ghost', { type: 'button', onclick: () => { LL.auth.setLocalMode(true); LL.app.go('students'); } }, 'Usar sin cuenta, solo en este dispositivo'))
           : null),
+
+      voicesPanel(),
 
       sec('privacidad', 'Política de privacidad',
         el('p.small.muted', 'Última actualización: ' + c.policyUpdated),

@@ -1,6 +1,8 @@
 # Changelog
 
 ## V126 — October 2026 (Clasificación rápida)
+- Información → «🔊 Voces de este aparato»: which device voice is used for Spanish and English (and if it
+  needs internet), with ▶️ Probar buttons and a warning when the device has no Spanish voice.
 - A student who leaves an activity with ↩️ (holding 3 s) goes straight back to «¿Quién eres?» (all the
   students), not to the folder. Guests and the teacher's preview still go back to where they were.
 - Información shows «Versión instalada» (the build, in Chicago time) to check a tablet is up to date.

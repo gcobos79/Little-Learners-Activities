@@ -1072,3 +1072,4 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 .lang-btn { white-space: nowrap; }
 .local-mode-box { margin-top: 6px; padding: 10px 14px; border-radius: 14px; background: var(--surface-2); display: grid; gap: 8px; }
 .local-mode-box summary { cursor: pointer; font-weight: 800; color: var(--muted); }
+.voice-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: 12px; background: var(--surface-2); }
