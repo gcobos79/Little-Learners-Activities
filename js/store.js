@@ -282,6 +282,13 @@ window.LL = window.LL || {};
   function folderPathLabel(f) { return folderTrail(f.id).map((x) => x.name).join(' / '); }
 
   /** True when the folder (or any subfolder) contains at least one of `entries`. */
+  /** How many of `entries` are in this folder or any folder inside it (V127: shown on folder cards). */
+  function folderCount(id, allFolders, entries) {
+    const ids = new Set([id]);
+    let grew = true;
+    while (grew) { grew = false; for (const f of allFolders) if (f.parentId && ids.has(f.parentId) && !ids.has(f.id)) { ids.add(f.id); grew = true; } }
+    return entries.filter((t) => t.folderId && ids.has(t.folderId)).length;
+  }
   function folderHas(id, allFolders, entries) {
     return entries.some((t) => (t.folderId || null) === id) ||
       allFolders.some((f) => (f.parentId || null) === id && folderHas(f.id, allFolders, entries));
@@ -524,7 +531,7 @@ window.LL = window.LL || {};
   LL.store = {
     KEYS, FOLDER_COLORS, folderColor, ANIMALS, clone, uid, byName,
     readLibrary, quizzes, getQuiz, isReady, saveQuiz, duplicateQuiz, deleteQuiz, moveQuiz,
-    folders, getFolder, saveFolder, deleteFolder, moveFolder, folderNameTaken, mergeDuplicateFolders, folderTrail, folderPathLabel, folderHas,
+    folders, getFolder, saveFolder, deleteFolder, moveFolder, folderNameTaken, mergeDuplicateFolders, folderTrail, folderPathLabel, folderHas, folderCount,
     roster, saveRoster, placeByName, setGuest, isGuest, sonidos, saveSonidos, pinHash, savePinHash, voice, saveVoice, settingsAt, quietly, readJSON, writeJSON, writeLibrary, writeFolders, todayChicago,
     readDraft, writeDraft, clearDraft,
     exportBackup, importBackup, validateBackup, storageUsed, deleteAllData, freeSpace,

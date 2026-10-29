@@ -1,6 +1,8 @@
 # Changelog
 
 ## V126 — October 2026 (Clasificación rápida)
+- Folder cards count the activities inside the folder AND all its subfolders («2 carpetas · 15 actividades
+  en total»); students and guests count only what they can see, the teacher counts everything.
 - Guests can use the app in English: «Enter as guest (English)» on the sign-in page and a «🌐 English /
   🌐 Español» switch in the guest bar. Guide, folders, card details, end screen, Pantalla de Tablet and
   sorting texts follow it (`LL.ui.tr`). Spanish unless the guest chooses English (this tab only).

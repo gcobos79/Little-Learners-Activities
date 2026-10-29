@@ -1163,7 +1163,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 window.LL = window.LL || {};
 LL.config = {
   // Set by tools/stamp_version.py on every publish.
-  build: '20261029055720',
+  build: '20261029055950',
   version: 'V126',
   // Who runs this site, e.g. 'Sra. García · Escuela Primaria Lincoln'
   owner: 'Geovanny Cobos',
@@ -1467,6 +1467,13 @@ window.LL = window.LL || {};
   function folderPathLabel(f) { return folderTrail(f.id).map((x) => x.name).join(' / '); }
 
   /** True when the folder (or any subfolder) contains at least one of `entries`. */
+  /** How many of `entries` are in this folder or any folder inside it (V127: shown on folder cards). */
+  function folderCount(id, allFolders, entries) {
+    const ids = new Set([id]);
+    let grew = true;
+    while (grew) { grew = false; for (const f of allFolders) if (f.parentId && ids.has(f.parentId) && !ids.has(f.id)) { ids.add(f.id); grew = true; } }
+    return entries.filter((t) => t.folderId && ids.has(t.folderId)).length;
+  }
   function folderHas(id, allFolders, entries) {
     return entries.some((t) => (t.folderId || null) === id) ||
       allFolders.some((f) => (f.parentId || null) === id && folderHas(f.id, allFolders, entries));
@@ -1709,7 +1716,7 @@ window.LL = window.LL || {};
   LL.store = {
     KEYS, FOLDER_COLORS, folderColor, ANIMALS, clone, uid, byName,
     readLibrary, quizzes, getQuiz, isReady, saveQuiz, duplicateQuiz, deleteQuiz, moveQuiz,
-    folders, getFolder, saveFolder, deleteFolder, moveFolder, folderNameTaken, mergeDuplicateFolders, folderTrail, folderPathLabel, folderHas,
+    folders, getFolder, saveFolder, deleteFolder, moveFolder, folderNameTaken, mergeDuplicateFolders, folderTrail, folderPathLabel, folderHas, folderCount,
     roster, saveRoster, placeByName, setGuest, isGuest, sonidos, saveSonidos, pinHash, savePinHash, voice, saveVoice, settingsAt, quietly, readJSON, writeJSON, writeLibrary, writeFolders, todayChicago,
     readDraft, writeDraft, clearDraft,
     exportBackup, importBackup, validateBackup, storageUsed, deleteAllData, freeSpace,
@@ -4596,9 +4603,11 @@ window.LL = window.LL || {};
 
   function folderCard(f, folders, entries, student) {
     const subCount = folders.filter((x) => x.parentId === f.id && (!student || S.folderHas(x.id, folders, entries))).length;
-    const actCount = entries.filter((t) => t.folderId === f.id).length;
+    // Activities in this folder AND in all its subfolders (only the ones this person can see).
+    const actCount = S.folderCount(f.id, folders, entries);
     const tr = LL.ui.tr;
-    const meta = [subCount ? subCount + (subCount === 1 ? tr(' carpeta', ' folder') : tr(' carpetas', ' folders')) : '', actCount + (actCount === 1 ? tr(' actividad', ' activity') : tr(' actividades', ' activities'))].filter(Boolean).join(' · ');
+    const acts = actCount + (actCount === 1 ? tr(' actividad', ' activity') : tr(' actividades', ' activities')) + (subCount ? tr(' en total', ' in all') : '');
+    const meta = [subCount ? subCount + (subCount === 1 ? tr(' carpeta', ' folder') : tr(' carpetas', ' folders')) : '', acts].filter(Boolean).join(' · ');
     const card = el('div.card.folder',
       el('button.card-main', { type: 'button', onclick: (e) => { const c = e.currentTarget.closest('.card'); c.classList.add('opening'); setTimeout(() => setFolder(f.id), 180); } },
         el('span.folder-icon', '📁'),

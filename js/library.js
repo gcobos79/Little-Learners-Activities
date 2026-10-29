@@ -128,9 +128,11 @@ window.LL = window.LL || {};
 
   function folderCard(f, folders, entries, student) {
     const subCount = folders.filter((x) => x.parentId === f.id && (!student || S.folderHas(x.id, folders, entries))).length;
-    const actCount = entries.filter((t) => t.folderId === f.id).length;
+    // Activities in this folder AND in all its subfolders (only the ones this person can see).
+    const actCount = S.folderCount(f.id, folders, entries);
     const tr = LL.ui.tr;
-    const meta = [subCount ? subCount + (subCount === 1 ? tr(' carpeta', ' folder') : tr(' carpetas', ' folders')) : '', actCount + (actCount === 1 ? tr(' actividad', ' activity') : tr(' actividades', ' activities'))].filter(Boolean).join(' · ');
+    const acts = actCount + (actCount === 1 ? tr(' actividad', ' activity') : tr(' actividades', ' activities')) + (subCount ? tr(' en total', ' in all') : '');
+    const meta = [subCount ? subCount + (subCount === 1 ? tr(' carpeta', ' folder') : tr(' carpetas', ' folders')) : '', acts].filter(Boolean).join(' · ');
     const card = el('div.card.folder',
       el('button.card-main', { type: 'button', onclick: (e) => { const c = e.currentTarget.closest('.card'); c.classList.add('opening'); setTimeout(() => setFolder(f.id), 180); } },
         el('span.folder-icon', '📁'),
