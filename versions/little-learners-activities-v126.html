@@ -876,7 +876,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
   display: flex; flex-direction: column; gap: clamp(10px, 1.6vh, 18px); padding-top: 8px;
 }
 /* The two cards share the space left by the keyboard (centred when there is room). */
-.tp-boxes { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: clamp(14px, 2.2vh, 26px); }
+.tp-boxes { flex: 1 0 auto; display: flex; flex-direction: column; justify-content: center; gap: clamp(14px, 2.2vh, 26px); }
 .tp-w { display: inline-block; white-space: nowrap; }
 .tp-target, .tp-typed {
   position: relative; border-radius: 26px; background: var(--tp-frame);
@@ -912,8 +912,8 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 .tp-img { flex: none; border: 0; padding: 4px; border-radius: 16px; background: #fff; box-shadow: 0 3px 0 rgba(0, 0, 0, .1); height: calc(var(--tp-size) * 1.55); aspect-ratio: 1; cursor: pointer; }
 .tp-img img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .tp-img.pop { animation: img-pop .35s ease; }
-.tp-target.mode-3 .tp-target-in { min-height: min(26vh, 230px); }
-.tp-target.mode-3 .tp-img { height: min(24vh, 210px); }
+.tp-target.mode-3 .tp-target-in { min-height: min(20vh, 200px); }
+.tp-target.mode-3 .tp-img { height: min(18vh, 180px); }
 .tp-listen { display: inline-flex; align-items: center; gap: 10px; border: 0; border-radius: 999px; padding: 14px 28px; background: var(--primary); color: #fff; font-size: clamp(22px, 3.4vh, 32px); font-weight: 900; box-shadow: 0 4px 0 #1E3F99; }
 .tp-out { flex: 1; text-align: left; }
 .tp-och { display: inline-block; padding: 0 .05em; }
@@ -927,7 +927,10 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 
 /* The keyboard */
 .kb {
-  position: relative; flex: 0 0 auto; height: clamp(190px, 52vh, 450px); display: flex; flex-direction: column; gap: clamp(4px, .8vh, 8px);
+  /* As tall as possible up to this size, but it gives way so the two cards always fit above it. */
+  position: relative; flex: 0 1 clamp(220px, 58vh, 520px); min-height: 200px;
+  /* 5 rows of the same height: the numbers row is as tall as a row of letters (easier to tap). */
+  display: grid; grid-template-rows: minmax(0, 1fr) minmax(0, 4fr); gap: clamp(4px, .9vh, 10px);
   padding: clamp(10px, 1.4vh, 16px) clamp(8px, 1.2vw, 16px) clamp(8px, 1.2vh, 14px);
   border-radius: 24px; background: linear-gradient(180deg, #EEF0F2, #E2E6EA);
   box-shadow: 0 6px 0 #C3CAD2, 0 12px 30px rgba(30, 40, 60, .14);
@@ -938,10 +941,10 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
   content: ''; position: absolute; left: 22px; right: 22px; top: 4px; height: 5px; border-radius: 99px;
   background: linear-gradient(90deg, #F87171, #FBBF24, #34D399, #60A5FA, #A78BFA, #F472B6);
 }
-.kb-tools { flex: 0 0 auto; height: clamp(30px, 5.2vh, 48px); display: flex; align-items: center; gap: clamp(2px, .5vw, 8px); padding: 0 4px 4px; border-bottom: 1px solid #CDD3D9; }
-.kb-icon { flex: 0 0 auto; width: clamp(22px, 3vw, 40px); text-align: center; font-size: clamp(15px, 2.4vh, 22px); filter: grayscale(1); opacity: .5; }
+.kb-tools { min-height: 0; display: flex; align-items: stretch; gap: clamp(3px, .6vw, 9px); }
+.kb-icon { flex: 0 0 auto; align-self: center; width: clamp(18px, 2.4vw, 34px); text-align: center; font-size: clamp(15px, 2.4vh, 22px); filter: grayscale(1); opacity: .5; }
 .kb-sep { flex: 0 0 1px; align-self: stretch; margin: 6px 2px; background: #C4CAD1; }
-.kb-rows { flex: 1 1 auto; min-height: 0; display: grid; grid-template-rows: repeat(4, 1fr); gap: clamp(4px, .9vh, 10px); }
+.kb-rows { min-height: 0; display: grid; grid-template-rows: repeat(4, 1fr); gap: clamp(4px, .9vh, 10px); }
 .kb-row { display: flex; gap: clamp(3px, .6vw, 9px); min-height: 0; }
 .kb-pad { flex: .45 1 0; }
 .kb-key {
@@ -958,8 +961,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
   min-width: 115%; padding: .1em .25em; border-radius: 12px; background: #fff; color: #1C2433; font-size: 1.45em; text-align: center;
   box-shadow: 0 6px 18px rgba(0, 0, 0, .22); pointer-events: none; z-index: 6;
 }
-.kb-key.kb-num { background: transparent; box-shadow: none; height: 100%; font-size: clamp(15px, min(2.8vh, 2.4vw), 26px); border-radius: 10px; }
-.kb-key.kb-num.down { background: #D6DBE0; }
+.kb-key.kb-num { background: #E4E8EC; box-shadow: 0 2px 0 #AEB6BF; }
 .kb-alt { position: absolute; top: 2px; right: 5px; font-size: .42em; color: #7C8796; pointer-events: none; }
 .kb-key.k-back, .kb-key.k-shift, .kb-key.k-sym, .kb-key.k-abc, .kb-key.k-hide { background: #A8D3E0; }
 .kb-key.k-enter { flex-grow: 2.1; background: #0E4C5E; color: #fff; font-size: 1.4em; font-weight: 700; box-shadow: 0 2px 0 #072E39; }
@@ -989,7 +991,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
   .tp-ch.now, .kb-key.hint, .kb-key.hint::before, .tp-caret { animation: none !important; }
 }
 @media (orientation: portrait) {
-  .kb { height: clamp(220px, 40vh, 480px); }
+  .kb { flex-basis: clamp(250px, 44vh, 540px); }
   .tp { --tp-size: clamp(30px, 7.4vw, 76px); }
   .tp-target-in { min-height: max(calc(var(--tp-size) * 1.65), 17vh); }
   .tp-typed-in { min-height: max(calc(var(--tp-size) * 1.65), 12vh); }
@@ -999,9 +1001,8 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
   .tp-boxes { gap: 12px; justify-content: flex-start; }
   .tp-target, .tp-typed { padding: 8px 8px 6px; border-radius: 18px; }
   .tp-target-in, .tp-typed-in { min-height: calc(var(--tp-size) * 1.45); padding: 2px 12px; border-width: 2px; border-radius: 12px; }
-  .kb { height: max(150px, 45vh); padding-top: 9px; }
+  .kb { flex-basis: max(170px, 52vh); min-height: 160px; padding-top: 9px; gap: 4px; }
   .kb-rows { gap: 4px; }
-  .kb-tools { height: 26px; }
   .tp-tag { font-size: 12px; top: -10px; }
   .tp-target.mode-3 .tp-target-in { min-height: 18vh; }
   .tp-target.mode-3 .tp-img { height: 16vh; }
@@ -1105,7 +1106,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 window.LL = window.LL || {};
 LL.config = {
   // Set by tools/stamp_version.py on every publish.
-  build: '20261029013705',
+  build: '20261029022548',
   version: 'V126',
   // Who runs this site, e.g. 'Sra. García · Escuela Primaria Lincoln'
   owner: 'Geovanny Cobos',

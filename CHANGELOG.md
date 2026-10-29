@@ -11,6 +11,8 @@
   1–2 0.75, 3–4 0.5, 5–6 0.25, more 0. Files: js/typing-game.js, js/typing-editor.js. Database:
   activity_type 'typing' (settings.mode), `quiz_results.score` numeric(8,2), `quiz_result_answers`
   + points, errors. Results show decimals (e.g. 3.5 / 4) and the mistakes per word.
+- Pantalla de Tablet: the numbers row is as tall as the rows of letters and its numbers look like keys
+  (easier for children to tap). The keyboard gives way on short screens so both cards stay visible.
 - Quiz start: when the activity has instructions, they are read first when it starts (and on «Otra
   vez»), then question 1's sound (question, «Leer en voz alta» text or audio file). Only at the start,
   not before every question. `LL.ui.speak` takes an optional onDone callback for this.
