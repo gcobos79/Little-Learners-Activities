@@ -287,6 +287,14 @@ window.LL = window.LL || {};
     return LL.cloud && LL.cloud.signedIn() ? [] : clone(DEFAULT_ROSTER);
   }
   function saveRoster(r) { return writeJSON(KEYS.roster, r); }
+  /** A copy of the class list with `student` put where its name fits alphabetically (before the first
+   *  name that comes after it), so a new child never jumps to the top of the list. */
+  function placeByName(list, student) {
+    const out = list.slice();
+    const i = out.findIndex((s) => byName(s, student) > 0);
+    out.splice(i < 0 ? out.length : i, 0, student);
+    return out;
+  }
 
   /* ---------- Sonidos iniciales (old prototype, removed in V126; its saved settings are only kept so sync keeps working) ---------- */
   function sonidos() { return { ...DEFAULT_SONIDOS, ...readJSON(KEYS.sonidos, {}) }; }
@@ -508,7 +516,7 @@ window.LL = window.LL || {};
     KEYS, FOLDER_COLORS, folderColor, ANIMALS, clone, uid, byName,
     readLibrary, quizzes, getQuiz, isReady, saveQuiz, duplicateQuiz, deleteQuiz, moveQuiz,
     folders, getFolder, saveFolder, deleteFolder, moveFolder, folderNameTaken, mergeDuplicateFolders, folderTrail, folderPathLabel, folderHas,
-    roster, saveRoster, sonidos, saveSonidos, pinHash, savePinHash, voice, saveVoice, settingsAt, quietly, readJSON, writeJSON, writeLibrary, writeFolders, todayChicago,
+    roster, saveRoster, placeByName, sonidos, saveSonidos, pinHash, savePinHash, voice, saveVoice, settingsAt, quietly, readJSON, writeJSON, writeLibrary, writeFolders, todayChicago,
     readDraft, writeDraft, clearDraft,
     exportBackup, importBackup, validateBackup, storageUsed, deleteAllData, freeSpace,
     newOption, newQuestion, newQuiz, questionProblem, isActivity,

@@ -1,6 +1,9 @@
 # Changelog
 
 ## V126 — October 2026 (Clasificación rápida)
+- Students: a new student takes its alphabetical place in the list (before it got the next number and,
+  since the others had none, jumped to the top). With a hand-made order (⬆️) it goes before the first
+  name that comes after it. «Zone Guest» was fixed in the database.
 - New activity type «Pantalla de Tablet» (`typing`): the child copies a word or phrase with an on-screen
   keyboard like the school tablets' (letters with ñ, Shift / double tap = CAPS LOCK, numbers row, «?123»
   page with signs, long press on a vowel for á é í ó ú ü, Space, ⌫, Enter). Modes for the whole

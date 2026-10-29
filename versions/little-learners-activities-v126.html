@@ -1106,7 +1106,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 window.LL = window.LL || {};
 LL.config = {
   // Set by tools/stamp_version.py on every publish.
-  build: '20261029022548',
+  build: '20261029033835',
   version: 'V126',
   // Who runs this site, e.g. 'Sra. García · Escuela Primaria Lincoln'
   owner: 'Geovanny Cobos',
@@ -1415,6 +1415,14 @@ window.LL = window.LL || {};
     return LL.cloud && LL.cloud.signedIn() ? [] : clone(DEFAULT_ROSTER);
   }
   function saveRoster(r) { return writeJSON(KEYS.roster, r); }
+  /** A copy of the class list with `student` put where its name fits alphabetically (before the first
+   *  name that comes after it), so a new child never jumps to the top of the list. */
+  function placeByName(list, student) {
+    const out = list.slice();
+    const i = out.findIndex((s) => byName(s, student) > 0);
+    out.splice(i < 0 ? out.length : i, 0, student);
+    return out;
+  }
 
   /* ---------- Sonidos iniciales (old prototype, removed in V126; its saved settings are only kept so sync keeps working) ---------- */
   function sonidos() { return { ...DEFAULT_SONIDOS, ...readJSON(KEYS.sonidos, {}) }; }
@@ -1636,7 +1644,7 @@ window.LL = window.LL || {};
     KEYS, FOLDER_COLORS, folderColor, ANIMALS, clone, uid, byName,
     readLibrary, quizzes, getQuiz, isReady, saveQuiz, duplicateQuiz, deleteQuiz, moveQuiz,
     folders, getFolder, saveFolder, deleteFolder, moveFolder, folderNameTaken, mergeDuplicateFolders, folderTrail, folderPathLabel, folderHas,
-    roster, saveRoster, sonidos, saveSonidos, pinHash, savePinHash, voice, saveVoice, settingsAt, quietly, readJSON, writeJSON, writeLibrary, writeFolders, todayChicago,
+    roster, saveRoster, placeByName, sonidos, saveSonidos, pinHash, savePinHash, voice, saveVoice, settingsAt, quietly, readJSON, writeJSON, writeLibrary, writeFolders, todayChicago,
     readDraft, writeDraft, clearDraft,
     exportBackup, importBackup, validateBackup, storageUsed, deleteAllData, freeSpace,
     newOption, newQuestion, newQuiz, questionProblem, isActivity,
@@ -2594,9 +2602,17 @@ window.LL = window.LL || {};
     async add({ name, animal, avatar }) {
       const list = S.roster();
       const img = avatar && avatar.startsWith('data:') ? await LL.media.upload(avatar, 'students') : avatar;
-      const sort = list.length;
-      await LL.cloud.insert('students', [{ name, animal: animal || randomAnimal(new Set(list.map((s) => s.animal))), avatar_path: path(img), sort_order: sort, active: true }]);
+      // No number of its own: students without one are listed by name (alphabetical order).
+      const rows = await LL.cloud.insert('students', [{ name, animal: animal || randomAnimal(new Set(list.map((s) => s.animal))), avatar_path: path(img), sort_order: null, active: true }], 'id');
       await refreshStudents();
+      // If the teacher ordered the list by hand (⬆️), put the new child where its name fits.
+      const id = Array.isArray(rows) && rows[0] ? rows[0].id : null;
+      if (id == null) return;
+      const manual = await LL.cloud.select('students', 'select=id&active=eq.true&sort_order=not.is.null&limit=1');
+      if (Array.isArray(manual) && manual.length) {
+        const others = S.roster().filter((s) => s.id !== id);
+        await students.reorder(S.placeByName(others, { id, name }).map((s) => s.id));
+      }
     },
     async update(id, { name, animal, avatar }) {
       const img = avatar && avatar.startsWith('data:') ? await LL.media.upload(avatar, 'students') : avatar;
@@ -5827,7 +5843,7 @@ window.LL = window.LL || {};
           el('button.btn.primary', { type: 'button', onclick: async () => {
             const v = await studentDialog(null); if (!v) return;
             if (dupName(v, -1)) { toast('Ya hay un estudiante con ese nombre.', 'error'); return; }
-            rosterChange(() => LL.sync.students.add(v), () => { r.push(v); S.saveRoster(r); }, v.name + ' agregado.');
+            rosterChange(() => LL.sync.students.add(v), () => { S.saveRoster(S.placeByName(r, v)); }, v.name + ' agregado.');
           } }, '＋ Agregar estudiante'),
           cloud ? el('button.btn.ghost', { type: 'button', onclick: async () => { try { await LL.sync.refreshStudents(); renderRoster(); toast('Lista actualizada.'); } catch (e) { toast(LL.auth.friendly(e), 'error'); } } }, '🔄 Actualizar lista') : null)),
       el('p.small.muted', cloud

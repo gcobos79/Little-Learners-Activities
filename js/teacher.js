@@ -101,7 +101,7 @@ window.LL = window.LL || {};
           el('button.btn.primary', { type: 'button', onclick: async () => {
             const v = await studentDialog(null); if (!v) return;
             if (dupName(v, -1)) { toast('Ya hay un estudiante con ese nombre.', 'error'); return; }
-            rosterChange(() => LL.sync.students.add(v), () => { r.push(v); S.saveRoster(r); }, v.name + ' agregado.');
+            rosterChange(() => LL.sync.students.add(v), () => { S.saveRoster(S.placeByName(r, v)); }, v.name + ' agregado.');
           } }, '＋ Agregar estudiante'),
           cloud ? el('button.btn.ghost', { type: 'button', onclick: async () => { try { await LL.sync.refreshStudents(); renderRoster(); toast('Lista actualizada.'); } catch (e) { toast(LL.auth.friendly(e), 'error'); } } }, '🔄 Actualizar lista') : null)),
       el('p.small.muted', cloud

@@ -25,6 +25,7 @@ module.exports = function makeMock() {
         if (op === 'eq') return String(x) === val;
         if (op === 'gt') return x != null && String(x) > val;
         if (op === 'is') return val === 'null' ? x == null : true;
+        if (op === 'not' && val === 'is.null') return x != null;
         return true;
       });
     }

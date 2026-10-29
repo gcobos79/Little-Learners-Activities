@@ -274,9 +274,17 @@ window.LL = window.LL || {};
     async add({ name, animal, avatar }) {
       const list = S.roster();
       const img = avatar && avatar.startsWith('data:') ? await LL.media.upload(avatar, 'students') : avatar;
-      const sort = list.length;
-      await LL.cloud.insert('students', [{ name, animal: animal || randomAnimal(new Set(list.map((s) => s.animal))), avatar_path: path(img), sort_order: sort, active: true }]);
+      // No number of its own: students without one are listed by name (alphabetical order).
+      const rows = await LL.cloud.insert('students', [{ name, animal: animal || randomAnimal(new Set(list.map((s) => s.animal))), avatar_path: path(img), sort_order: null, active: true }], 'id');
       await refreshStudents();
+      // If the teacher ordered the list by hand (⬆️), put the new child where its name fits.
+      const id = Array.isArray(rows) && rows[0] ? rows[0].id : null;
+      if (id == null) return;
+      const manual = await LL.cloud.select('students', 'select=id&active=eq.true&sort_order=not.is.null&limit=1');
+      if (Array.isArray(manual) && manual.length) {
+        const others = S.roster().filter((s) => s.id !== id);
+        await students.reorder(S.placeByName(others, { id, name }).map((s) => s.id));
+      }
     },
     async update(id, { name, animal, avatar }) {
       const img = avatar && avatar.startsWith('data:') ? await LL.media.upload(avatar, 'students') : avatar;
