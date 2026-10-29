@@ -82,7 +82,7 @@ const shots=process.argv[3]||'/tmp';
   ok(!mock.db.quizzes.some(r=>r.teacher_id==='u-2222'),'B: first teacher’s data not uploaded into second account');
   // local mode
   const C=await mk(1280,800); await C.goto('file://'+require('path').resolve(file)); await C.evaluate(()=>localStorage.clear()); await C.reload(); await C.waitForTimeout(300);
-  await C.click('button:has-text("Usar sin cuenta")'); await C.waitForTimeout(300);
+  await C.evaluate(() => { LL.auth.setLocalMode(true); LL.app.go('students'); }); await C.waitForTimeout(300);
   ok(await C.isVisible('#studentGrid'),'C: can use without an account');
   console.log('ERRORS A',A.errs,'B',B.errs,'C',C.errs);
   await b.close();

@@ -26,7 +26,14 @@ window.LL = window.LL || {};
         el('p', 'Little Learners Activities es una herramienta gratuita para que maestros de Pre-K creen quizzes con imágenes y sonido, y para que los niños los respondan en una tableta.'),
         c.owner ? el('p', 'Creado por ', el('strong', c.owner), ', maestro bilingüe de Pre-K.') : null,
         el('p', 'No tiene costo y no tiene anuncios. Los maestros pueden usarla con una cuenta (por invitación) para guardar sus actividades en la nube, o sin cuenta en un solo dispositivo.'),
-        contactLine),
+        contactLine,
+        // V127: «Usar sin cuenta» left the sign-in page (it confused visitors); it stays here for special cases.
+        LL.cloud && LL.cloud.enabled() && !LL.cloud.signedIn() && !LL.auth.localMode()
+          ? el('details.local-mode-box',
+            el('summary', 'Avanzado: usar sin cuenta en este dispositivo'),
+            el('p.small.muted', 'Abre la app vacía, sin tus actividades de la nube. Todo lo que se cree queda solo en este navegador (no va a la base de datos ni a otras tabletas). Para visitantes, usa mejor «Entrar como invitado».'),
+            el('button.btn.ghost', { type: 'button', onclick: () => { LL.auth.setLocalMode(true); LL.app.go('students'); } }, 'Usar sin cuenta, solo en este dispositivo'))
+          : null),
 
       sec('privacidad', 'Política de privacidad',
         el('p.small.muted', 'Última actualización: ' + c.policyUpdated),

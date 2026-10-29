@@ -1078,6 +1078,8 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 .guest-btns { grid-column: 1 / -1; display: grid; gap: 8px; }
 .login-guest .guest-btn-en { background: #fff; border: 2px solid #F59E0B; color: #8A4B00; }
 .lang-btn { white-space: nowrap; }
+.local-mode-box { margin-top: 6px; padding: 10px 14px; border-radius: 14px; background: var(--surface-2); display: grid; gap: 8px; }
+.local-mode-box summary { cursor: pointer; font-weight: 800; color: var(--muted); }
 
 </style>
 </head>
@@ -1163,7 +1165,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 window.LL = window.LL || {};
 LL.config = {
   // Set by tools/stamp_version.py on every publish.
-  build: '20261029055950',
+  build: '20261029060718',
   version: 'V126',
   // Who runs this site, e.g. 'Sra. García · Escuela Primaria Lincoln'
   owner: 'Geovanny Cobos',
@@ -6327,7 +6329,14 @@ window.LL = window.LL || {};
         el('p', 'Little Learners Activities es una herramienta gratuita para que maestros de Pre-K creen quizzes con imágenes y sonido, y para que los niños los respondan en una tableta.'),
         c.owner ? el('p', 'Creado por ', el('strong', c.owner), ', maestro bilingüe de Pre-K.') : null,
         el('p', 'No tiene costo y no tiene anuncios. Los maestros pueden usarla con una cuenta (por invitación) para guardar sus actividades en la nube, o sin cuenta en un solo dispositivo.'),
-        contactLine),
+        contactLine,
+        // V127: «Usar sin cuenta» left the sign-in page (it confused visitors); it stays here for special cases.
+        LL.cloud && LL.cloud.enabled() && !LL.cloud.signedIn() && !LL.auth.localMode()
+          ? el('details.local-mode-box',
+            el('summary', 'Avanzado: usar sin cuenta en este dispositivo'),
+            el('p.small.muted', 'Abre la app vacía, sin tus actividades de la nube. Todo lo que se cree queda solo en este navegador (no va a la base de datos ni a otras tabletas). Para visitantes, usa mejor «Entrar como invitado».'),
+            el('button.btn.ghost', { type: 'button', onclick: () => { LL.auth.setLocalMode(true); LL.app.go('students'); } }, 'Usar sin cuenta, solo en este dispositivo'))
+          : null),
 
       sec('privacidad', 'Política de privacidad',
         el('p.small.muted', 'Última actualización: ' + c.policyUpdated),
@@ -6520,9 +6529,6 @@ window.LL = window.LL || {};
         el('div.guest-btns',
           el('button.btn.primary.big.guest-btn', { type: 'button', onclick: (e) => { LL.ui.setGuestLang('es'); enterGuest(e.currentTarget); } }, 'Entrar como invitado'),
           el('button.btn.soft.big.guest-btn-en', { type: 'button', lang: 'en', onclick: (e) => { LL.ui.setGuestLang('en'); enterGuest(e.currentTarget); } }, 'Enter as guest (English)')))),
-      el('div.login-alt',
-        el('button.btn.ghost', { type: 'button', onclick: () => { setLocalMode(true); LL.app.go('students'); } }, 'Usar sin cuenta, solo en este dispositivo'),
-        el('p.small.muted', 'Sin cuenta, las actividades se guardan solo en este navegador.')),
       el('footer.site-footer',
         el('button', { type: 'button', onclick: () => LL.app.openInfo('privacidad') }, 'Privacidad'), el('span', { 'aria-hidden': 'true' }, '·'),
         el('button', { type: 'button', onclick: () => LL.app.openInfo('terminos') }, 'Términos'))));

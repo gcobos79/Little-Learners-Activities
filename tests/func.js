@@ -74,7 +74,7 @@ const assert=(c,m)=>{console.log((c?'PASS ':'FAIL ')+m)};
   const left=await p.evaluate(()=>Object.keys(localStorage).filter(k=>k.startsWith('ll-')&&k!=='ll-v122-roster'));
   assert(left.length===0,'delete all: removes all data');
   // import
-  await p.click('button:has-text("Usar sin cuenta")'); await p.waitForTimeout(300);
+  await p.evaluate(() => { LL.auth.setLocalMode(true); LL.app.go('students'); }); await p.waitForTimeout(300);
   await p.focus('.teacher-gate'); await p.keyboard.press('Enter'); await p.waitForTimeout(300);
   await p.click('.tab:has-text("Ajustes")'); await p.waitForTimeout(300);
   const [fc]=await Promise.all([p.waitForEvent('filechooser'),p.click('text=📤 Elegir archivo…')]);

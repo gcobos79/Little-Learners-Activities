@@ -118,9 +118,6 @@ window.LL = window.LL || {};
         el('div.guest-btns',
           el('button.btn.primary.big.guest-btn', { type: 'button', onclick: (e) => { LL.ui.setGuestLang('es'); enterGuest(e.currentTarget); } }, 'Entrar como invitado'),
           el('button.btn.soft.big.guest-btn-en', { type: 'button', lang: 'en', onclick: (e) => { LL.ui.setGuestLang('en'); enterGuest(e.currentTarget); } }, 'Enter as guest (English)')))),
-      el('div.login-alt',
-        el('button.btn.ghost', { type: 'button', onclick: () => { setLocalMode(true); LL.app.go('students'); } }, 'Usar sin cuenta, solo en este dispositivo'),
-        el('p.small.muted', 'Sin cuenta, las actividades se guardan solo en este navegador.')),
       el('footer.site-footer',
         el('button', { type: 'button', onclick: () => LL.app.openInfo('privacidad') }, 'Privacidad'), el('span', { 'aria-hidden': 'true' }, '·'),
         el('button', { type: 'button', onclick: () => LL.app.openInfo('terminos') }, 'Términos'))));

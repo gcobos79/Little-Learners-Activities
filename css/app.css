@@ -1070,3 +1070,5 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 .guest-btns { grid-column: 1 / -1; display: grid; gap: 8px; }
 .login-guest .guest-btn-en { background: #fff; border: 2px solid #F59E0B; color: #8A4B00; }
 .lang-btn { white-space: nowrap; }
+.local-mode-box { margin-top: 6px; padding: 10px 14px; border-radius: 14px; background: var(--surface-2); display: grid; gap: 8px; }
+.local-mode-box summary { cursor: pointer; font-weight: 800; color: var(--muted); }

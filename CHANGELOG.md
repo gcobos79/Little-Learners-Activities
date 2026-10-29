@@ -1,6 +1,9 @@
 # Changelog
 
 ## V126 — October 2026 (Clasificación rápida)
+- Sign-in page: «Usar sin cuenta, solo en este dispositivo» removed (it confused visitors, who should
+  use «Entrar como invitado»). It remains under Información → Acerca de → «Avanzado» when nobody is
+  signed in.
 - Folder cards count the activities inside the folder AND all its subfolders («2 carpetas · 15 actividades
   en total»); students and guests count only what they can see, the teacher counts everything.
 - Guests can use the app in English: «Enter as guest (English)» on the sign-in page and a «🌐 English /
