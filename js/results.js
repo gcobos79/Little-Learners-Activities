@@ -28,7 +28,8 @@ window.LL = window.LL || {};
 
   /** Called by the player when a child finishes a quiz. */
   function record({ quiz, student, answers, total, startedAt, finishedAt }) {
-    const score = answers.filter((a) => a.correct).length;
+    // «Pantalla de Tablet» answers carry points (1, 0.75, 0.5, 0.25 or 0); the rest count 1 if right.
+    const score = Math.round(answers.reduce((s, a) => s + (typeof a.points === 'number' ? a.points : a.correct ? 1 : 0), 0) * 100) / 100;
     const r = {
       student_id: typeof student.id === 'number' || /^\d+$/.test(String(student.id || '')) ? Number(student.id) : null,
       student_name: student.name, student_animal: student.animal || '', student_avatar: student.avatar || '',
@@ -106,11 +107,11 @@ window.LL = window.LL || {};
     let rows = [], offline = false;
     if (LL.cloud.signedIn()) {
       try {
-        const data = await LL.cloud.select('quiz_results', 'select=id,student_id,score,total,started_at,finished_at,duration_seconds,students(name,animal,avatar_path),quiz_result_answers(position,prompt,chosen_text,correct,response_ms)&quiz_id=eq.' + encodeURIComponent(quiz.id) + '&month=eq.' + month);
+        const data = await LL.cloud.select('quiz_results', 'select=id,student_id,score,total,started_at,finished_at,duration_seconds,students(name,animal,avatar_path),quiz_result_answers(position,prompt,chosen_text,correct,response_ms,points,errors)&quiz_id=eq.' + encodeURIComponent(quiz.id) + '&month=eq.' + month);
         rows = (data || []).map((r) => ({
           id: r.id, quiz_id: quiz.id, month,
           student_id: r.student_id, student_name: r.students ? r.students.name : '¿?', student_animal: r.students ? r.students.animal : '', student_avatar: r.students ? LL.media.toRef(r.students.avatar_path) : '',
-          score: r.score, total: r.total, finished_at: r.finished_at, duration_seconds: r.duration_seconds,
+          score: Number(r.score), total: r.total, finished_at: r.finished_at, duration_seconds: r.duration_seconds,
           answers: (r.quiz_result_answers || []).sort((a, b) => a.position - b.position),
         }));
       } catch (e) { offline = true; }
@@ -136,6 +137,8 @@ window.LL = window.LL || {};
 
   const fmtTime = (s) => (s == null ? '—' : s < 60 ? s + ' s' : Math.floor(s / 60) + ' min ' + String(s % 60).padStart(2, '0') + ' s');
   const fmtDate = (iso) => new Date(iso).toLocaleDateString('es-US', { day: 'numeric', month: 'short', timeZone: 'America/Chicago' }) + ' · ' + new Date(iso).toLocaleTimeString('es-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Chicago' });
+  /** 3 → «3»; 2.75 → «2.75»; 2.5 → «2.5». */
+  const fmtScore = (n) => { const v = Math.round(Number(n || 0) * 100) / 100; return String(v); };
   /** Short time for the children's board: 45 s → 0:45, 125 s → 2:05. */
   const clock = (s) => (s == null ? '—' : Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'));
   const medal = (p) => (p === 1 ? '🥇' : p === 2 ? '🥈' : p === 3 ? '🥉' : '');
@@ -185,16 +188,16 @@ window.LL = window.LL || {};
       for (const r of rows) {
         const pct = Math.round(r.score / Math.max(1, r.total) * 100);
         // The whole row opens the detail; the 🗑️ at the end deletes this result.
-        const row = el('div.rt-row.rt-click', { role: 'row', tabindex: '0', onclick: () => detail(r), onkeydown: (e) => { if (e.target === row && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); detail(r); } }, 'aria-label': r.student_name + ': ' + r.score + ' de ' + r.total + '. Ver detalle' },
+        const row = el('div.rt-row.rt-click', { role: 'row', tabindex: '0', onclick: () => detail(r), onkeydown: (e) => { if (e.target === row && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); detail(r); } }, 'aria-label': r.student_name + ': ' + fmtScore(r.score) + ' de ' + r.total + '. Ver detalle' },
           el('span.rt-place', medal(r.place) + ' ' + r.place),
           el('span.rt-student', LL.teacher.avatar({ animal: r.student_animal, avatar: r.student_avatar }), el('span', r.student_name), r.pending ? el('span.badge.hidden', { title: 'Se subirá cuando haya internet' }, '⏳') : null),
-          el('span.rt-score', el('strong', r.score + ' / ' + r.total), el('span.rt-bar', el('span', { style: { width: pct + '%' } }))),
+          el('span.rt-score', el('strong', fmtScore(r.score) + ' / ' + r.total), el('span.rt-bar', el('span', { style: { width: pct + '%' } }))),
           el('span.rt-date', fmtDate(r.finished_at)),
           el('span.rt-time', fmtTime(r.duration_seconds)),
           el('button.icon-btn.rt-del.danger', { type: 'button', title: 'Borrar este resultado', 'aria-label': 'Borrar el resultado de ' + r.student_name, onclick: (e) => { e.stopPropagation(); deleteResult(r); } }, '🗑️'));
         table.append(row);
       }
-      panel.append(table, el('p.small.muted', current.quiz && current.quiz.type === 'sort' ? 'Toca un estudiante para ver dónde llevó cada tarjeta.' : 'Toca un estudiante para ver cada pregunta.'));
+      panel.append(table, el('p.small.muted', current.quiz && current.quiz.type === 'sort' ? 'Toca un estudiante para ver dónde llevó cada tarjeta.' : current.quiz && current.quiz.type === 'typing' ? 'Toca un estudiante para ver cada palabra y sus errores.' : 'Toca un estudiante para ver cada pregunta.'));
     }
     // Who hasn't done it this month
     const done = new Set(rows.map((r) => (r.student_id != null ? 'id:' + r.student_id : 'n:' + r.student_name)));
@@ -216,7 +219,7 @@ window.LL = window.LL || {};
     const q = current.quiz;
     const when = current.view === 'day' ? 'de ' + fmtDate(r.finished_at).split(' · ')[0] : 'de ' + monthLabel(r.month || current.month);
     if (!(await confirmDialog('¿Borrar el resultado de ' + r.student_name + '?',
-      'Se borrará su puntaje ' + r.score + ' / ' + r.total + ' ' + when + ' en «' + (q ? q.name : '') + '». Volverá a aparecer como pendiente y podrá hacer la actividad otra vez. Esto no se puede deshacer.', 'Borrar', true))) return;
+      'Se borrará su puntaje ' + fmtScore(r.score) + ' / ' + r.total + ' ' + when + ' en «' + (q ? q.name : '') + '». Volverá a aparecer como pendiente y podrá hacer la actividad otra vez. Esto no se puede deshacer.', 'Borrar', true))) return;
     try {
       if (r.id != null && LL.cloud.signedIn()) await LL.cloud.remove('quiz_results', 'id=eq.' + encodeURIComponent(r.id));
       const all = readAll();
@@ -237,13 +240,21 @@ window.LL = window.LL || {};
     const sorting = !!(current.quiz && current.quiz.type === 'sort');
     const list = el('ol.answer-list');
     for (const a of r.answers || []) {
+      if (a.points != null) { // «Pantalla de Tablet»: points and mistakes per word
+        const p = Number(a.points), e = Number(a.errors) || 0;
+        list.append(el('li.' + (p === 1 ? 'good' : p > 0 ? 'part' : 'bad'),
+          el('span.mark', p === 1 ? '✓' : p > 0 ? '◐' : '✗'),
+          el('span.q', a.prompt || '—'),
+          el('span.a', fmtScore(p) + (p === 1 ? ' punto' : ' puntos') + ' · ' + (e === 0 ? 'sin errores' : e + (e === 1 ? ' error' : ' errores')))));
+        continue;
+      }
       list.append(el('li.' + (a.correct ? 'good' : 'bad'),
         el('span.mark', a.correct ? '✓' : '✗'),
         el('span.q', a.prompt || '(pregunta sin texto)'),
         el('span.a', (sorting ? 'Lo llevó a: ' : 'Respondió: ') + (a.chosen_text || '—'))));
     }
     dialog({
-      title: r.student_name + ' · ' + r.score + ' / ' + r.total,
+      title: r.student_name + ' · ' + fmtScore(r.score) + ' / ' + r.total,
       body: el('div', { style: { display: 'grid', gap: '10px' } },
         el('p.small.muted', fmtDate(r.finished_at) + ' · ' + fmtTime(r.duration_seconds)),
         (r.answers || []).length ? list : el('p.muted', 'No hay detalle para este resultado.')),
@@ -261,5 +272,5 @@ window.LL = window.LL || {};
     return { rows: today, missing };
   }
 
-  LL.results = { record, flush, open, render, monthOf, dayOf, dayBoard, clock, current: () => current };
+  LL.results = { record, flush, open, render, monthOf, dayOf, dayBoard, clock, fmtScore, current: () => current };
 })();

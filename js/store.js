@@ -101,7 +101,9 @@ window.LL = window.LL || {};
    *  card on the conveyor belt into its group). A sort activity is stored in the same shape as a quiz
    *  so pictures, voices, sync and backups work the same: each group is a "question" (text = group
    *  name) and each card is an "answer" of that group; config.sort has the belt settings. */
-  const isActivity = (t) => !!t && (t.type === 'quiz' || t.type === 'sort');
+  const ACTIVITY_TYPES = ['quiz', 'sort', 'typing'];
+  const typeOf = (t) => (ACTIVITY_TYPES.includes(t) ? t : 'quiz');
+  const isActivity = (t) => !!t && ACTIVITY_TYPES.includes(t.type);
 
   /** Latest version of every activity family (same rule as V121). */
   function quizzes() {
@@ -125,6 +127,7 @@ window.LL = window.LL || {};
   function isReady(q) {
     if (!(q && q.config && q.config.visibility === 'visible' && Array.isArray(q.config.questions))) return false;
     if (q.type === 'sort') return !sortProblem(q.config);
+    if (q.type === 'typing') return !typingProblem(q.config);
     return q.config.questions.length > 0;
   }
 
@@ -138,7 +141,7 @@ window.LL = window.LL || {};
     } else {
       const id = uid('quiz');
       quiz.id = id;
-      all.push({ id, familyId: id, type: quiz.type === 'sort' ? 'sort' : 'quiz', name: quiz.name, version: 1, folderId: quiz.folderId || null, config: clone(quiz.config), createdAt: now, updatedAt: now });
+      all.push({ id, familyId: id, type: typeOf(quiz.type), name: quiz.name, version: 1, folderId: quiz.folderId || null, config: clone(quiz.config), createdAt: now, updatedAt: now });
     }
     return writeLibrary(all, opts) ? quiz.id : null;
   }
@@ -454,6 +457,37 @@ window.LL = window.LL || {};
     return '';
   }
 
+  /* ---------- «Pantalla de Tablet» helpers (type 'typing', V127) ----------
+   * Each word or phrase is a "question" (text = what to type, optional picture, no answers);
+   * config.typing.mode: 1 = letter marked, 2 = not marked, 3 = only the picture (write from memory). */
+  const TYPING_DEFAULTS = { mode: 1 };
+  function newTypingItem(text = '') { return { id: uid('quiz'), text, image: '', emoji: '', audioMode: 'voice', readTextEnabled: false, readText: '', audio: '', correctCount: 1, options: [] }; }
+  function newTyping(folderId) {
+    return { id: null, type: 'typing', name: '', folderId: folderId || null, config: { lang: 'es', voiceGender: 'female', mode: 'practice', questionOrder: 'fixed', answerOrder: 'fixed', visibility: 'hidden', coverImage: '', typing: { ...TYPING_DEFAULTS }, questions: [newTypingItem(), newTypingItem(), newTypingItem()] } };
+  }
+  const typingSettings = (c) => { const t = { ...TYPING_DEFAULTS, ...((c && c.typing) || {}) }; t.mode = [1, 2, 3].includes(Number(t.mode)) ? Number(t.mode) : 1; return t; };
+  function typingSettingsOf(c) {
+    if (!c.typing || typeof c.typing !== 'object') c.typing = {};
+    c.typing.mode = typingSettings(c).mode;
+    return c.typing;
+  }
+  /** '' when the activity can be played, otherwise what is missing. */
+  function typingProblem(c) {
+    const items = ((c && c.questions) || []);
+    const filled = items.filter((q) => String(q.text || '').trim());
+    if (!filled.length) return 'Escribe al menos una palabra o frase.';
+    const mode = typingSettings(c).mode;
+    for (let i = 0; i < items.length; i++) {
+      const q = items[i], t = String(q.text || '').trim();
+      if (!t) { if (q.image) return 'La palabra ' + (i + 1) + ' tiene imagen pero le falta el texto.'; continue; }
+      const bad = LL.typingGame ? LL.typingGame.unsupported(t, c.lang) : [];
+      if (bad.length) return 'La palabra ' + (i + 1) + ' tiene ' + bad.map((b) => '«' + b + '»').join(' ') + ', que no está en el teclado.';
+      if (t.length > 60) return 'La palabra o frase ' + (i + 1) + ' es muy larga (máximo 60 letras).';
+      if (mode === 3 && !q.image) return 'En el Modo 3 cada palabra necesita una imagen (falta en la ' + (i + 1) + ').';
+    }
+    return '';
+  }
+
   /** Returns '' when the question is complete, otherwise a short message. Same rules as V121. */
   function questionProblem(q) {
     const visible = String(q.text || '').trim() || String(q.image || '').trim() || String(q.emoji || '').trim();
@@ -479,5 +513,6 @@ window.LL = window.LL || {};
     exportBackup, importBackup, validateBackup, storageUsed, deleteAllData, freeSpace,
     newOption, newQuestion, newQuiz, questionProblem, isActivity,
     newSort, newSortGroup, newSortItem, sortSettings, sortSettingsOf, sortProblem, itemFilled, instructionsOf, imageSpeaksOf,
+    typeOf, newTyping, newTypingItem, typingSettings, typingSettingsOf, typingProblem,
   };
 })();

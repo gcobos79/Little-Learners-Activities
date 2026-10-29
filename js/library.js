@@ -107,7 +107,9 @@ window.LL = window.LL || {};
         el('button.kind-choice', { type: 'button', onclick: pick('quiz') },
           el('span.kind-icon', '❓'), el('span.kind-name', 'Quiz'), el('span.kind-desc', 'Preguntas con respuestas para elegir.')),
         el('button.kind-choice', { type: 'button', onclick: pick('sort') },
-          el('span.kind-icon', '🧺'), el('span.kind-name', 'Clasificación rápida'), el('span.kind-desc', 'Las tarjetas pasan por una banda y el niño lleva cada una a su grupo.'))),
+          el('span.kind-icon', '🧺'), el('span.kind-name', 'Clasificación rápida'), el('span.kind-desc', 'Las tarjetas pasan por una banda y el niño lleva cada una a su grupo.')),
+        el('button.kind-choice', { type: 'button', onclick: pick('typing') },
+          el('span.kind-icon', '⌨️'), el('span.kind-name', 'Pantalla de Tablet'), el('span.kind-desc', 'El niño copia palabras o frases con el teclado de la tablet: letras, Shift, Borrar y Enter.'))),
       actions: [{ label: 'Cancelar', kind: 'ghost', value: false }],
     });
   }
@@ -118,13 +120,17 @@ window.LL = window.LL || {};
       const cards = qs.reduce((s, g) => s + (g.options || []).filter(S.itemFilled).length, 0);
       return 'Clasificación rápida · ' + qs.length + ' grupos · ' + cards + (cards === 1 ? ' tarjeta' : ' tarjetas');
     }
+    if (t.type === 'typing') {
+      const n = qs.filter((q) => String(q.text || '').trim()).length;
+      return 'Pantalla de Tablet · ' + n + (n === 1 ? ' palabra' : ' palabras');
+    }
     return 'Quiz · ' + qs.length + (qs.length === 1 ? ' pregunta' : ' preguntas');
   }
 
   function quizCard(t, student) {
     const cover = t.config?.coverImage || '';
     const main = el('button.card-main', { type: 'button', onclick: () => play(t) },
-      LL.media.isImage(cover) ? el('img.cover', { src: cover, alt: '' }) : el('span.cover-placeholder', { 'aria-hidden': 'true' }, t.type === 'sort' ? '🧺' : '❓'),
+      LL.media.isImage(cover) ? el('img.cover', { src: cover, alt: '' }) : el('span.cover-placeholder', { 'aria-hidden': 'true' }, t.type === 'sort' ? '🧺' : t.type === 'typing' ? '⌨️' : '❓'),
       el('span.name', t.name),
       el('span.meta', cardMeta(t)));
     const card = el('div.card.quiz', { dataset: { quizId: t.id } }, main);

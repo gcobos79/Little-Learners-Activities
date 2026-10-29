@@ -107,12 +107,13 @@ window.LL = window.LL || {};
       return item;
     });
     return {
-      id: r.id, familyId: r.id, type: r.activity_type === 'sort' ? 'sort' : 'quiz', name: r.name, version: 1, folderId: r.folder_id || null,
+      id: r.id, familyId: r.id, type: S.typeOf(r.activity_type), name: r.name, version: 1, folderId: r.folder_id || null,
       createdAt: iso(r.created_at), updatedAt: iso(r.updated_at),
       config: { lang: r.language, voiceGender: r.voice_gender === 'male' ? 'male' : 'female', mode: 'practice', questionOrder: r.question_order, answerOrder: r.answer_order, visibility: r.visible ? 'visible' : 'hidden', coverImage: ref(r.cover_path), questions,
         instructions: r.instructions || (r.settings && r.settings.instruction) || '',
         imageSpeaks: r.image_speaks !== false,
-        ...(r.activity_type === 'sort' ? { sort: S.sortSettings({ sort: r.settings || {} }) } : {}) },
+        ...(r.activity_type === 'sort' ? { sort: S.sortSettings({ sort: r.settings || {} }) } : {}),
+        ...(r.activity_type === 'typing' ? { typing: S.typingSettings({ typing: r.settings || {} }) } : {}) },
     };
   }
 
@@ -149,7 +150,7 @@ window.LL = window.LL || {};
     });
     return {
       p_quiz: { id: entry.id, folder_id: entry.folderId && folderIds.has(entry.folderId) ? entry.folderId : null, name: String(entry.name || '').slice(0, 200), language: c.lang, voice_gender: c.voiceGender === 'male' ? 'male' : 'female', mode: 'practice', question_order: c.questionOrder, answer_order: c.answerOrder, visible: c.visibility === 'visible', cover_path: path(c.coverImage), created_at: entry.createdAt || entry.updatedAt, updated_at: entry.updatedAt,
-        activity_type: entry.type === 'sort' ? 'sort' : 'quiz', settings: entry.type === 'sort' ? S.sortSettings(c) : {},
+        activity_type: S.typeOf(entry.type), settings: entry.type === 'sort' ? S.sortSettings(c) : entry.type === 'typing' ? S.typingSettings(c) : {},
         instructions: S.instructionsOf(c).slice(0, 300), image_speaks: S.imageSpeaksOf(c) },
       p_questions: questions,
       p_options: options,
@@ -439,5 +440,5 @@ window.LL = window.LL || {};
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') run(); });
   setInterval(() => { if (document.visibilityState === 'visible' && !LL.player?.isOpen?.()) run(); }, 120000);
 
-  LL.sync = { uploadMedia, schedule, run, status, onChange, owner, reset, localHasData, clearLocalLibrary, deleteCloudData, students, refreshStudents };
+  LL.sync = { uploadMedia, schedule, run, status, onChange, owner, reset, localHasData, clearLocalLibrary, deleteCloudData, students, refreshStudents, _convert: { rowToEntry, entryToPayload } };
 })();

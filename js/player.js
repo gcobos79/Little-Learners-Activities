@@ -38,6 +38,8 @@ window.LL = window.LL || {};
   // «Clasificación rápida» (type 'sort') runs the conveyor-belt game in the same player.
   let sortTotal = 0, sortDone = 0;
   const isSort = () => !!quiz && quiz.type === 'sort';
+  // «Pantalla de Tablet» (type 'typing', V127): copy each word with the on-screen tablet keyboard.
+  const isTyping = () => !!quiz && quiz.type === 'typing';
 
   /* Full screen (V127): a student's activity fills the whole screen, so the browser bar and
    * other tabs are out of reach. The teacher's preview stays in the window. Browsers only allow
@@ -81,7 +83,9 @@ window.LL = window.LL || {};
     // 📢 Instructions of the activity (part of its header), when the teacher wrote some.
     $('#playerHelp').hidden = !LL.store.instructionsOf(entry.config);
     root().classList.toggle('is-sort', entry.type === 'sort');
+    root().classList.toggle('is-typing', entry.type === 'typing');
     questions = entry.type === 'sort' ? [] : LL.store.clone(entry.config?.questions || []);
+    if (entry.type === 'typing') questions = questions.filter((q) => LL.typingGame.normalize(q.text));
     if (entry.config?.questionOrder === 'random' && !options.preview) questions = shuffle(questions);
     index = Math.max(0, Math.min(options.startIndex || 0, questions.length - 1));
     newAttempt();
@@ -106,6 +110,7 @@ window.LL = window.LL || {};
     stopClock();
     stopSound();
     if (LL.sortGame) LL.sortGame.stop();
+    if (LL.typingGame) LL.typingGame.stop();
     root().hidden = true;
     leaveFullscreen();
     document.body.style.overflow = '';
@@ -168,6 +173,7 @@ window.LL = window.LL || {};
     if (isSort()) { renderSort(); return; }
     clearTimer();
     stopSound();
+    if (LL.typingGame) LL.typingGame.stop();
     answered = false;
     selected = new Set();
     const q = questions[index];
@@ -175,12 +181,13 @@ window.LL = window.LL || {};
     b.replaceChildren();
     if (!q) {
       renderProgress();
-      b.append(el('div.finish', el('div.stars', '🤔'), el('h1', 'Esta actividad todavía no tiene preguntas.')));
+      b.append(el('div.finish', el('div.stars', '🤔'), el('h1', isTyping() ? 'Esta actividad todavía no tiene palabras.' : 'Esta actividad todavía no tiene preguntas.')));
       $('#playerSpeak').disabled = true;
       return;
     }
     renderProgress();
     shownAt = Date.now();
+    if (isTyping()) { renderTyping(q); return; }
 
     // Question
     const hasImg = LL.media.isImage(q.image);
@@ -251,7 +258,11 @@ window.LL = window.LL || {};
 
     if (LL.tts) LL.tts.prefetch([q, ...(q.options || [])], quiz.config?.voiceGender || 'female');
     // Read the question aloud automatically (needs a tap first, which the child just did).
-    // At the start of the activity, its instructions come first, then the question (V127).
+    autoRead(q);
+  }
+
+  /** Read the question automatically; at the start of the activity its instructions come first (V127). */
+  function autoRead(q) {
     const myRun = run;
     promptPlayed = false;
     const intro = introPending && !!instructions();
@@ -265,6 +276,35 @@ window.LL = window.LL || {};
     } else {
       timer = setTimeout(() => { if (still()) playPrompt(q); }, 250);
     }
+  }
+
+  /** «Pantalla de Tablet»: one word or phrase per screen, typed with the tablet keyboard. */
+  function renderTyping(q) {
+    const word = { ...q, text: LL.typingGame.normalize(q.text), audioMode: q.audioMode === 'file' && q.audio ? 'file' : 'voice' };
+    const speakBtn = $('#playerSpeak');
+    speakBtn.disabled = !hasPromptSound(word);
+    speakBtn.onclick = () => playPrompt(word);
+    const mode = Number(quiz.config?.typing?.mode) || 1;
+    const myRun = run;
+    LL.typingGame.start(body(), word, {
+      mode, lang: quiz.config?.lang,
+      say: () => playPrompt(word),
+      onDone: (r) => {
+        if (myRun !== run || root().hidden) return;
+        answered = true;
+        if (attempt && !attempt.answers.some((a) => a.question_id === q.id)) {
+          const original = (quiz.config?.questions || []).findIndex((x) => x.id === q.id);
+          attempt.answers.push({
+            position: original >= 0 ? original : index, question_id: q.id,
+            prompt: word.text.slice(0, 300), chosen_option_ids: [], chosen_text: r.typed.slice(0, 200),
+            correct: r.errors === 0, points: r.points, errors: r.errors, response_ms: r.ms,
+          });
+        }
+        if (index < questions.length - 1) { index++; render(); } else finish();
+      },
+    });
+    if (LL.tts) LL.tts.prefetch([word], quiz.config?.voiceGender || 'female');
+    autoRead(word);
   }
 
   /** Shrink only the answer texts that don't fit their box. */
@@ -334,6 +374,7 @@ window.LL = window.LL || {};
 
   function finish() {
     clearTimer();
+    if (LL.typingGame) LL.typingGame.stop();
     stopClock();
     if (attempt) showClock(Date.now() - Date.parse(attempt.startedAt));
     index = questions.length;
@@ -377,7 +418,7 @@ window.LL = window.LL || {};
         el('span.b-place', r.place <= 3 ? ['🥇', '🥈', '🥉'][r.place - 1] : String(r.place)),
         LL.teacher.avatar({ animal: r.student_animal, avatar: r.student_avatar }),
         el('span.b-name', r.student_name),
-        el('span.b-score', r.score + ' / ' + r.total),
+        el('span.b-score', LL.results.fmtScore(r.score) + ' / ' + r.total),
         el('span.b-time', { 'aria-label': 'Tiempo ' + clock(r.duration_seconds) }, clock(r.duration_seconds))));
     }
     for (const s of data.missing) {

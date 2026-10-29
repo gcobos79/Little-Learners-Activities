@@ -862,6 +862,165 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 .instructions-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .instructions-head label { font-weight: 900; font-size: 17px; }
 
+/* =====================================================================
+ * «Pantalla de Tablet» (activity type 'typing', V127)
+ * Word to copy (yellow card) · where the child writes (white card) · a tablet keyboard like the
+ * school tablets' (light keys, blue special keys, dark Enter), with playful colours around it.
+ * ===================================================================== */
+.player.is-typing .player-body { overflow: hidden; }
+.tp {
+  --tp-size: clamp(28px, min(7vh, 6.4vw), 76px);
+  --tp-frame: linear-gradient(180deg, #C7DEF8, #A6C8EF);
+  --tp-edge: #3B6FB6;
+  position: relative; flex: 1 1 auto; min-height: 0;
+  display: flex; flex-direction: column; gap: clamp(10px, 1.6vh, 18px); padding-top: 8px;
+}
+/* The two cards share the space left by the keyboard (centred when there is room). */
+.tp-boxes { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: clamp(14px, 2.2vh, 26px); }
+.tp-w { display: inline-block; white-space: nowrap; }
+.tp-target, .tp-typed {
+  position: relative; border-radius: 26px; background: var(--tp-frame);
+  padding: clamp(12px, 1.8vh, 18px) clamp(10px, 1.4vw, 18px) clamp(8px, 1.2vh, 14px);
+  box-shadow: 0 4px 0 #86AEDF, 0 10px 24px rgba(47, 91, 211, .12);
+}
+.tp-typed { --tp-frame: linear-gradient(180deg, #D9CCF7, #C3B1F1); box-shadow: 0 4px 0 #A48FDF, 0 10px 24px rgba(110, 70, 200, .12); }
+.tp-tag {
+  position: absolute; top: -12px; left: 18px; z-index: 1; padding: 3px 14px; border-radius: 999px;
+  background: #fff; font-weight: 900; font-size: clamp(13px, 1.8vh, 16px); box-shadow: 0 2px 0 rgba(0, 0, 0, .08);
+}
+.tp-target-in, .tp-typed-in {
+  display: flex; align-items: center; gap: clamp(10px, 1.6vw, 22px); overflow: hidden;
+  min-height: calc(var(--tp-size) * 1.65); max-height: 30vh;
+  border: 3px solid var(--tp-edge); border-radius: 18px; padding: 6px clamp(12px, 2vw, 26px);
+  transition: background .3s, border-color .3s;
+}
+.tp-target-in { background: #FFF4CC; justify-content: center; }
+.tp-typed-in { background: #fff; border-color: #6D4BC8; }
+.tp-word, .tp-out {
+  font-size: var(--tp-size); font-weight: 800; letter-spacing: .12em; line-height: 1.3;
+  min-width: 0; overflow-wrap: anywhere;
+}
+.tp-word { text-align: center; }
+.tp-ch { display: inline-block; padding: 0 .05em; border-radius: .2em; transition: color .25s; }
+.tp-ch.sp, .tp-och.sp { width: .5em; }
+.tp-ch.done { color: #15803D; }
+.tp-ch.now { background: rgba(255, 201, 77, .62); box-shadow: inset 0 0 0 3px #E39B00; animation: tpNow 1.2s ease-in-out infinite; }
+@keyframes tpNow { 50% { transform: translateY(-5px); } }
+.tp-enter { font-size: .55em; vertical-align: middle; margin-left: .35em; padding: .05em .3em; color: #8FA3BF; border: 3px dashed #BCCBE0; letter-spacing: 0; }
+.tp-target:not(.mode-1) .tp-enter { display: none; }
+.tp-enter.now { color: #0E4C5E; border-color: #E39B00; }
+.tp-img { flex: none; border: 0; padding: 4px; border-radius: 16px; background: #fff; box-shadow: 0 3px 0 rgba(0, 0, 0, .1); height: calc(var(--tp-size) * 1.55); aspect-ratio: 1; cursor: pointer; }
+.tp-img img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.tp-img.pop { animation: img-pop .35s ease; }
+.tp-target.mode-3 .tp-target-in { min-height: min(26vh, 230px); }
+.tp-target.mode-3 .tp-img { height: min(24vh, 210px); }
+.tp-listen { display: inline-flex; align-items: center; gap: 10px; border: 0; border-radius: 999px; padding: 14px 28px; background: var(--primary); color: #fff; font-size: clamp(22px, 3.4vh, 32px); font-weight: 900; box-shadow: 0 4px 0 #1E3F99; }
+.tp-out { flex: 1; text-align: left; }
+.tp-och { display: inline-block; padding: 0 .05em; }
+.tp-och.bad { color: #DC2626; text-decoration: underline wavy #DC2626 3px; text-underline-offset: .12em; animation: tpBad .35s ease; }
+@keyframes tpBad { 0% { transform: scale(1.5); } 100% { transform: scale(1); } }
+.tp-caret { display: inline-block; width: .09em; height: 1.05em; margin-left: .04em; vertical-align: -.16em; border-radius: 3px; background: #6D4BC8; animation: tpBlink 1s steps(2, start) infinite; }
+@keyframes tpBlink { to { visibility: hidden; } }
+.tp-typed.shake { animation: shake .45s ease; }
+.tp-target.win .tp-target-in, .tp-typed.win .tp-typed-in { background: #DCF7E6; border-color: #16A34A; }
+.tp-points { position: absolute; right: 22px; top: 50%; transform: translateY(-40%); padding: 6px 18px; border-radius: 999px; background: var(--sun); font-weight: 900; font-size: clamp(18px, 2.8vh, 30px); box-shadow: 0 3px 0 #D99A00; animation: popIn .45s cubic-bezier(.3, 1.6, .5, 1); }
+
+/* The keyboard */
+.kb {
+  position: relative; flex: 0 0 auto; height: clamp(190px, 52vh, 450px); display: flex; flex-direction: column; gap: clamp(4px, .8vh, 8px);
+  padding: clamp(10px, 1.4vh, 16px) clamp(8px, 1.2vw, 16px) clamp(8px, 1.2vh, 14px);
+  border-radius: 24px; background: linear-gradient(180deg, #EEF0F2, #E2E6EA);
+  box-shadow: 0 6px 0 #C3CAD2, 0 12px 30px rgba(30, 40, 60, .14);
+  user-select: none; -webkit-user-select: none; touch-action: manipulation;
+  font-family: Roboto, 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+}
+.kb::before { /* a little rainbow on top, for the children */
+  content: ''; position: absolute; left: 22px; right: 22px; top: 4px; height: 5px; border-radius: 99px;
+  background: linear-gradient(90deg, #F87171, #FBBF24, #34D399, #60A5FA, #A78BFA, #F472B6);
+}
+.kb-tools { flex: 0 0 auto; height: clamp(30px, 5.2vh, 48px); display: flex; align-items: center; gap: clamp(2px, .5vw, 8px); padding: 0 4px 4px; border-bottom: 1px solid #CDD3D9; }
+.kb-icon { flex: 0 0 auto; width: clamp(22px, 3vw, 40px); text-align: center; font-size: clamp(15px, 2.4vh, 22px); filter: grayscale(1); opacity: .5; }
+.kb-sep { flex: 0 0 1px; align-self: stretch; margin: 6px 2px; background: #C4CAD1; }
+.kb-rows { flex: 1 1 auto; min-height: 0; display: grid; grid-template-rows: repeat(4, 1fr); gap: clamp(4px, .9vh, 10px); }
+.kb-row { display: flex; gap: clamp(3px, .6vw, 9px); min-height: 0; }
+.kb-pad { flex: .45 1 0; }
+.kb-key {
+  position: relative; flex: 1 1 0; min-width: 0; min-height: 0; padding: 0; border: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: clamp(8px, 1.3vh, 14px); background: #D6DBE0; color: #1C2433;
+  font: inherit; font-size: clamp(17px, min(3.6vh, 3.4vw), 36px); font-weight: 500;
+  box-shadow: 0 2px 0 #AEB6BF; touch-action: manipulation; transition: transform .06s, background .15s;
+}
+.kb-key .kb-label { pointer-events: none; }
+.kb-key.down { transform: translateY(2px); box-shadow: none; background: #C2C9D1; }
+.kb-key.down[data-label]::after {
+  content: attr(data-label); position: absolute; left: 50%; bottom: calc(100% + 6px); transform: translateX(-50%);
+  min-width: 115%; padding: .1em .25em; border-radius: 12px; background: #fff; color: #1C2433; font-size: 1.45em; text-align: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .22); pointer-events: none; z-index: 6;
+}
+.kb-key.kb-num { background: transparent; box-shadow: none; height: 100%; font-size: clamp(15px, min(2.8vh, 2.4vw), 26px); border-radius: 10px; }
+.kb-key.kb-num.down { background: #D6DBE0; }
+.kb-alt { position: absolute; top: 2px; right: 5px; font-size: .42em; color: #7C8796; pointer-events: none; }
+.kb-key.k-back, .kb-key.k-shift, .kb-key.k-sym, .kb-key.k-abc, .kb-key.k-hide { background: #A8D3E0; }
+.kb-key.k-enter { flex-grow: 2.1; background: #0E4C5E; color: #fff; font-size: 1.4em; font-weight: 700; box-shadow: 0 2px 0 #072E39; }
+.kb-key.k-back { flex-grow: 1.3; }
+.kb-key.k-shift { flex-grow: 1.45; font-size: 1.35em; font-weight: 700; }
+.kb-key.k-sym, .kb-key.k-abc { flex-grow: 1.7; border-radius: 999px; font-size: clamp(14px, min(2.6vh, 2.4vw), 24px); font-weight: 600; }
+.kb-key.k-space { flex-grow: 6.2; }
+.kb-key.k-hide { flex-grow: 1.6; }
+.kb.shifted .k-shift { background: #6FB2C8; }
+.kb.caps .k-shift { background: #0E4C5E; color: #fff; }
+.kb.caps .k-shift .kb-label { border-bottom: 3px solid currentColor; }
+.kb-key.ok { animation: tpOk .35s ease; }
+@keyframes tpOk { 45% { background: #86EFAC; transform: scale(1.08); } }
+.kb-key.bad { animation: tpKeyBad .9s ease, shake .45s ease; }
+@keyframes tpKeyBad { 0%, 35%, 70% { background: var(--bad); color: #fff; } 18%, 52%, 100% { } }
+.kb-key.wig { animation: wiggle .4s ease; }
+.kb-key.hint {
+  z-index: 3; background: #22C55E !important; color: #fff !important;
+  box-shadow: 0 0 0 4px #BBF7D0, 0 0 24px 4px rgba(34, 197, 94, .75); animation: tpHint 1s ease-in-out infinite;
+}
+.kb-key.hint::before { content: '👆'; position: absolute; right: -6px; bottom: -14px; font-size: clamp(20px, 3vh, 30px); animation: bob 1s ease-in-out infinite; pointer-events: none; }
+@keyframes tpHint { 50% { transform: scale(1.07); } }
+.kb.locked .kb-key:not(.hint) { opacity: .32; filter: grayscale(.5); pointer-events: none; }
+.kb-pop { position: absolute; z-index: 20; display: flex; gap: 6px; padding: 6px; border-radius: 16px; background: #fff; box-shadow: 0 10px 30px rgba(0, 0, 0, .28); animation: popIn .15s ease; }
+.kb-pop .kb-var { flex: none; width: var(--kw); height: var(--kh); background: #EEF1F4; font-size: clamp(20px, 4vh, 38px); }
+@media (prefers-reduced-motion: reduce) {
+  .tp-ch.now, .kb-key.hint, .kb-key.hint::before, .tp-caret { animation: none !important; }
+}
+@media (orientation: portrait) {
+  .kb { height: clamp(220px, 40vh, 480px); }
+  .tp { --tp-size: clamp(30px, 7.4vw, 76px); }
+  .tp-target-in { min-height: max(calc(var(--tp-size) * 1.65), 17vh); }
+  .tp-typed-in { min-height: max(calc(var(--tp-size) * 1.65), 12vh); }
+}
+@media (max-height: 560px) {
+  .tp { --tp-size: clamp(20px, 6vh, 34px); gap: 6px; padding-top: 10px; }
+  .tp-boxes { gap: 12px; justify-content: flex-start; }
+  .tp-target, .tp-typed { padding: 8px 8px 6px; border-radius: 18px; }
+  .tp-target-in, .tp-typed-in { min-height: calc(var(--tp-size) * 1.45); padding: 2px 12px; border-width: 2px; border-radius: 12px; }
+  .kb { height: max(150px, 45vh); padding-top: 9px; }
+  .kb-rows { gap: 4px; }
+  .kb-tools { height: 26px; }
+  .tp-tag { font-size: 12px; top: -10px; }
+  .tp-target.mode-3 .tp-target-in { min-height: 18vh; }
+  .tp-target.mode-3 .tp-img { height: 16vh; }
+}
+
+/* Editor of «Pantalla de Tablet» */
+.tp-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.tp-item { grid-template-columns: 26px 50px minmax(120px, 1fr) auto; background: #F4F7FF; }
+.tp-item-main { display: grid; gap: 2px; min-width: 0; }
+.tp-item-text { width: 100%; font-size: 20px; font-weight: 800; }
+.tp-item-warn { font-size: 13px; font-weight: 800; color: #B45309; }
+.tp-item-warn:empty { display: none; }
+.tp-modes { display: grid; gap: 8px; }
+.tp-mode { display: grid; gap: 2px; text-align: left; padding: 10px 12px; border-radius: 14px; border: 3px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; cursor: pointer; }
+.tp-mode[aria-checked="true"] { border-color: var(--primary); background: var(--primary-soft); }
+.tp-mode-name { font-weight: 900; }
+.tp-mode-desc { font-size: 13px; color: var(--muted); }
+.answer-list li.part { background: var(--warn-soft); }
+
 </style>
 </head>
 <body class="mode-home">
@@ -946,7 +1105,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 window.LL = window.LL || {};
 LL.config = {
   // Set by tools/stamp_version.py on every publish.
-  build: '20261028221030',
+  build: '20261029013705',
   version: 'V126',
   // Who runs this site, e.g. 'Sra. García · Escuela Primaria Lincoln'
   owner: 'Geovanny Cobos',
@@ -1069,7 +1228,9 @@ window.LL = window.LL || {};
    *  card on the conveyor belt into its group). A sort activity is stored in the same shape as a quiz
    *  so pictures, voices, sync and backups work the same: each group is a "question" (text = group
    *  name) and each card is an "answer" of that group; config.sort has the belt settings. */
-  const isActivity = (t) => !!t && (t.type === 'quiz' || t.type === 'sort');
+  const ACTIVITY_TYPES = ['quiz', 'sort', 'typing'];
+  const typeOf = (t) => (ACTIVITY_TYPES.includes(t) ? t : 'quiz');
+  const isActivity = (t) => !!t && ACTIVITY_TYPES.includes(t.type);
 
   /** Latest version of every activity family (same rule as V121). */
   function quizzes() {
@@ -1093,6 +1254,7 @@ window.LL = window.LL || {};
   function isReady(q) {
     if (!(q && q.config && q.config.visibility === 'visible' && Array.isArray(q.config.questions))) return false;
     if (q.type === 'sort') return !sortProblem(q.config);
+    if (q.type === 'typing') return !typingProblem(q.config);
     return q.config.questions.length > 0;
   }
 
@@ -1106,7 +1268,7 @@ window.LL = window.LL || {};
     } else {
       const id = uid('quiz');
       quiz.id = id;
-      all.push({ id, familyId: id, type: quiz.type === 'sort' ? 'sort' : 'quiz', name: quiz.name, version: 1, folderId: quiz.folderId || null, config: clone(quiz.config), createdAt: now, updatedAt: now });
+      all.push({ id, familyId: id, type: typeOf(quiz.type), name: quiz.name, version: 1, folderId: quiz.folderId || null, config: clone(quiz.config), createdAt: now, updatedAt: now });
     }
     return writeLibrary(all, opts) ? quiz.id : null;
   }
@@ -1422,6 +1584,37 @@ window.LL = window.LL || {};
     return '';
   }
 
+  /* ---------- «Pantalla de Tablet» helpers (type 'typing', V127) ----------
+   * Each word or phrase is a "question" (text = what to type, optional picture, no answers);
+   * config.typing.mode: 1 = letter marked, 2 = not marked, 3 = only the picture (write from memory). */
+  const TYPING_DEFAULTS = { mode: 1 };
+  function newTypingItem(text = '') { return { id: uid('quiz'), text, image: '', emoji: '', audioMode: 'voice', readTextEnabled: false, readText: '', audio: '', correctCount: 1, options: [] }; }
+  function newTyping(folderId) {
+    return { id: null, type: 'typing', name: '', folderId: folderId || null, config: { lang: 'es', voiceGender: 'female', mode: 'practice', questionOrder: 'fixed', answerOrder: 'fixed', visibility: 'hidden', coverImage: '', typing: { ...TYPING_DEFAULTS }, questions: [newTypingItem(), newTypingItem(), newTypingItem()] } };
+  }
+  const typingSettings = (c) => { const t = { ...TYPING_DEFAULTS, ...((c && c.typing) || {}) }; t.mode = [1, 2, 3].includes(Number(t.mode)) ? Number(t.mode) : 1; return t; };
+  function typingSettingsOf(c) {
+    if (!c.typing || typeof c.typing !== 'object') c.typing = {};
+    c.typing.mode = typingSettings(c).mode;
+    return c.typing;
+  }
+  /** '' when the activity can be played, otherwise what is missing. */
+  function typingProblem(c) {
+    const items = ((c && c.questions) || []);
+    const filled = items.filter((q) => String(q.text || '').trim());
+    if (!filled.length) return 'Escribe al menos una palabra o frase.';
+    const mode = typingSettings(c).mode;
+    for (let i = 0; i < items.length; i++) {
+      const q = items[i], t = String(q.text || '').trim();
+      if (!t) { if (q.image) return 'La palabra ' + (i + 1) + ' tiene imagen pero le falta el texto.'; continue; }
+      const bad = LL.typingGame ? LL.typingGame.unsupported(t, c.lang) : [];
+      if (bad.length) return 'La palabra ' + (i + 1) + ' tiene ' + bad.map((b) => '«' + b + '»').join(' ') + ', que no está en el teclado.';
+      if (t.length > 60) return 'La palabra o frase ' + (i + 1) + ' es muy larga (máximo 60 letras).';
+      if (mode === 3 && !q.image) return 'En el Modo 3 cada palabra necesita una imagen (falta en la ' + (i + 1) + ').';
+    }
+    return '';
+  }
+
   /** Returns '' when the question is complete, otherwise a short message. Same rules as V121. */
   function questionProblem(q) {
     const visible = String(q.text || '').trim() || String(q.image || '').trim() || String(q.emoji || '').trim();
@@ -1447,6 +1640,7 @@ window.LL = window.LL || {};
     exportBackup, importBackup, validateBackup, storageUsed, deleteAllData, freeSpace,
     newOption, newQuestion, newQuiz, questionProblem, isActivity,
     newSort, newSortGroup, newSortItem, sortSettings, sortSettingsOf, sortProblem, itemFilled, instructionsOf, imageSpeaksOf,
+    typeOf, newTyping, newTypingItem, typingSettings, typingSettingsOf, typingProblem,
   };
 })();
 
@@ -2232,12 +2426,13 @@ window.LL = window.LL || {};
       return item;
     });
     return {
-      id: r.id, familyId: r.id, type: r.activity_type === 'sort' ? 'sort' : 'quiz', name: r.name, version: 1, folderId: r.folder_id || null,
+      id: r.id, familyId: r.id, type: S.typeOf(r.activity_type), name: r.name, version: 1, folderId: r.folder_id || null,
       createdAt: iso(r.created_at), updatedAt: iso(r.updated_at),
       config: { lang: r.language, voiceGender: r.voice_gender === 'male' ? 'male' : 'female', mode: 'practice', questionOrder: r.question_order, answerOrder: r.answer_order, visibility: r.visible ? 'visible' : 'hidden', coverImage: ref(r.cover_path), questions,
         instructions: r.instructions || (r.settings && r.settings.instruction) || '',
         imageSpeaks: r.image_speaks !== false,
-        ...(r.activity_type === 'sort' ? { sort: S.sortSettings({ sort: r.settings || {} }) } : {}) },
+        ...(r.activity_type === 'sort' ? { sort: S.sortSettings({ sort: r.settings || {} }) } : {}),
+        ...(r.activity_type === 'typing' ? { typing: S.typingSettings({ typing: r.settings || {} }) } : {}) },
     };
   }
 
@@ -2274,7 +2469,7 @@ window.LL = window.LL || {};
     });
     return {
       p_quiz: { id: entry.id, folder_id: entry.folderId && folderIds.has(entry.folderId) ? entry.folderId : null, name: String(entry.name || '').slice(0, 200), language: c.lang, voice_gender: c.voiceGender === 'male' ? 'male' : 'female', mode: 'practice', question_order: c.questionOrder, answer_order: c.answerOrder, visible: c.visibility === 'visible', cover_path: path(c.coverImage), created_at: entry.createdAt || entry.updatedAt, updated_at: entry.updatedAt,
-        activity_type: entry.type === 'sort' ? 'sort' : 'quiz', settings: entry.type === 'sort' ? S.sortSettings(c) : {},
+        activity_type: S.typeOf(entry.type), settings: entry.type === 'sort' ? S.sortSettings(c) : entry.type === 'typing' ? S.typingSettings(c) : {},
         instructions: S.instructionsOf(c).slice(0, 300), image_speaks: S.imageSpeaksOf(c) },
       p_questions: questions,
       p_options: options,
@@ -2564,7 +2759,7 @@ window.LL = window.LL || {};
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') run(); });
   setInterval(() => { if (document.visibilityState === 'visible' && !LL.player?.isOpen?.()) run(); }, 120000);
 
-  LL.sync = { uploadMedia, schedule, run, status, onChange, owner, reset, localHasData, clearLocalLibrary, deleteCloudData, students, refreshStudents };
+  LL.sync = { uploadMedia, schedule, run, status, onChange, owner, reset, localHasData, clearLocalLibrary, deleteCloudData, students, refreshStudents, _convert: { rowToEntry, entryToPayload } };
 })();
 
 </script>
@@ -2924,6 +3119,452 @@ window.LL = window.LL || {};
 
 </script>
   <script>
+/* js/typing-game.js */
+/* «Pantalla de Tablet» (activity type 'typing', V127).
+ *
+ * The child copies a word or phrase with an on-screen keyboard that looks like the school tablets'
+ * keyboard (lower case, upper case with Shift, numbers row, «?123» page with more signs). It teaches
+ * the keys and their functions: letters, Shift, Space, Backspace (⌫) and Enter.
+ *
+ * Modes (one per activity, config.typing.mode):
+ *   1 — the letter to type is marked with a yellow box in the word above;
+ *   2 — the word is shown but no letter is marked;
+ *   3 — only the picture (tap it to hear the word); the child writes it from memory.
+ *
+ * Rules (from the teacher):
+ *   - Right key: the letter appears in the white box. Upper/lower case must match (Shift first).
+ *   - Wrong key: buzzer and the key blinks red; a wrong letter appears in red in the white box and must
+ *     be erased with ⌫ before going on.
+ *   - A second mistake on the same letter: the key to press turns green and the rest of the keyboard is
+ *     locked until it is pressed (first ⌫ if a red letter is there; Shift / ?123 / ABC when needed).
+ *   - When the word is complete, Enter goes to the next word (same green help if it can't be found).
+ *   - Points per word: 0 mistakes = 1; 1–2 = 0.75; 3–4 = 0.5; 5–6 = 0.25; more than 6 = 0.
+ */
+window.LL = window.LL || {};
+(function () {
+  const { el, toast, confetti } = LL.ui;
+
+  const LONG_PRESS_MS = 450;
+  const DOUBLE_SHIFT_MS = 380;
+  const VARIANTS = { a: ['á'], e: ['é'], i: ['í'], o: ['ó'], u: ['ú', 'ü'], n: ['ñ'] };
+  const DIGITS = '1234567890'.split('');
+  const SYM_ROWS = [
+    '@#$%&-+=()'.split(''),
+    ['*', '"', "'", ':', ';', '¡', '!', '¿', '?'],
+    ['~', '|', '<', '>', '[', ']', '{', '}', '\\', '°'],
+  ];
+
+  /** Letters page. The Spanish keyboard has ñ after l (like the tablets set to Spanish). */
+  function letterRows(lang) {
+    return [
+      [...'qwertyuiop'.split(''), 'back'],
+      ['pad', ...'asdfghjkl'.split(''), ...(lang === 'en' ? [] : ['ñ']), 'enter'],
+      ['shift', ...'zxcvbnm'.split(''), '!', '?', 'shift'],
+      ['sym', '_', '/', 'space', ',', '.', 'hide'],
+    ];
+  }
+  function symRows() {
+    return [
+      [...SYM_ROWS[0], 'back'],
+      ['pad', ...SYM_ROWS[1], 'enter'],
+      SYM_ROWS[2],
+      ['abc', '_', '/', 'space', ',', '.', 'hide'],
+    ];
+  }
+  const KEYWORDS = new Set(['back', 'enter', 'shift', 'sym', 'abc', 'space', 'hide', 'pad']);
+  const isLetter = (ch) => ch.toLowerCase() !== ch.toUpperCase();
+  const lower = (ch) => ch.toLocaleLowerCase('es');
+  const upper = (ch) => ch.toLocaleUpperCase('es');
+
+  /** Characters each page can type (besides the numbers row, which is always there). */
+  function pageChars(page, lang) {
+    const rows = page === 'sym' ? symRows() : letterRows(lang);
+    const s = new Set(DIGITS);
+    for (const r of rows) for (const k of r) if (!KEYWORDS.has(k)) s.add(k);
+    s.add(' ');
+    return s;
+  }
+  /** Base key of a lower-case letter on the letters page: 'á' → 'a'; 'ñ' → 'ñ' (es) or 'n' (en). */
+  function baseKey(ch, lang) {
+    const letters = pageChars('letters', lang);
+    if (letters.has(ch)) return ch;
+    for (const [base, vs] of Object.entries(VARIANTS)) if (vs.includes(ch) && letters.has(base)) return base;
+    return null;
+  }
+  /** Can this character be typed with our keyboard? */
+  function canType(ch, lang) {
+    if (ch === ' ') return true;
+    if (isLetter(ch)) return !!baseKey(lower(ch), lang);
+    return pageChars('letters', lang).has(ch) || pageChars('sym', lang).has(ch);
+  }
+  /** Characters of a text that the keyboard can't type (for the editor). */
+  function unsupported(text, lang) {
+    const bad = new Set();
+    for (const ch of normalize(text)) if (!canType(ch, lang)) bad.add(ch);
+    return [...bad];
+  }
+  const normalize = (t) => String(t || '').normalize('NFC').replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"').replace(/\s+/g, ' ').trim();
+
+  /** Points for one word: 0 mistakes = 1; 1–2 = 0.75; 3–4 = 0.5; 5–6 = 0.25; more = 0. */
+  const pointsFor = (errors) => (errors <= 0 ? 1 : errors <= 2 ? 0.75 : errors <= 4 ? 0.5 : errors <= 6 ? 0.25 : 0);
+
+  // Toolbar of the tablet keyboard: icons are only for looks; the numbers type.
+  const TOOL_ICONS_LEFT = ['⌨️', '🙂', '📋', '✍️', '🎤'];
+  const TOOL_ICONS_RIGHT = ['🔄', '🌐'];
+
+  let game = null;
+
+  /**
+   * host: element to fill. q: { id, text, image }. o: { mode, lang, say(), onDone({ typed, errors, points, ms }) }
+   */
+  function start(host, q, o) {
+    stop();
+    const text = normalize(q.text);
+    const g = game = {
+      host, q, o, mode: [1, 2, 3].includes(Number(o.mode)) ? Number(o.mode) : 1, lang: o.lang === 'en' ? 'en' : 'es',
+      target: [...text, '\n'], pos: 0, typed: [], pending: null,
+      page: 'letters', shift: 0, lastShift: 0,
+      errors: 0, stepErr: 0, hint: false, done: false, startedAt: Date.now(), timers: [],
+    };
+
+    // Top: the word to copy (modes 1 and 2) or only the picture (mode 3).
+    const hasImg = LL.media.isImage(q.image);
+    const img = hasImg ? el('button.tp-img', { type: 'button', 'aria-label': 'Escuchar la palabra', title: 'Toca para escuchar' }, el('img', { src: q.image, alt: '' })) : null;
+    if (img) img.addEventListener('click', () => { o.say && o.say(); img.classList.remove('pop'); void img.offsetWidth; img.classList.add('pop'); });
+    const word = el('div.tp-word', { 'aria-label': g.mode === 3 ? '' : 'Copia: ' + text });
+    g.chars = [];
+    if (g.mode !== 3) {
+      // Letters of one word stay together on a line (a phrase only wraps at its spaces).
+      let group = null;
+      [...text].forEach((ch) => {
+        const s = el('span.tp-ch' + (ch === ' ' ? '.sp' : ''), ch === ' ' ? '\u00A0' : ch);
+        g.chars.push(s);
+        if (ch === ' ') { group = null; word.append(s, document.createTextNode(' ')); return; }
+        if (!group) { group = el('span.tp-w'); word.append(group); }
+        group.append(s);
+      });
+      const enter = el('span.tp-ch.tp-enter', { title: 'Enter' }, '⏎'); g.chars.push(enter);
+      (group || word).append(enter);
+    }
+    const listen = g.mode === 3 && !hasImg
+      ? el('button.tp-listen', { type: 'button', onclick: () => o.say && o.say() }, el('span', '🔊'), el('span', 'Escucha'))
+      : null;
+    const top = el('div.tp-target.mode-' + g.mode + (hasImg ? '.has-img' : ''),
+      el('span.tp-tag', g.mode === 3 ? '👂 Escucha y escribe' : '👀 Copia'),
+      el('div.tp-target-in', img, g.mode === 3 ? listen : word));
+
+    // Middle: where the child writes.
+    g.out = el('div.tp-out', { 'aria-live': 'polite' });
+    g.caret = el('span.tp-caret', { 'aria-hidden': 'true' });
+    const outBox = el('div.tp-typed', el('span.tp-tag', '✏️ Escribe aquí'), el('div.tp-typed-in', g.out));
+    g.outBox = outBox;
+
+    // Bottom: the keyboard.
+    g.kb = el('div.kb', { role: 'group', 'aria-label': 'Teclado' });
+    g.pop = null;
+    wireKeyboard(g);
+
+    host.replaceChildren(el('div.tp', el('div.tp-boxes', top, outBox), g.kb));
+    g.root = host.firstElementChild;
+    drawKeyboard(g);
+    drawOut(g);
+    drawMarks(g);
+    requestAnimationFrame(() => fit(g));
+    g.onResize = () => fit(g);
+    window.addEventListener('resize', g.onResize);
+    g.onKey = (e) => physicalKey(g, e);
+    document.addEventListener('keydown', g.onKey);
+    return { total: 1 };
+  }
+
+  function stop() {
+    const g = game; if (!g) return;
+    g.timers.forEach(clearTimeout);
+    window.removeEventListener('resize', g.onResize);
+    window.removeEventListener('pointerup', g.onUp);
+    document.removeEventListener('keydown', g.onKey);
+    closePop(g);
+    game = null;
+  }
+  const later = (g, ms, fn) => { const t = setTimeout(() => { if (game === g) fn(); }, ms); g.timers.push(t); };
+
+  /* ---------- Drawing ---------- */
+  function keyLabel(g, k) {
+    if (k === 'back') return '⌫';
+    if (k === 'enter') return '↵';
+    if (k === 'shift') return g.shift ? '⬆' : '⇧';
+    if (k === 'sym') return '?123';
+    if (k === 'abc') return 'ABC';
+    if (k === 'space') return '';
+    if (k === 'hide') return '⌨';
+    return g.page === 'letters' && g.shift && isLetter(k) ? upper(k) : k;
+  }
+  const KEY_NAMES = { back: 'Borrar', enter: 'Enter', shift: 'Mayúsculas (Shift)', sym: 'Números y signos', abc: 'Letras', space: 'Espacio', hide: 'Ocultar teclado' };
+
+  function drawKeyboard(g) {
+    const rows = g.page === 'sym' ? symRows() : letterRows(g.lang);
+    const tools = el('div.kb-tools',
+      ...TOOL_ICONS_LEFT.map((i) => el('span.kb-icon', { 'aria-hidden': 'true' }, i)),
+      el('span.kb-sep'),
+      ...DIGITS.map((d) => keyButton(g, d, 'kb-num')),
+      el('span.kb-sep'),
+      ...TOOL_ICONS_RIGHT.map((i) => el('span.kb-icon', { 'aria-hidden': 'true' }, i)),
+      el('span.kb-sep'),
+      el('span.kb-icon', { 'aria-hidden': 'true' }, '▣'));
+    const body = el('div.kb-rows', ...rows.map((r, ri) => el('div.kb-row.r' + (ri + 1), ...r.map((k) => (k === 'pad' ? el('span.kb-pad') : keyButton(g, k))))));
+    g.kb.replaceChildren(tools, body);
+    g.kb.classList.toggle('caps', g.shift === 2);
+    g.kb.classList.toggle('shifted', g.shift > 0);
+    g.kb.classList.toggle('sym', g.page === 'sym');
+    applyHint(g);
+  }
+
+  function keyButton(g, k, extra) {
+    const special = KEYWORDS.has(k);
+    const label = keyLabel(g, k);
+    const b = el('button.kb-key' + (extra ? '.' + extra : '') + (special ? '.k-' + k : ''), {
+      type: 'button', dataset: { k }, tabIndex: -1,
+      'aria-label': special ? KEY_NAMES[k] : (label === ' ' ? 'Espacio' : label),
+    });
+    b.append(el('span.kb-label', label));
+    if (g.page === 'letters' && VARIANTS[k] && (k !== 'n' || g.lang === 'en')) b.append(el('span.kb-alt', { 'aria-hidden': 'true' }, VARIANTS[k][0]));
+    if (!special) b.dataset.label = label;
+    return b;
+  }
+
+  function drawOut(g) {
+    const parts = g.typed.map((ch) => el('span.tp-och' + (ch === ' ' ? '.sp' : ''), ch === ' ' ? '\u00A0' : ch));
+    if (g.pending != null) parts.push(el('span.tp-och.bad', g.pending === ' ' ? '\u00A0' : g.pending));
+    g.out.replaceChildren(...parts, g.caret);
+  }
+
+  /** Mode 1: yellow box on the letter to type (done letters turn green). Mode 2: nothing marked. */
+  function drawMarks(g) {
+    if (g.mode !== 1) { g.chars.forEach((s) => s.classList.remove('now', 'done')); return; }
+    g.chars.forEach((s, i) => { s.classList.toggle('done', i < g.pos); s.classList.toggle('now', i === g.pos && !g.done); });
+  }
+
+  /** Same big letters in both boxes, shrunk only when the phrase doesn't fit. */
+  function fit(g) {
+    if (game !== g || !g.root.isConnected) return;
+    const r = g.root;
+    r.style.removeProperty('--tp-size');
+    const word = r.querySelector('.tp-word');
+    if (!word) return;
+    const box = word.parentElement;
+    let size = parseFloat(getComputedStyle(word).fontSize) || 56;
+    let guard = 0;
+    while (size > 18 && guard++ < 60 && (word.scrollWidth > box.clientWidth + 1 || word.scrollHeight > box.clientHeight + 1)) {
+      size -= 3; r.style.setProperty('--tp-size', size + 'px');
+    }
+  }
+
+  /* ---------- What should be pressed now ---------- */
+  /** The key that moves the child toward the next character: { k, variant? }. */
+  function expected(g) {
+    if (g.pending != null) return { k: 'back' };
+    const t = g.target[g.pos];
+    if (t === '\n') return { k: 'enter' };
+    if (t === ' ') return { k: 'space' };
+    if (DIGITS.includes(t)) return { k: t };
+    if (isLetter(t)) {
+      if (g.page === 'sym') return { k: 'abc' };
+      const up = t !== lower(t);
+      if (up !== (g.shift > 0)) return { k: 'shift' };
+      const low = lower(t), base = baseKey(low, g.lang);
+      return base && base !== low ? { k: base, variant: up ? t : low } : { k: low };
+    }
+    if (pageChars(g.page, g.lang).has(t)) return { k: t };
+    return { k: g.page === 'letters' ? 'sym' : 'abc' };
+  }
+
+  /** Green key + locked keyboard while the help is on. */
+  function applyHint(g) {
+    const keys = g.kb.querySelectorAll('.kb-key');
+    keys.forEach((b) => b.classList.remove('hint'));
+    g.kb.classList.toggle('locked', !!g.hint && !g.done);
+    if (!g.hint || g.done) return;
+    const ex = expected(g);
+    const b = g.kb.querySelector('.kb-key[data-k="' + cssEsc(ex.k) + '"]');
+    if (b) b.classList.add('hint');
+  }
+  const cssEsc = (s) => (window.CSS && CSS.escape ? CSS.escape(s) : String(s).replace(/["\\]/g, '\\$&'));
+
+  /* ---------- Pressing keys ---------- */
+  function wireKeyboard(g) {
+    let downKey = null, longTimer = null, longDone = false;
+    const keyOf = (e) => e.target.closest && e.target.closest('.kb-key');
+    g.kb.addEventListener('contextmenu', (e) => e.preventDefault());
+    g.kb.addEventListener('pointerdown', (e) => {
+      const b = keyOf(e);
+      if (!b || e.button > 0) return;
+      e.preventDefault();
+      if (g.pop && !g.pop.contains(e.target)) closePop(g);
+      if (g.kb.classList.contains('locked') && !b.classList.contains('hint')) return;
+      downKey = b; longDone = false;
+      b.classList.add('down');
+      const k = b.dataset.k;
+      clearTimeout(longTimer);
+      if (variantsOf(g, k).length) {
+        longTimer = setTimeout(() => { longDone = true; b.classList.remove('down'); openPop(g, b, k); }, LONG_PRESS_MS);
+      }
+    });
+    const up = (e, commit) => {
+      clearTimeout(longTimer);
+      const b = downKey; downKey = null;
+      if (!b) return;
+      b.classList.remove('down');
+      if (!commit || longDone) return;
+      const over = document.elementFromPoint(e.clientX, e.clientY);
+      if (over && b.contains(over)) press(g, b.dataset.k, b);
+    };
+    window.addEventListener('pointerup', g.onUp = (e) => { if (game === g) up(e, true); });
+    g.kb.addEventListener('pointercancel', (e) => up(e, false));
+    g.kb.addEventListener('pointerleave', () => { if (downKey && !longDone) { clearTimeout(longTimer); downKey.classList.remove('down'); downKey = null; } });
+    // Keyboard users (Tab + Enter) and screen readers.
+    g.kb.addEventListener('click', (e) => { const b = keyOf(e); if (b && e.detail === 0) press(g, b.dataset.k, b); });
+  }
+
+  function variantsOf(g, k) {
+    if (g.page !== 'letters' || !VARIANTS[k]) return [];
+    if (k === 'n' && g.lang !== 'en') return [];
+    return VARIANTS[k].map((v) => (g.shift ? upper(v) : v));
+  }
+
+  /** Long press on a vowel: little bubble with á é í ó ú ü (like the tablets). */
+  function openPop(g, b, k) {
+    closePop(g);
+    const vs = variantsOf(g, k);
+    const ex = expected(g);
+    const pop = el('div.kb-pop', { role: 'group', 'aria-label': 'Letras con tilde' },
+      ...vs.map((v) => {
+        const vb = el('button.kb-key.kb-var', { type: 'button', dataset: { v } }, v);
+        if (g.hint && ex.variant === v) vb.classList.add('hint');
+        vb.addEventListener('pointerup', (e) => { e.stopPropagation(); closePop(g); typeChar(g, v, b); });
+        vb.addEventListener('click', (e) => { if (e.detail === 0) { closePop(g); typeChar(g, v, b); } });
+        return vb;
+      }));
+    g.root.append(pop);
+    const r = b.getBoundingClientRect(), host = g.root.getBoundingClientRect();
+    const w = Math.max(r.width * vs.length, r.width);
+    pop.style.left = Math.max(4, Math.min(r.left - host.left + r.width / 2 - w / 2, host.width - w - 4)) + 'px';
+    pop.style.top = (r.top - host.top - r.height - 10) + 'px';
+    pop.style.setProperty('--kw', r.width + 'px');
+    pop.style.setProperty('--kh', r.height + 'px');
+    g.pop = pop;
+  }
+  function closePop(g) { if (g && g.pop) { g.pop.remove(); g.pop = null; } }
+
+  function press(g, k, btn) {
+    if (game !== g || g.done) return;
+    if (g.hint && (!btn || !btn.classList.contains('hint')) && !(btn && btn.classList.contains('kb-var'))) return;
+    switch (k) {
+      case 'shift': {
+        if (g.page !== 'letters') return;
+        const now = Date.now();
+        if (g.shift === 1 && now - g.lastShift < DOUBLE_SHIFT_MS) g.shift = 2; // double tap = CAPS LOCK
+        else g.shift = g.shift ? 0 : 1;
+        g.lastShift = now;
+        drawKeyboard(g);
+        return;
+      }
+      case 'sym': g.page = 'sym'; drawKeyboard(g); return;
+      case 'abc': g.page = 'letters'; drawKeyboard(g); return;
+      case 'hide': case 'pad': wiggle(btn); return;
+      case 'back':
+        if (g.pending != null) {
+          g.pending = null; drawOut(g); tap(btn);
+          applyHint(g);
+          return;
+        }
+        return mistake(g, btn, null);
+      case 'enter':
+        if (g.pending == null && g.target[g.pos] === '\n') { tap(btn); return complete(g, btn); }
+        return mistake(g, btn, null);
+      default: {
+        const ex = expected(g);
+        // In the help, the green vowel opens the bubble with the right accented letter.
+        if (g.hint && ex.variant && btn && btn.dataset.k === ex.k) { openPop(g, btn, ex.k); return; }
+        const ch = k === 'space' ? ' ' : (g.page === 'letters' && g.shift && isLetter(k) ? upper(k) : k);
+        typeChar(g, ch, btn);
+      }
+    }
+  }
+
+  function typeChar(g, ch, btn) {
+    if (game !== g || g.done) return;
+    const k = btn && btn.dataset.k;
+    if (g.pending != null) { mistake(g, btn, null); return; }
+    // Shift pressed once only lasts for one letter (double tap = CAPS LOCK stays on).
+    const redraw = (g.shift === 1 && isLetter(ch)) || g.hint;
+    if (g.shift === 1 && isLetter(ch)) g.shift = 0;
+    if (ch === g.target[g.pos]) {
+      g.typed.push(ch); g.pos++; g.stepErr = 0; g.hint = false;
+      if (redraw) drawKeyboard(g); else applyHint(g);
+      tap(findKey(g, k) || btn, true);
+      drawOut(g); drawMarks(g);
+      return;
+    }
+    if (redraw) drawKeyboard(g);
+    mistake(g, (k && findKey(g, k)) || btn, ch);
+  }
+  const findKey = (g, k) => (k ? g.kb.querySelector('.kb-key[data-k="' + cssEsc(k) + '"]') : null);
+
+  function mistake(g, btn, glyph) {
+    g.errors++; g.stepErr++;
+    if (glyph != null && g.pending == null) g.pending = glyph;
+    LL.ui.feedbackTone(false);
+    if (btn) { btn.classList.remove('bad'); void btn.offsetWidth; btn.classList.add('bad'); later(g, 900, () => btn.classList.remove('bad')); }
+    g.outBox.classList.remove('shake'); void g.outBox.offsetWidth; g.outBox.classList.add('shake');
+    drawOut(g);
+    if (g.stepErr >= 2 && !g.hint) {
+      g.hint = true;
+      later(g, 350, () => { applyHint(g); toast(g.pending != null ? 'Toca la tecla verde ⌫ para borrar.' : 'Toca la tecla verde.'); });
+    } else applyHint(g);
+  }
+
+  function complete(g) {
+    g.done = true; g.hint = false;
+    applyHint(g); drawMarks(g);
+    g.caret.remove();
+    const points = pointsFor(g.errors);
+    LL.ui.feedbackTone(true);
+    g.outBox.classList.add('win');
+    g.root.querySelector('.tp-target').classList.add('win');
+    const r = g.outBox.getBoundingClientRect();
+    confetti(r.left + r.width / 2, r.top + r.height / 2);
+    g.outBox.append(el('span.tp-points' + (points === 1 ? '.full' : ''), points === 1 ? '⭐ ¡Perfecto!' : points > 0 ? '⭐ ¡Muy bien!' : '👍 ¡Lo lograste!'));
+    later(g, 1600, () => { const o = g.o; const res = { typed: g.typed.join(''), errors: g.errors, points, ms: Date.now() - g.startedAt }; stop(); o.onDone && o.onDone(res); });
+  }
+
+  function tap(btn, good) {
+    if (!btn) return;
+    btn.classList.remove('ok'); void btn.offsetWidth;
+    if (good) btn.classList.add('ok');
+  }
+  function wiggle(btn) { if (!btn) return; btn.classList.remove('wig'); void btn.offsetWidth; btn.classList.add('wig'); }
+
+  /** A real keyboard (Chromebook) works too: the typed character counts as is. */
+  function physicalKey(g, e) {
+    if (game !== g || g.done || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (document.querySelector('.modal-back')) return;
+    const find = (k) => g.kb.querySelector('.kb-key[data-k="' + cssEsc(k) + '"]');
+    if (e.key === 'Backspace') { e.preventDefault(); const b = find('back'); if (!g.hint || (b && b.classList.contains('hint'))) press(g, 'back', b); return; }
+    if (e.key === 'Enter') { e.preventDefault(); const b = find('enter'); if (!g.hint || (b && b.classList.contains('hint'))) press(g, 'enter', b); return; }
+    if (e.key.length !== 1) return;
+    e.preventDefault();
+    const ch = e.key;
+    if (g.hint && g.pending == null && ch !== g.target[g.pos]) return;
+    if (g.hint && g.pending != null) return;
+    const k = ch === ' ' ? 'space' : (baseKey(lower(ch), g.lang) || ch);
+    typeChar(g, ch, find(k));
+  }
+
+  LL.typingGame = { start, stop, isRunning: () => !!game, unsupported, canType, normalize, pointsFor };
+})();
+
+</script>
+  <script>
 /* js/player.js */
 /* Quiz player. Same answer rules and timing as V121:
  *  - Correct: magic sound, the answer blinks green, next question after 2 s.
@@ -2965,6 +3606,8 @@ window.LL = window.LL || {};
   // «Clasificación rápida» (type 'sort') runs the conveyor-belt game in the same player.
   let sortTotal = 0, sortDone = 0;
   const isSort = () => !!quiz && quiz.type === 'sort';
+  // «Pantalla de Tablet» (type 'typing', V127): copy each word with the on-screen tablet keyboard.
+  const isTyping = () => !!quiz && quiz.type === 'typing';
 
   /* Full screen (V127): a student's activity fills the whole screen, so the browser bar and
    * other tabs are out of reach. The teacher's preview stays in the window. Browsers only allow
@@ -3008,7 +3651,9 @@ window.LL = window.LL || {};
     // 📢 Instructions of the activity (part of its header), when the teacher wrote some.
     $('#playerHelp').hidden = !LL.store.instructionsOf(entry.config);
     root().classList.toggle('is-sort', entry.type === 'sort');
+    root().classList.toggle('is-typing', entry.type === 'typing');
     questions = entry.type === 'sort' ? [] : LL.store.clone(entry.config?.questions || []);
+    if (entry.type === 'typing') questions = questions.filter((q) => LL.typingGame.normalize(q.text));
     if (entry.config?.questionOrder === 'random' && !options.preview) questions = shuffle(questions);
     index = Math.max(0, Math.min(options.startIndex || 0, questions.length - 1));
     newAttempt();
@@ -3033,6 +3678,7 @@ window.LL = window.LL || {};
     stopClock();
     stopSound();
     if (LL.sortGame) LL.sortGame.stop();
+    if (LL.typingGame) LL.typingGame.stop();
     root().hidden = true;
     leaveFullscreen();
     document.body.style.overflow = '';
@@ -3095,6 +3741,7 @@ window.LL = window.LL || {};
     if (isSort()) { renderSort(); return; }
     clearTimer();
     stopSound();
+    if (LL.typingGame) LL.typingGame.stop();
     answered = false;
     selected = new Set();
     const q = questions[index];
@@ -3102,12 +3749,13 @@ window.LL = window.LL || {};
     b.replaceChildren();
     if (!q) {
       renderProgress();
-      b.append(el('div.finish', el('div.stars', '🤔'), el('h1', 'Esta actividad todavía no tiene preguntas.')));
+      b.append(el('div.finish', el('div.stars', '🤔'), el('h1', isTyping() ? 'Esta actividad todavía no tiene palabras.' : 'Esta actividad todavía no tiene preguntas.')));
       $('#playerSpeak').disabled = true;
       return;
     }
     renderProgress();
     shownAt = Date.now();
+    if (isTyping()) { renderTyping(q); return; }
 
     // Question
     const hasImg = LL.media.isImage(q.image);
@@ -3178,7 +3826,11 @@ window.LL = window.LL || {};
 
     if (LL.tts) LL.tts.prefetch([q, ...(q.options || [])], quiz.config?.voiceGender || 'female');
     // Read the question aloud automatically (needs a tap first, which the child just did).
-    // At the start of the activity, its instructions come first, then the question (V127).
+    autoRead(q);
+  }
+
+  /** Read the question automatically; at the start of the activity its instructions come first (V127). */
+  function autoRead(q) {
     const myRun = run;
     promptPlayed = false;
     const intro = introPending && !!instructions();
@@ -3192,6 +3844,35 @@ window.LL = window.LL || {};
     } else {
       timer = setTimeout(() => { if (still()) playPrompt(q); }, 250);
     }
+  }
+
+  /** «Pantalla de Tablet»: one word or phrase per screen, typed with the tablet keyboard. */
+  function renderTyping(q) {
+    const word = { ...q, text: LL.typingGame.normalize(q.text), audioMode: q.audioMode === 'file' && q.audio ? 'file' : 'voice' };
+    const speakBtn = $('#playerSpeak');
+    speakBtn.disabled = !hasPromptSound(word);
+    speakBtn.onclick = () => playPrompt(word);
+    const mode = Number(quiz.config?.typing?.mode) || 1;
+    const myRun = run;
+    LL.typingGame.start(body(), word, {
+      mode, lang: quiz.config?.lang,
+      say: () => playPrompt(word),
+      onDone: (r) => {
+        if (myRun !== run || root().hidden) return;
+        answered = true;
+        if (attempt && !attempt.answers.some((a) => a.question_id === q.id)) {
+          const original = (quiz.config?.questions || []).findIndex((x) => x.id === q.id);
+          attempt.answers.push({
+            position: original >= 0 ? original : index, question_id: q.id,
+            prompt: word.text.slice(0, 300), chosen_option_ids: [], chosen_text: r.typed.slice(0, 200),
+            correct: r.errors === 0, points: r.points, errors: r.errors, response_ms: r.ms,
+          });
+        }
+        if (index < questions.length - 1) { index++; render(); } else finish();
+      },
+    });
+    if (LL.tts) LL.tts.prefetch([word], quiz.config?.voiceGender || 'female');
+    autoRead(word);
   }
 
   /** Shrink only the answer texts that don't fit their box. */
@@ -3261,6 +3942,7 @@ window.LL = window.LL || {};
 
   function finish() {
     clearTimer();
+    if (LL.typingGame) LL.typingGame.stop();
     stopClock();
     if (attempt) showClock(Date.now() - Date.parse(attempt.startedAt));
     index = questions.length;
@@ -3304,7 +3986,7 @@ window.LL = window.LL || {};
         el('span.b-place', r.place <= 3 ? ['🥇', '🥈', '🥉'][r.place - 1] : String(r.place)),
         LL.teacher.avatar({ animal: r.student_animal, avatar: r.student_avatar }),
         el('span.b-name', r.student_name),
-        el('span.b-score', r.score + ' / ' + r.total),
+        el('span.b-score', LL.results.fmtScore(r.score) + ' / ' + r.total),
         el('span.b-time', { 'aria-label': 'Tiempo ' + clock(r.duration_seconds) }, clock(r.duration_seconds))));
     }
     for (const s of data.missing) {
@@ -3421,7 +4103,8 @@ window.LL = window.LL || {};
 
   /** Called by the player when a child finishes a quiz. */
   function record({ quiz, student, answers, total, startedAt, finishedAt }) {
-    const score = answers.filter((a) => a.correct).length;
+    // «Pantalla de Tablet» answers carry points (1, 0.75, 0.5, 0.25 or 0); the rest count 1 if right.
+    const score = Math.round(answers.reduce((s, a) => s + (typeof a.points === 'number' ? a.points : a.correct ? 1 : 0), 0) * 100) / 100;
     const r = {
       student_id: typeof student.id === 'number' || /^\d+$/.test(String(student.id || '')) ? Number(student.id) : null,
       student_name: student.name, student_animal: student.animal || '', student_avatar: student.avatar || '',
@@ -3499,11 +4182,11 @@ window.LL = window.LL || {};
     let rows = [], offline = false;
     if (LL.cloud.signedIn()) {
       try {
-        const data = await LL.cloud.select('quiz_results', 'select=id,student_id,score,total,started_at,finished_at,duration_seconds,students(name,animal,avatar_path),quiz_result_answers(position,prompt,chosen_text,correct,response_ms)&quiz_id=eq.' + encodeURIComponent(quiz.id) + '&month=eq.' + month);
+        const data = await LL.cloud.select('quiz_results', 'select=id,student_id,score,total,started_at,finished_at,duration_seconds,students(name,animal,avatar_path),quiz_result_answers(position,prompt,chosen_text,correct,response_ms,points,errors)&quiz_id=eq.' + encodeURIComponent(quiz.id) + '&month=eq.' + month);
         rows = (data || []).map((r) => ({
           id: r.id, quiz_id: quiz.id, month,
           student_id: r.student_id, student_name: r.students ? r.students.name : '¿?', student_animal: r.students ? r.students.animal : '', student_avatar: r.students ? LL.media.toRef(r.students.avatar_path) : '',
-          score: r.score, total: r.total, finished_at: r.finished_at, duration_seconds: r.duration_seconds,
+          score: Number(r.score), total: r.total, finished_at: r.finished_at, duration_seconds: r.duration_seconds,
           answers: (r.quiz_result_answers || []).sort((a, b) => a.position - b.position),
         }));
       } catch (e) { offline = true; }
@@ -3529,6 +4212,8 @@ window.LL = window.LL || {};
 
   const fmtTime = (s) => (s == null ? '—' : s < 60 ? s + ' s' : Math.floor(s / 60) + ' min ' + String(s % 60).padStart(2, '0') + ' s');
   const fmtDate = (iso) => new Date(iso).toLocaleDateString('es-US', { day: 'numeric', month: 'short', timeZone: 'America/Chicago' }) + ' · ' + new Date(iso).toLocaleTimeString('es-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Chicago' });
+  /** 3 → «3»; 2.75 → «2.75»; 2.5 → «2.5». */
+  const fmtScore = (n) => { const v = Math.round(Number(n || 0) * 100) / 100; return String(v); };
   /** Short time for the children's board: 45 s → 0:45, 125 s → 2:05. */
   const clock = (s) => (s == null ? '—' : Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'));
   const medal = (p) => (p === 1 ? '🥇' : p === 2 ? '🥈' : p === 3 ? '🥉' : '');
@@ -3578,16 +4263,16 @@ window.LL = window.LL || {};
       for (const r of rows) {
         const pct = Math.round(r.score / Math.max(1, r.total) * 100);
         // The whole row opens the detail; the 🗑️ at the end deletes this result.
-        const row = el('div.rt-row.rt-click', { role: 'row', tabindex: '0', onclick: () => detail(r), onkeydown: (e) => { if (e.target === row && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); detail(r); } }, 'aria-label': r.student_name + ': ' + r.score + ' de ' + r.total + '. Ver detalle' },
+        const row = el('div.rt-row.rt-click', { role: 'row', tabindex: '0', onclick: () => detail(r), onkeydown: (e) => { if (e.target === row && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); detail(r); } }, 'aria-label': r.student_name + ': ' + fmtScore(r.score) + ' de ' + r.total + '. Ver detalle' },
           el('span.rt-place', medal(r.place) + ' ' + r.place),
           el('span.rt-student', LL.teacher.avatar({ animal: r.student_animal, avatar: r.student_avatar }), el('span', r.student_name), r.pending ? el('span.badge.hidden', { title: 'Se subirá cuando haya internet' }, '⏳') : null),
-          el('span.rt-score', el('strong', r.score + ' / ' + r.total), el('span.rt-bar', el('span', { style: { width: pct + '%' } }))),
+          el('span.rt-score', el('strong', fmtScore(r.score) + ' / ' + r.total), el('span.rt-bar', el('span', { style: { width: pct + '%' } }))),
           el('span.rt-date', fmtDate(r.finished_at)),
           el('span.rt-time', fmtTime(r.duration_seconds)),
           el('button.icon-btn.rt-del.danger', { type: 'button', title: 'Borrar este resultado', 'aria-label': 'Borrar el resultado de ' + r.student_name, onclick: (e) => { e.stopPropagation(); deleteResult(r); } }, '🗑️'));
         table.append(row);
       }
-      panel.append(table, el('p.small.muted', current.quiz && current.quiz.type === 'sort' ? 'Toca un estudiante para ver dónde llevó cada tarjeta.' : 'Toca un estudiante para ver cada pregunta.'));
+      panel.append(table, el('p.small.muted', current.quiz && current.quiz.type === 'sort' ? 'Toca un estudiante para ver dónde llevó cada tarjeta.' : current.quiz && current.quiz.type === 'typing' ? 'Toca un estudiante para ver cada palabra y sus errores.' : 'Toca un estudiante para ver cada pregunta.'));
     }
     // Who hasn't done it this month
     const done = new Set(rows.map((r) => (r.student_id != null ? 'id:' + r.student_id : 'n:' + r.student_name)));
@@ -3609,7 +4294,7 @@ window.LL = window.LL || {};
     const q = current.quiz;
     const when = current.view === 'day' ? 'de ' + fmtDate(r.finished_at).split(' · ')[0] : 'de ' + monthLabel(r.month || current.month);
     if (!(await confirmDialog('¿Borrar el resultado de ' + r.student_name + '?',
-      'Se borrará su puntaje ' + r.score + ' / ' + r.total + ' ' + when + ' en «' + (q ? q.name : '') + '». Volverá a aparecer como pendiente y podrá hacer la actividad otra vez. Esto no se puede deshacer.', 'Borrar', true))) return;
+      'Se borrará su puntaje ' + fmtScore(r.score) + ' / ' + r.total + ' ' + when + ' en «' + (q ? q.name : '') + '». Volverá a aparecer como pendiente y podrá hacer la actividad otra vez. Esto no se puede deshacer.', 'Borrar', true))) return;
     try {
       if (r.id != null && LL.cloud.signedIn()) await LL.cloud.remove('quiz_results', 'id=eq.' + encodeURIComponent(r.id));
       const all = readAll();
@@ -3630,13 +4315,21 @@ window.LL = window.LL || {};
     const sorting = !!(current.quiz && current.quiz.type === 'sort');
     const list = el('ol.answer-list');
     for (const a of r.answers || []) {
+      if (a.points != null) { // «Pantalla de Tablet»: points and mistakes per word
+        const p = Number(a.points), e = Number(a.errors) || 0;
+        list.append(el('li.' + (p === 1 ? 'good' : p > 0 ? 'part' : 'bad'),
+          el('span.mark', p === 1 ? '✓' : p > 0 ? '◐' : '✗'),
+          el('span.q', a.prompt || '—'),
+          el('span.a', fmtScore(p) + (p === 1 ? ' punto' : ' puntos') + ' · ' + (e === 0 ? 'sin errores' : e + (e === 1 ? ' error' : ' errores')))));
+        continue;
+      }
       list.append(el('li.' + (a.correct ? 'good' : 'bad'),
         el('span.mark', a.correct ? '✓' : '✗'),
         el('span.q', a.prompt || '(pregunta sin texto)'),
         el('span.a', (sorting ? 'Lo llevó a: ' : 'Respondió: ') + (a.chosen_text || '—'))));
     }
     dialog({
-      title: r.student_name + ' · ' + r.score + ' / ' + r.total,
+      title: r.student_name + ' · ' + fmtScore(r.score) + ' / ' + r.total,
       body: el('div', { style: { display: 'grid', gap: '10px' } },
         el('p.small.muted', fmtDate(r.finished_at) + ' · ' + fmtTime(r.duration_seconds)),
         (r.answers || []).length ? list : el('p.muted', 'No hay detalle para este resultado.')),
@@ -3654,7 +4347,7 @@ window.LL = window.LL || {};
     return { rows: today, missing };
   }
 
-  LL.results = { record, flush, open, render, monthOf, dayOf, dayBoard, clock, current: () => current };
+  LL.results = { record, flush, open, render, monthOf, dayOf, dayBoard, clock, fmtScore, current: () => current };
 })();
 
 </script>
@@ -3769,7 +4462,9 @@ window.LL = window.LL || {};
         el('button.kind-choice', { type: 'button', onclick: pick('quiz') },
           el('span.kind-icon', '❓'), el('span.kind-name', 'Quiz'), el('span.kind-desc', 'Preguntas con respuestas para elegir.')),
         el('button.kind-choice', { type: 'button', onclick: pick('sort') },
-          el('span.kind-icon', '🧺'), el('span.kind-name', 'Clasificación rápida'), el('span.kind-desc', 'Las tarjetas pasan por una banda y el niño lleva cada una a su grupo.'))),
+          el('span.kind-icon', '🧺'), el('span.kind-name', 'Clasificación rápida'), el('span.kind-desc', 'Las tarjetas pasan por una banda y el niño lleva cada una a su grupo.')),
+        el('button.kind-choice', { type: 'button', onclick: pick('typing') },
+          el('span.kind-icon', '⌨️'), el('span.kind-name', 'Pantalla de Tablet'), el('span.kind-desc', 'El niño copia palabras o frases con el teclado de la tablet: letras, Shift, Borrar y Enter.'))),
       actions: [{ label: 'Cancelar', kind: 'ghost', value: false }],
     });
   }
@@ -3780,13 +4475,17 @@ window.LL = window.LL || {};
       const cards = qs.reduce((s, g) => s + (g.options || []).filter(S.itemFilled).length, 0);
       return 'Clasificación rápida · ' + qs.length + ' grupos · ' + cards + (cards === 1 ? ' tarjeta' : ' tarjetas');
     }
+    if (t.type === 'typing') {
+      const n = qs.filter((q) => String(q.text || '').trim()).length;
+      return 'Pantalla de Tablet · ' + n + (n === 1 ? ' palabra' : ' palabras');
+    }
     return 'Quiz · ' + qs.length + (qs.length === 1 ? ' pregunta' : ' preguntas');
   }
 
   function quizCard(t, student) {
     const cover = t.config?.coverImage || '';
     const main = el('button.card-main', { type: 'button', onclick: () => play(t) },
-      LL.media.isImage(cover) ? el('img.cover', { src: cover, alt: '' }) : el('span.cover-placeholder', { 'aria-hidden': 'true' }, t.type === 'sort' ? '🧺' : '❓'),
+      LL.media.isImage(cover) ? el('img.cover', { src: cover, alt: '' }) : el('span.cover-placeholder', { 'aria-hidden': 'true' }, t.type === 'sort' ? '🧺' : t.type === 'typing' ? '⌨️' : '❓'),
       el('span.name', t.name),
       el('span.meta', cardMeta(t)));
     const card = el('div.card.quiz', { dataset: { quizId: t.id } }, main);
@@ -4215,6 +4914,138 @@ window.LL = window.LL || {};
 
 </script>
   <script>
+/* js/typing-editor.js */
+/* Editor for «Pantalla de Tablet» (activity type 'typing', V127).
+ * A numbered list of words or phrases, each with an optional picture (needed in Mode 3). Each word is
+ * stored as a quiz "question" without answers (see store.js), so saving, pictures, voices and sync are
+ * shared with quizzes. The mode (1, 2 or 3) is one choice for the whole activity. */
+window.LL = window.LL || {};
+(function () {
+  const { el, toast, imageFileToDataURL, pickFile, speak } = LL.ui;
+  const S = LL.store;
+  const MAX_ITEMS = 30;
+  const MODES = [
+    [1, '🟨 Modo 1', 'Se marca la letra que toca escribir.'],
+    [2, '⬜ Modo 2', 'Se ve la palabra, sin marcar la letra.'],
+    [3, '🖼️ Modo 3', 'Solo la imagen: al tocarla se oye la palabra y el niño la escribe de memoria.'],
+  ];
+
+  function pickFiles(accept) {
+    return new Promise((resolve) => {
+      const input = el('input', { type: 'file', accept, multiple: true, style: { display: 'none' } });
+      input.addEventListener('change', () => { resolve([...(input.files || [])]); input.remove(); });
+      document.body.append(input);
+      input.click();
+    });
+  }
+  /** "gato.png" → "gato"; "02_casa-roja.jpg" → "casa roja". */
+  let refreshFn = null;
+  const wordFromFile = (name) => String(name || '').replace(/\.[a-z0-9]+$/i, '').replace(/^[\d\s._-]+/, '').replace(/[_-]+/g, ' ').trim().slice(0, 60);
+
+  /** container: element to fill. api: { changed(), store(dataUrl, folder) → Promise<ref> } */
+  function render(container, quiz, api) {
+    const c = quiz.config;
+    const items = c.questions;
+    container.replaceChildren();
+
+    const status = el('div');
+    const refreshStatus = () => {
+      const msg = S.typingProblem(c);
+      const n = items.filter((q) => String(q.text || '').trim()).length;
+      status.className = msg ? 'problem-box' : 'ok-box';
+      status.textContent = msg ? '⚠️ ' + msg : '✓ Lista: ' + n + (n === 1 ? ' palabra o frase.' : ' palabras o frases.');
+    };
+    const changed = () => { refreshStatus(); api.changed(); };
+    refreshFn = () => { if (status.isConnected) { refreshStatus(); list.querySelectorAll('.tp-item-text').forEach((t) => t.dispatchEvent(new Event('recheck'))); } };
+
+    const list = el('ol.tp-items');
+    const drawItems = () => {
+      list.replaceChildren(...items.map((q, i) => itemRow(q, i)));
+      addItem.disabled = addMany.disabled = items.length >= MAX_ITEMS;
+      count.textContent = items.length + ' / ' + MAX_ITEMS;
+      refreshStatus();
+    };
+
+    function itemRow(q, i) {
+      const thumb = el('button.sort-thumb', { type: 'button', 'aria-label': q.image ? 'Cambiar la imagen de la palabra ' + (i + 1) : 'Elegir una imagen para la palabra ' + (i + 1), title: q.image ? 'Cambiar imagen' : 'Elegir imagen (opcional; necesaria en el Modo 3)' },
+        q.image ? el('img', { src: q.image, alt: '' }) : el('span', '🖼️'));
+      thumb.addEventListener('click', async () => {
+        const f = await pickFile('image/*'); if (!f) return;
+        try { q.image = await api.store(await imageFileToDataURL(f, 800, 0.8), 'images'); if (!q.text) q.text = wordFromFile(f.name); delete q.tts; drawItems(); changed(); } catch (e) { toast(e.message, 'error'); }
+      });
+      const text = el('input.tp-item-text', { type: 'text', maxlength: '60', placeholder: 'Palabra o frase (ej. Welcome back!)', value: q.text || '', 'aria-label': 'Palabra o frase ' + (i + 1), autocapitalize: 'off', autocomplete: 'off', spellcheck: 'false' });
+      const warn = el('span.tp-item-warn');
+      const check = () => {
+        const bad = LL.typingGame.unsupported(text.value, c.lang);
+        warn.textContent = bad.length ? '⚠️ No está en el teclado: ' + bad.join(' ') : '';
+        row.classList.toggle('empty', !String(text.value).trim());
+      };
+      text.addEventListener('recheck', check);
+      text.addEventListener('input', () => { q.text = text.value; q.audioMode = 'voice'; delete q.tts; check(); changed(); });
+      const mv = (d) => { const j = i + d; if (j < 0 || j >= items.length) return; [items[i], items[j]] = [items[j], items[i]]; drawItems(); changed(); };
+      const row = el('li.sort-item.tp-item',
+        el('span.sort-item-num', String(i + 1) + '.'),
+        thumb,
+        el('div.tp-item-main', text, warn),
+        el('div.sort-item-tools',
+          q.image ? el('button.icon-btn', { type: 'button', 'aria-label': 'Quitar la imagen de la palabra ' + (i + 1), title: 'Quitar imagen', onclick: () => { q.image = ''; drawItems(); changed(); } }, '✕') : null,
+          el('button.icon-btn', { type: 'button', 'aria-label': 'Escuchar', title: 'Escuchar', onclick: () => { if (String(q.text || '').trim()) speak(q.text, c.lang, c.voiceGender); else toast('Escribe la palabra para que se pueda escuchar.'); } }, '🔊'),
+          el('button.icon-btn', { type: 'button', 'aria-label': 'Subir la palabra ' + (i + 1), title: 'Subir', disabled: i === 0, onclick: () => mv(-1) }, '↑'),
+          el('button.icon-btn', { type: 'button', 'aria-label': 'Bajar la palabra ' + (i + 1), title: 'Bajar', disabled: i === items.length - 1, onclick: () => mv(1) }, '↓'),
+          el('button.icon-btn.danger', { type: 'button', 'aria-label': 'Eliminar la palabra ' + (i + 1), title: 'Eliminar', disabled: items.length <= 1, onclick: () => { items.splice(i, 1); drawItems(); changed(); } }, '🗑️')));
+      check();
+      return row;
+    }
+
+    const count = el('span.small.muted');
+    const addItem = el('button.btn.soft', { type: 'button', onclick: () => {
+      if (items.length >= MAX_ITEMS) return;
+      items.push(S.newTypingItem()); drawItems(); changed();
+      const rows = list.querySelectorAll('.tp-item-text'); rows[rows.length - 1] && rows[rows.length - 1].focus();
+    } }, '＋ Agregar palabra');
+    const addMany = el('button.btn.ghost', { type: 'button', title: 'Elige varias imágenes a la vez: se crea una palabra por imagen (la palabra sale del nombre del archivo).', onclick: async () => {
+      const files = await pickFiles('image/*'); if (!files.length) return;
+      let added = 0;
+      for (const f of files) {
+        let target = items.find((q) => !String(q.text || '').trim() && !q.image);
+        if (!target) { if (items.length >= MAX_ITEMS) { toast('Puedes tener hasta ' + MAX_ITEMS + ' palabras.', 'error'); break; } target = S.newTypingItem(); items.push(target); }
+        try { target.image = await api.store(await imageFileToDataURL(f, 800, 0.8), 'images'); if (!target.text) target.text = wordFromFile(f.name); added++; } catch (e) { toast(e.message, 'error'); }
+        drawItems();
+      }
+      if (added) { changed(); toast(added + (added === 1 ? ' palabra agregada.' : ' palabras agregadas.'), 'success'); }
+    } }, '🖼️ Varias imágenes');
+
+    container.append(
+      el('div.sort-editor-head', el('h2', '⌨️ Palabras y frases')),
+      el('p.small.muted', 'El niño copia cada palabra o frase con el teclado de la tablet, letra por letra, y al final toca Enter. Respeta mayúsculas y minúsculas (con Shift), los espacios, los números y los signos. La imagen es opcional, pero en el Modo 3 es necesaria.'),
+      status, list,
+      el('div.sort-editor-foot', addItem, addMany, count));
+    drawItems();
+  }
+
+  /** The mode, shown in the editor's ⚙️ Ajustes panel. */
+  function settingsFields(quiz, api) {
+    const set = S.typingSettingsOf(quiz.config);
+    const wrap = el('div.tp-modes', { role: 'radiogroup', 'aria-label': 'Modo de la actividad' });
+    const draw = () => {
+      wrap.replaceChildren(...MODES.map(([m, name, desc]) => el('button.tp-mode', {
+        type: 'button', role: 'radio', 'aria-checked': String(set.mode === m),
+        onclick: () => { set.mode = m; draw(); api.changed(); },
+      }, el('span.tp-mode-name', name), el('span.tp-mode-desc', desc))));
+    };
+    draw();
+    return [
+      el('p.type-tag', '⌨️ Pantalla de Tablet'),
+      el('div.field', 'Modo (para toda la actividad)', wrap,
+        el('span.hint', 'Puntos por palabra: sin errores 1 · 1–2 errores 0.75 · 3–4 errores 0.5 · 5–6 errores 0.25 · más de 6 errores 0.')),
+    ];
+  }
+
+  LL.typingEditor = { render, settingsFields, refresh: () => refreshFn && refreshFn() };
+})();
+
+</script>
+  <script>
 /* js/editor.js */
 /* Quiz editor (teacher). One page: settings on the left, questions in the middle.
  * Saves in the same format as V121. Unsaved work is also kept as a draft so it can
@@ -4239,19 +5070,23 @@ window.LL = window.LL || {};
   }
 
   const isSort = () => !!quiz && quiz.type === 'sort';
-  const draftKey = () => quiz.id || (isSort() ? 'new-sort' : 'new');
+  const isTyping = () => !!quiz && quiz.type === 'typing'; // «Pantalla de Tablet» (V127)
+  /** Activities that aren't a classic quiz say «actividad» (feminine) instead of «quiz». */
+  const isActivityWord = () => isSort() || isTyping();
+  const draftKey = () => quiz.id || (isSort() ? 'new-sort' : isTyping() ? 'new-typing' : 'new');
 
   /** kind (new activities only): 'quiz' or 'sort' («Clasificación rápida»). */
   async function open(id, folderId, kind) {
     if (id) {
       const q = S.getQuiz(id);
       if (!q) { toast('No se encontró esa actividad.', 'error'); return; }
-      quiz = { id: q.id, type: q.type === 'sort' ? 'sort' : 'quiz', name: q.name, folderId: q.folderId || null, config: S.clone(q.config) };
+      quiz = { id: q.id, type: S.typeOf(q.type), name: q.name, folderId: q.folderId || null, config: S.clone(q.config) };
       if (!Array.isArray(quiz.config.questions)) quiz.config.questions = [];
       quiz.config = { lang: 'es', voiceGender: 'female', mode: 'practice', questionOrder: 'fixed', answerOrder: 'fixed', visibility: 'hidden', coverImage: '', ...quiz.config };
       if (quiz.type === 'sort') quiz.config.sort = S.sortSettings(quiz.config);
+      if (quiz.type === 'typing') quiz.config.typing = S.typingSettings(quiz.config);
     } else {
-      quiz = kind === 'sort' ? S.newSort(folderId) : S.newQuiz(folderId);
+      quiz = kind === 'sort' ? S.newSort(folderId) : kind === 'typing' ? S.newTyping(folderId) : S.newQuiz(folderId);
     }
     snapshot = JSON.stringify(quiz);
     qIndex = 0;
@@ -4264,6 +5099,7 @@ window.LL = window.LL || {};
       } else S.clearDraft();
     }
     if (isSort()) { while (quiz.config.questions.length < 2) quiz.config.questions.push(S.newSortGroup()); }
+    else if (isTyping()) { if (!quiz.config.questions.length) quiz.config.questions.push(S.newTypingItem()); }
     else if (!quiz.config.questions.length) quiz.config.questions.push(S.newQuestion());
     await LL.app.go('editor');
     renderAll();
@@ -4271,6 +5107,7 @@ window.LL = window.LL || {};
   }
 
   function changed() {
+    if (isTyping() && LL.typingEditor) LL.typingEditor.refresh(); // mode / language change what is valid
     if (isDirty()) S.writeDraft({ quizId: draftKey(), quiz, at: new Date().toISOString() });
     const st = $('#edState');
     if (st) {
@@ -4284,7 +5121,7 @@ window.LL = window.LL || {};
   function renderAll() {
     const r = root();
     r.replaceChildren();
-    const name = el('input.name-input#edName', { type: 'text', maxlength: '90', placeholder: isSort() ? 'Nombre de la actividad (ej. Clasificar A, F, K, P)' : 'Nombre del quiz (ej. Animales)', value: quiz.name, 'aria-label': isSort() ? 'Nombre de la actividad' : 'Nombre del quiz' });
+    const name = el('input.name-input#edName', { type: 'text', maxlength: '90', placeholder: isSort() ? 'Nombre de la actividad (ej. Clasificar A, F, K, P)' : isTyping() ? 'Nombre de la actividad (ej. Escribo saludos)' : 'Nombre del quiz (ej. Animales)', value: quiz.name, 'aria-label': isActivityWord() ? 'Nombre de la actividad' : 'Nombre del quiz' });
     name.addEventListener('input', () => { quiz.name = name.value; changed(); });
 
     r.append(el('div.editor-top',
@@ -4295,6 +5132,13 @@ window.LL = window.LL || {};
     r.append(el('p.small#edState', { style: { margin: '-8px 0 12px', fontWeight: '800' } }));
     r.append(instructionsField());
 
+    if (isTyping()) {
+      const main = el('div.panel.sort-editor.tp-editor#edTyping');
+      r.append(el('div.editor-layout.sort-layout', el('aside.editor-side', settingsPanel()), main));
+      LL.typingEditor.render(main, quiz, { changed, store });
+      changed();
+      return;
+    }
     if (isSort()) {
       const main = el('div.panel.sort-editor#edSort');
       r.append(el('div.editor-layout.sort-layout', el('aside.editor-side', settingsPanel()), main));
@@ -4316,14 +5160,14 @@ window.LL = window.LL || {};
     const c = quiz.config;
     if (!c.instructions && c.sort && c.sort.instruction) c.instructions = c.sort.instruction; // early V126 sort activities
     if (c.sort) delete c.sort.instruction;
-    const box = el('textarea', { rows: '2', maxlength: '300', placeholder: isSort() ? 'Ej. Escucha el nombre de cada dibujo y llévalo a la letra con la que empieza.' : 'Ej. Escucha la pregunta y toca la respuesta correcta.', 'aria-label': 'Instrucciones de la actividad' });
+    const box = el('textarea', { rows: '2', maxlength: '300', placeholder: isSort() ? 'Ej. Escucha el nombre de cada dibujo y llévalo a la letra con la que empieza.' : isTyping() ? 'Ej. Copia la palabra con el teclado. Al terminar, toca Enter.' : 'Ej. Escucha la pregunta y toca la respuesta correcta.', 'aria-label': 'Instrucciones de la actividad' });
     box.value = c.instructions || '';
     box.addEventListener('input', () => { c.instructions = box.value; changed(); });
     const test = el('button.btn.sm.ghost', { type: 'button', onclick: () => { if (box.value.trim()) speak(box.value, c.lang, c.voiceGender); else { toast('Escribe primero las instrucciones.'); box.focus(); } } }, '🔊 Escuchar');
     return el('div.panel.instructions-field',
       el('div.instructions-head', el('label', { htmlFor: 'edInstructions' }, '📢 Instrucciones de la actividad'), test),
       Object.assign(box, { id: 'edInstructions' }),
-      el('span.hint', 'Opcional. Explica a los niños de qué se trata la actividad. En la actividad aparece el botón 📢 arriba para escucharlas' + (isSort() ? ', y se leen solas al empezar.' : '.')));
+      el('span.hint', 'Opcional. Explica a los niños de qué se trata la actividad. En la actividad se leen solas al empezar, y el botón 📢 de arriba las repite.'));
   }
 
   function settingsPanel() {
@@ -4335,6 +5179,7 @@ window.LL = window.LL || {};
     vis.addEventListener('change', () => { c.visibility = vis.checked ? 'visible' : 'hidden'; changed(); });
     p.append(el('div.field', el('label.switch', vis, 'Visible para estudiantes'), el('span.hint', 'Déjalo apagado mientras lo preparas. Los estudiantes solo ven las actividades visibles.')));
     if (isSort()) p.append(el('p.type-tag', '🧺 Clasificación rápida'));
+    if (isTyping()) p.append(...LL.typingEditor.settingsFields(quiz, { changed }));
 
     const voiceNote = el('span.hint.voice-note', { 'aria-live': 'polite' });
     const drawVoiceNote = () => {
@@ -4359,9 +5204,10 @@ window.LL = window.LL || {};
     qr.addEventListener('change', () => { c.questionOrder = qr.checked ? 'random' : 'fixed'; changed(); });
     const ar = el('input', { type: 'checkbox', checked: c.answerOrder === 'random' });
     ar.addEventListener('change', () => { c.answerOrder = ar.checked ? 'random' : 'fixed'; changed(); });
-    if (!isSort()) p.append(el('div.field', 'Orden', el('label.switch', qr, 'Mezclar preguntas'), el('label.switch', ar, 'Mezclar respuestas')));
+    if (isTyping()) p.append(el('div.field', 'Orden', el('label.switch', qr, 'Mezclar palabras')));
+    else if (!isSort()) p.append(el('div.field', 'Orden', el('label.switch', qr, 'Mezclar preguntas'), el('label.switch', ar, 'Mezclar respuestas')));
     // V127: one choice for the whole quiz: does tapping a question's picture play its sound?
-    if (!isSort()) {
+    if (!isActivityWord()) {
       const is = el('input', { type: 'checkbox', checked: S.imageSpeaksOf(c) });
       is.addEventListener('change', () => { c.imageSpeaks = is.checked; changed(); });
       p.append(el('div.field.image-speaks', 'Imagen de las preguntas',
@@ -4711,8 +5557,9 @@ window.LL = window.LL || {};
   function save() {
     quiz.name = (quiz.name || '').trim();
     quiz.config.mode = 'practice'; // only one mode: a wrong answer always shows the right one
-    if (!quiz.name) { toast(isSort() ? 'Escribe un nombre para la actividad.' : 'Escribe un nombre para el quiz.', 'error'); $('#edName').focus(); return false; }
+    if (!quiz.name) { toast(isActivityWord() ? 'Escribe un nombre para la actividad.' : 'Escribe un nombre para el quiz.', 'error'); $('#edName').focus(); return false; }
     if (isSort()) return saveSort();
+    if (isTyping()) return saveTyping();
     // A question that was never touched is simply dropped.
     const blank = (q) => !String(q.text || '').trim() && !q.image && !q.audio && !String(q.readText || '').trim() && q.options.every((o) => !String(o.text || '').trim() && !o.image && !o.audio && !o.correct);
     const qs = quiz.config.questions;
@@ -4761,6 +5608,27 @@ window.LL = window.LL || {};
       g.correctCount = 1;
     }
     const problem = S.sortProblem(c);
+    if (problem && c.visibility === 'visible') {
+      renderAll();
+      toast('Para que los estudiantes la vean: ' + problem, 'error');
+      return false;
+    }
+    return writeAndRefresh(problem ? 'Guardada como «En preparación». ' + problem : (c.visibility === 'visible' ? '✓ Guardada. Los estudiantes ya pueden verla.' : '✓ Guardada (en preparación).'));
+  }
+
+  /** «Pantalla de Tablet»: empty rows are dropped; it can be visible only when playable. */
+  function saveTyping() {
+    const c = quiz.config;
+    S.typingSettingsOf(c);
+    c.answerOrder = 'fixed';
+    const filled = c.questions.filter((q) => String(q.text || '').trim() || q.image);
+    c.questions = filled.length ? filled : [S.newTypingItem()];
+    c.questions.forEach((q) => {
+      q.text = LL.typingGame.normalize(q.text);
+      q.options = []; q.correctCount = 1;
+      if (q.audioMode !== 'file') q.audioMode = 'voice';
+    });
+    const problem = S.typingProblem(c);
     if (problem && c.visibility === 'visible') {
       renderAll();
       toast('Para que los estudiantes la vean: ' + problem, 'error');
@@ -4837,7 +5705,7 @@ window.LL = window.LL || {};
     if (!isDirty()) return true;
     const v = await dialog({
       title: '¿Guardar los cambios?',
-      body: isSort() ? 'Esta actividad tiene cambios sin guardar.' : 'Este quiz tiene cambios sin guardar.',
+      body: isActivityWord() ? 'Esta actividad tiene cambios sin guardar.' : 'Este quiz tiene cambios sin guardar.',
       actions: [{ label: 'Seguir editando', kind: 'ghost', value: 'stay' }, { label: 'Salir sin guardar', kind: 'danger-ghost', value: 'discard' }, { label: 'Guardar y salir', kind: 'primary', value: 'save' }],
     });
     if (v === 'save') return save();

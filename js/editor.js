@@ -21,19 +21,23 @@ window.LL = window.LL || {};
   }
 
   const isSort = () => !!quiz && quiz.type === 'sort';
-  const draftKey = () => quiz.id || (isSort() ? 'new-sort' : 'new');
+  const isTyping = () => !!quiz && quiz.type === 'typing'; // «Pantalla de Tablet» (V127)
+  /** Activities that aren't a classic quiz say «actividad» (feminine) instead of «quiz». */
+  const isActivityWord = () => isSort() || isTyping();
+  const draftKey = () => quiz.id || (isSort() ? 'new-sort' : isTyping() ? 'new-typing' : 'new');
 
   /** kind (new activities only): 'quiz' or 'sort' («Clasificación rápida»). */
   async function open(id, folderId, kind) {
     if (id) {
       const q = S.getQuiz(id);
       if (!q) { toast('No se encontró esa actividad.', 'error'); return; }
-      quiz = { id: q.id, type: q.type === 'sort' ? 'sort' : 'quiz', name: q.name, folderId: q.folderId || null, config: S.clone(q.config) };
+      quiz = { id: q.id, type: S.typeOf(q.type), name: q.name, folderId: q.folderId || null, config: S.clone(q.config) };
       if (!Array.isArray(quiz.config.questions)) quiz.config.questions = [];
       quiz.config = { lang: 'es', voiceGender: 'female', mode: 'practice', questionOrder: 'fixed', answerOrder: 'fixed', visibility: 'hidden', coverImage: '', ...quiz.config };
       if (quiz.type === 'sort') quiz.config.sort = S.sortSettings(quiz.config);
+      if (quiz.type === 'typing') quiz.config.typing = S.typingSettings(quiz.config);
     } else {
-      quiz = kind === 'sort' ? S.newSort(folderId) : S.newQuiz(folderId);
+      quiz = kind === 'sort' ? S.newSort(folderId) : kind === 'typing' ? S.newTyping(folderId) : S.newQuiz(folderId);
     }
     snapshot = JSON.stringify(quiz);
     qIndex = 0;
@@ -46,6 +50,7 @@ window.LL = window.LL || {};
       } else S.clearDraft();
     }
     if (isSort()) { while (quiz.config.questions.length < 2) quiz.config.questions.push(S.newSortGroup()); }
+    else if (isTyping()) { if (!quiz.config.questions.length) quiz.config.questions.push(S.newTypingItem()); }
     else if (!quiz.config.questions.length) quiz.config.questions.push(S.newQuestion());
     await LL.app.go('editor');
     renderAll();
@@ -53,6 +58,7 @@ window.LL = window.LL || {};
   }
 
   function changed() {
+    if (isTyping() && LL.typingEditor) LL.typingEditor.refresh(); // mode / language change what is valid
     if (isDirty()) S.writeDraft({ quizId: draftKey(), quiz, at: new Date().toISOString() });
     const st = $('#edState');
     if (st) {
@@ -66,7 +72,7 @@ window.LL = window.LL || {};
   function renderAll() {
     const r = root();
     r.replaceChildren();
-    const name = el('input.name-input#edName', { type: 'text', maxlength: '90', placeholder: isSort() ? 'Nombre de la actividad (ej. Clasificar A, F, K, P)' : 'Nombre del quiz (ej. Animales)', value: quiz.name, 'aria-label': isSort() ? 'Nombre de la actividad' : 'Nombre del quiz' });
+    const name = el('input.name-input#edName', { type: 'text', maxlength: '90', placeholder: isSort() ? 'Nombre de la actividad (ej. Clasificar A, F, K, P)' : isTyping() ? 'Nombre de la actividad (ej. Escribo saludos)' : 'Nombre del quiz (ej. Animales)', value: quiz.name, 'aria-label': isActivityWord() ? 'Nombre de la actividad' : 'Nombre del quiz' });
     name.addEventListener('input', () => { quiz.name = name.value; changed(); });
 
     r.append(el('div.editor-top',
@@ -77,6 +83,13 @@ window.LL = window.LL || {};
     r.append(el('p.small#edState', { style: { margin: '-8px 0 12px', fontWeight: '800' } }));
     r.append(instructionsField());
 
+    if (isTyping()) {
+      const main = el('div.panel.sort-editor.tp-editor#edTyping');
+      r.append(el('div.editor-layout.sort-layout', el('aside.editor-side', settingsPanel()), main));
+      LL.typingEditor.render(main, quiz, { changed, store });
+      changed();
+      return;
+    }
     if (isSort()) {
       const main = el('div.panel.sort-editor#edSort');
       r.append(el('div.editor-layout.sort-layout', el('aside.editor-side', settingsPanel()), main));
@@ -98,14 +111,14 @@ window.LL = window.LL || {};
     const c = quiz.config;
     if (!c.instructions && c.sort && c.sort.instruction) c.instructions = c.sort.instruction; // early V126 sort activities
     if (c.sort) delete c.sort.instruction;
-    const box = el('textarea', { rows: '2', maxlength: '300', placeholder: isSort() ? 'Ej. Escucha el nombre de cada dibujo y llévalo a la letra con la que empieza.' : 'Ej. Escucha la pregunta y toca la respuesta correcta.', 'aria-label': 'Instrucciones de la actividad' });
+    const box = el('textarea', { rows: '2', maxlength: '300', placeholder: isSort() ? 'Ej. Escucha el nombre de cada dibujo y llévalo a la letra con la que empieza.' : isTyping() ? 'Ej. Copia la palabra con el teclado. Al terminar, toca Enter.' : 'Ej. Escucha la pregunta y toca la respuesta correcta.', 'aria-label': 'Instrucciones de la actividad' });
     box.value = c.instructions || '';
     box.addEventListener('input', () => { c.instructions = box.value; changed(); });
     const test = el('button.btn.sm.ghost', { type: 'button', onclick: () => { if (box.value.trim()) speak(box.value, c.lang, c.voiceGender); else { toast('Escribe primero las instrucciones.'); box.focus(); } } }, '🔊 Escuchar');
     return el('div.panel.instructions-field',
       el('div.instructions-head', el('label', { htmlFor: 'edInstructions' }, '📢 Instrucciones de la actividad'), test),
       Object.assign(box, { id: 'edInstructions' }),
-      el('span.hint', 'Opcional. Explica a los niños de qué se trata la actividad. En la actividad aparece el botón 📢 arriba para escucharlas' + (isSort() ? ', y se leen solas al empezar.' : '.')));
+      el('span.hint', 'Opcional. Explica a los niños de qué se trata la actividad. En la actividad se leen solas al empezar, y el botón 📢 de arriba las repite.'));
   }
 
   function settingsPanel() {
@@ -117,6 +130,7 @@ window.LL = window.LL || {};
     vis.addEventListener('change', () => { c.visibility = vis.checked ? 'visible' : 'hidden'; changed(); });
     p.append(el('div.field', el('label.switch', vis, 'Visible para estudiantes'), el('span.hint', 'Déjalo apagado mientras lo preparas. Los estudiantes solo ven las actividades visibles.')));
     if (isSort()) p.append(el('p.type-tag', '🧺 Clasificación rápida'));
+    if (isTyping()) p.append(...LL.typingEditor.settingsFields(quiz, { changed }));
 
     const voiceNote = el('span.hint.voice-note', { 'aria-live': 'polite' });
     const drawVoiceNote = () => {
@@ -141,9 +155,10 @@ window.LL = window.LL || {};
     qr.addEventListener('change', () => { c.questionOrder = qr.checked ? 'random' : 'fixed'; changed(); });
     const ar = el('input', { type: 'checkbox', checked: c.answerOrder === 'random' });
     ar.addEventListener('change', () => { c.answerOrder = ar.checked ? 'random' : 'fixed'; changed(); });
-    if (!isSort()) p.append(el('div.field', 'Orden', el('label.switch', qr, 'Mezclar preguntas'), el('label.switch', ar, 'Mezclar respuestas')));
+    if (isTyping()) p.append(el('div.field', 'Orden', el('label.switch', qr, 'Mezclar palabras')));
+    else if (!isSort()) p.append(el('div.field', 'Orden', el('label.switch', qr, 'Mezclar preguntas'), el('label.switch', ar, 'Mezclar respuestas')));
     // V127: one choice for the whole quiz: does tapping a question's picture play its sound?
-    if (!isSort()) {
+    if (!isActivityWord()) {
       const is = el('input', { type: 'checkbox', checked: S.imageSpeaksOf(c) });
       is.addEventListener('change', () => { c.imageSpeaks = is.checked; changed(); });
       p.append(el('div.field.image-speaks', 'Imagen de las preguntas',
@@ -493,8 +508,9 @@ window.LL = window.LL || {};
   function save() {
     quiz.name = (quiz.name || '').trim();
     quiz.config.mode = 'practice'; // only one mode: a wrong answer always shows the right one
-    if (!quiz.name) { toast(isSort() ? 'Escribe un nombre para la actividad.' : 'Escribe un nombre para el quiz.', 'error'); $('#edName').focus(); return false; }
+    if (!quiz.name) { toast(isActivityWord() ? 'Escribe un nombre para la actividad.' : 'Escribe un nombre para el quiz.', 'error'); $('#edName').focus(); return false; }
     if (isSort()) return saveSort();
+    if (isTyping()) return saveTyping();
     // A question that was never touched is simply dropped.
     const blank = (q) => !String(q.text || '').trim() && !q.image && !q.audio && !String(q.readText || '').trim() && q.options.every((o) => !String(o.text || '').trim() && !o.image && !o.audio && !o.correct);
     const qs = quiz.config.questions;
@@ -543,6 +559,27 @@ window.LL = window.LL || {};
       g.correctCount = 1;
     }
     const problem = S.sortProblem(c);
+    if (problem && c.visibility === 'visible') {
+      renderAll();
+      toast('Para que los estudiantes la vean: ' + problem, 'error');
+      return false;
+    }
+    return writeAndRefresh(problem ? 'Guardada como «En preparación». ' + problem : (c.visibility === 'visible' ? '✓ Guardada. Los estudiantes ya pueden verla.' : '✓ Guardada (en preparación).'));
+  }
+
+  /** «Pantalla de Tablet»: empty rows are dropped; it can be visible only when playable. */
+  function saveTyping() {
+    const c = quiz.config;
+    S.typingSettingsOf(c);
+    c.answerOrder = 'fixed';
+    const filled = c.questions.filter((q) => String(q.text || '').trim() || q.image);
+    c.questions = filled.length ? filled : [S.newTypingItem()];
+    c.questions.forEach((q) => {
+      q.text = LL.typingGame.normalize(q.text);
+      q.options = []; q.correctCount = 1;
+      if (q.audioMode !== 'file') q.audioMode = 'voice';
+    });
+    const problem = S.typingProblem(c);
     if (problem && c.visibility === 'visible') {
       renderAll();
       toast('Para que los estudiantes la vean: ' + problem, 'error');
@@ -619,7 +656,7 @@ window.LL = window.LL || {};
     if (!isDirty()) return true;
     const v = await dialog({
       title: '¿Guardar los cambios?',
-      body: isSort() ? 'Esta actividad tiene cambios sin guardar.' : 'Este quiz tiene cambios sin guardar.',
+      body: isActivityWord() ? 'Esta actividad tiene cambios sin guardar.' : 'Este quiz tiene cambios sin guardar.',
       actions: [{ label: 'Seguir editando', kind: 'ghost', value: 'stay' }, { label: 'Salir sin guardar', kind: 'danger-ghost', value: 'discard' }, { label: 'Guardar y salir', kind: 'primary', value: 'save' }],
     });
     if (v === 'save') return save();
