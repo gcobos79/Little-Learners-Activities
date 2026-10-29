@@ -37,6 +37,7 @@ window.LL = window.LL || {};
     if (currentFolder) grid.append(upCard(folders));
     for (const f of subFolders) grid.append(folderCard(f, folders, entries, student));
     for (const t of items) grid.append(quizCard(t, student));
+    guestGuide(subFolders.length, items.length);
 
 
     LL.ui.stagger(grid);
@@ -50,6 +51,51 @@ window.LL = window.LL || {};
         student ? null : el('div.muted.small', 'Usa «＋ Nueva actividad» o «📁 Nueva carpeta» para agregar algo aquí.'),
       );
     }
+  }
+
+  /* Guests (V127): the activities are inside folders, and a first visit may show only one folder.
+   * A friendly guide explains the folder tree, a hand invites to open the first folder, and inside a
+   * folder it shows how to go back. The guide can be folded away (remembered in this tab). */
+  const GUIDE_KEY = 'll-guest-guide-small';
+  function guestGuide(nFolders, nItems) {
+    const head = $('#screen-library .library-head');
+    let box = $('#guestGuide');
+    const guest = LL.app.state.mode === 'guest';
+    if (!guest) { if (box) box.remove(); return; }
+    if (!box) { box = el('div.guest-guide#guestGuide', { role: 'note' }); head.after(box); }
+    let small = false;
+    try { small = sessionStorage.getItem(GUIDE_KEY) === '1'; } catch { /* ignore */ }
+    const fold = (v) => { try { if (v) sessionStorage.setItem(GUIDE_KEY, '1'); else sessionStorage.removeItem(GUIDE_KEY); } catch { /* ignore */ } guestGuide(nFolders, nItems); };
+    const atRoot = !currentFolder;
+    const tip = atRoot
+      ? (nFolders ? 'Toca una carpeta 📁 para entrar y ver lo que tiene adentro.' : 'Toca una actividad para empezar.')
+      : (nFolders && nItems ? 'Toca una carpeta para seguir bajando, o una actividad para jugar.' : nFolders ? 'Aquí hay más carpetas: toca una para entrar.' : 'Toca una actividad para jugar.');
+    const back = atRoot ? null : el('p.gg-back', '⬅️ Para regresar, toca la flecha ⬅️ o la tarjeta ⬆️ «Carpeta anterior». También puedes tocar los nombres de arriba (', el('b', '📚 Actividades › …'), ').');
+    if (small) {
+      box.className = 'guest-guide small';
+      box.replaceChildren(el('span.gg-hand', { 'aria-hidden': 'true' }, '👆'), el('span.gg-tip', tip),
+        el('button.link-btn', { type: 'button', onclick: () => fold(false) }, '¿Cómo funciona?'));
+    } else {
+      box.className = 'guest-guide';
+      box.replaceChildren(
+        el('div.gg-main',
+          el('span.gg-hand.big', { 'aria-hidden': 'true' }, '👆'),
+          el('div',
+            el('h2', atRoot ? '¡Bienvenido! Las actividades están dentro de carpetas' : '¡Muy bien! Ya estás dentro de una carpeta'),
+            el('p.gg-tip', tip),
+            back)),
+        el('div.gg-tree', { 'aria-label': 'Así están organizadas las actividades' },
+          el('span.gg-step', '📚 Actividades'), el('span.gg-arrow', { 'aria-hidden': 'true' }, '›'),
+          el('span.gg-step', '📁 Carpeta'), el('span.gg-arrow', { 'aria-hidden': 'true' }, '›'),
+          el('span.gg-step', '📂 Más carpetas'), el('span.gg-arrow', { 'aria-hidden': 'true' }, '›'),
+          el('span.gg-step.gg-goal', '🎮 Actividad')),
+        el('button.gg-close', { type: 'button', 'aria-label': 'Hacer la guía más pequeña', title: 'Entendido', onclick: () => fold(true) }, 'Entendido ✓'));
+    }
+    // The hand on the first folder (or on «Carpeta anterior» when there is nothing else to open).
+    const grid = $('#cardGrid');
+    grid.querySelectorAll('.invite').forEach((c) => c.classList.remove('invite'));
+    const first = grid.querySelector('.card.folder') || (!nItems && grid.querySelector('.card.up'));
+    if (first) first.classList.add('invite');
   }
 
   function renderCrumbs(folders) {

@@ -1037,3 +1037,33 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 .login-row { width: 100%; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 18px; }
 .login-row .login-guest { width: min(380px, 100%); grid-template-columns: auto 1fr; }
 @media (min-width: 900px) { .login-row .login-guest { align-self: center; } }
+
+/* Guest guide (V127): explains that activities live inside folders, with a hand inviting to open one. */
+.guest-guide {
+  position: relative; display: grid; gap: 12px; margin: 4px 0 18px; padding: 16px 20px; border-radius: 22px;
+  background: linear-gradient(135deg, #FFF8E1, #EAF2FF); border: 3px dashed #F4B740; box-shadow: var(--shadow);
+  animation: popIn .4s ease-out both;
+}
+.guest-guide h2 { font-size: clamp(19px, 2.4vw, 25px); }
+.gg-main { display: flex; gap: 14px; align-items: center; padding-right: 110px; }
+.gg-tip { font-size: clamp(16px, 2vw, 19px); font-weight: 800; }
+.gg-back { margin-top: 4px; font-weight: 700; color: var(--muted); }
+.gg-hand { display: inline-block; font-size: 28px; animation: ggTap 1.3s ease-in-out infinite; }
+.gg-hand.big { font-size: clamp(40px, 6vw, 56px); }
+@keyframes ggTap { 0%, 100% { transform: translateY(0) rotate(-8deg); } 45% { transform: translateY(-10px) rotate(4deg); } 60% { transform: translateY(2px) scale(.94); } }
+.gg-tree { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.gg-step { padding: 6px 12px; border-radius: 999px; background: #fff; font-weight: 800; box-shadow: 0 2px 0 var(--line); }
+.gg-step.gg-goal { background: var(--good-soft); color: #13753A; }
+.gg-arrow { font-size: 22px; font-weight: 900; color: #F59E0B; }
+.gg-close { position: absolute; top: 12px; right: 12px; border: 2px solid var(--line); background: #fff; border-radius: 999px; padding: 5px 12px; font: inherit; font-weight: 800; cursor: pointer; }
+.guest-guide.small { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 16px; }
+.guest-guide.small .gg-tip { font-size: 16px; }
+/* The hand on the card to open */
+.card.invite { position: relative; animation: ggGlow 1.6s ease-in-out infinite; }
+.card.invite::after {
+  content: '👆'; position: absolute; right: 10px; bottom: 6px; font-size: clamp(38px, 5vw, 52px); pointer-events: none;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .25)); animation: ggTap 1.3s ease-in-out infinite;
+}
+@keyframes ggGlow { 50% { box-shadow: 0 0 0 6px rgba(244, 183, 64, .45), var(--shadow); } }
+@media (max-width: 640px) { .gg-main { padding-right: 0; padding-top: 30px; } .gg-close { top: 8px; right: 8px; } }
+@media (prefers-reduced-motion: reduce) { .gg-hand, .card.invite, .card.invite::after { animation: none !important; } }

@@ -1,6 +1,10 @@
 # Changelog
 
 ## V126 — October 2026 (Clasificación rápida)
+- Guest guide: guests see a friendly note above the cards: activities are inside folders, a small map
+  (📚 Actividades › 📁 Carpeta › 📂 Más carpetas › 🎮 Actividad), a bouncing 👆 on the folder to open,
+  and, inside a folder, how to go back (⬅️, «Carpeta anterior», the names at the top). «Entendido ✓»
+  folds it to one line («¿Cómo funciona?» opens it again).
 - Guest mode: on the sign-in page, «Guest / Invitado» → «Entrar como invitado». Guests see only the
   activities marked «👋 Compartir con invitados» (new switch in each activity's Ajustes; it also has to
   be visible) and the folders on the way to them; they can play them (pictures included), see «Tu
