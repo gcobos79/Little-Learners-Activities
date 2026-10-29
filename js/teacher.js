@@ -135,7 +135,7 @@ window.LL = window.LL || {};
       line,
       el('div.media-row',
         el('button.btn.soft', { type: 'button', onclick: async () => { const ok = await LL.sync.run(); toast(ok ? '✓ Sincronizado.' : 'No se pudo sincronizar ahora.', ok ? 'success' : 'error'); } }, '🔄 Sincronizar ahora'),
-        el('button.btn.ghost', { type: 'button', onclick: () => LL.auth.signOut() }, 'Cerrar sesión')),
+        el('button.btn.ghost', { type: 'button', onclick: guarded(() => LL.auth.signOut()) }, 'Cerrar sesión')),
       el('p.small.muted', 'En cada tableta: abre la página, entra una vez con tu cuenta y la tableta queda lista. Los niños solo tocan su animalito.'));
   }
 
@@ -144,16 +144,24 @@ window.LL = window.LL || {};
     return box(el('h2', '🔒 PIN del maestro'),
       el('p', has ? 'Hay un PIN. Se pide al mantener presionado «Maestro».' : 'Para tabletas compartidas: además de mantener presionado «Maestro», pide un PIN de números.'),
       el('div.media-row',
-        el('button.btn.soft', { type: 'button', onclick: async () => { await LL.auth.setPinFlow(); renderBackup(); } }, has ? 'Cambiar PIN' : 'Crear PIN'),
-        has ? el('button.btn.danger-ghost', { type: 'button', onclick: async () => { if (await confirmDialog('¿Quitar el PIN?', 'Cualquiera que mantenga presionado «Maestro» podrá entrar.', 'Quitar PIN', true)) { S.savePinHash(null); renderBackup(); } } }, 'Quitar PIN') : null),
+        el('button.btn.soft', { type: 'button', onclick: guarded(async () => { await LL.auth.setPinFlow(); renderBackup(); }) }, has ? 'Cambiar PIN' : 'Crear PIN'),
+        has ? el('button.btn.danger-ghost', { type: 'button', onclick: guarded(async () => { if (await confirmDialog('¿Quitar el PIN?', 'Cualquiera que mantenga presionado «Maestro» podrá entrar.', 'Quitar PIN', true)) { S.savePinHash(null); renderBackup(); } }) }, 'Quitar PIN') : null),
       el('p.small.muted', 'El PIN se guarda cifrado' + (LL.cloud.signedIn() ? ' y se usa en todos tus dispositivos.' : '.')));
   }
 
   function voicePanel() {
     if (!LL.cloud.signedIn()) return null;
+    // The ElevenLabs credits belong to the site's administrator (also enforced by the ll-tts function).
+    if (!LL.auth.isAdmin()) {
+      return box(el('h2', '🗣️ Voz natural (ElevenLabs)'),
+        el('p', 'La voz natural la administra el responsable de este sitio. Tus actividades usan la voz del dispositivo (mujer u hombre, según elijas en cada actividad).'));
+    }
     const v = S.voice();
     const on = el('input', { type: 'checkbox', checked: v.enabled });
-    on.addEventListener('change', () => { S.saveVoice({ ...S.voice(), enabled: on.checked }); renderBackup(); });
+    on.addEventListener('change', async () => {
+      if (!(await unlockSettings())) { on.checked = !on.checked; return; }
+      S.saveVoice({ ...S.voice(), enabled: on.checked }); renderBackup();
+    });
     const selF = el('select', { 'aria-label': 'Voz de mujer', disabled: true }, new Option('Cargando voces…', v.voiceId || ''));
     const selM = el('select', { 'aria-label': 'Voz de hombre', disabled: true }, new Option('Cargando voces…', v.maleVoiceId || ''));
     const usage = el('div', { style: { display: 'grid', gap: '6px' } });
@@ -164,7 +172,7 @@ window.LL = window.LL || {};
         el('label.field', '👩 Voz de mujer', selF, el('button.btn.sm.ghost', { type: 'button', disabled: !v.enabled, onclick: () => testVoice('female') }, '🔊 Probar')),
         el('label.field', '👨 Voz de hombre', selM, el('button.btn.sm.ghost', { type: 'button', disabled: !v.enabled, onclick: () => testVoice('male') }, '🔊 Probar'))),
       el('div.media-row',
-        el('button.btn.soft', { type: 'button', disabled: !v.enabled, onclick: prepareAll }, '🗣️ Preparar voces de todos los quizzes')),
+        el('button.btn.soft', { type: 'button', disabled: !v.enabled, onclick: guarded(prepareAll) }, '🗣️ Preparar voces de todos los quizzes')),
       usage,
       el('p.small.muted', 'Voces creadas con ElevenLabs (elevenlabs.io). Con el plan gratuito: solo uso no comercial y se debe mencionar a ElevenLabs.'));
     if (v.enabled) {
@@ -186,8 +194,14 @@ window.LL = window.LL || {};
         };
         fill(selF, 'female', v.voiceId); fill(selM, 'male', v.maleVoiceId);
       }).catch((e) => { selF.replaceChildren(new Option('Sin conexión', '')); selM.replaceChildren(new Option('Sin conexión', '')); console.warn(e); });
-      selF.addEventListener('change', () => { S.saveVoice({ ...S.voice(), voiceId: selF.value }); toast('Voz de mujer cambiada. Usa «Preparar voces» para actualizar los quizzes.'); });
-      selM.addEventListener('change', () => { S.saveVoice({ ...S.voice(), maleVoiceId: selM.value }); toast('Voz de hombre cambiada. Usa «Preparar voces» para actualizar los quizzes.'); });
+      selF.addEventListener('change', async () => {
+        if (!(await unlockSettings())) { selF.value = S.voice().voiceId || ''; return; }
+        S.saveVoice({ ...S.voice(), voiceId: selF.value }); toast('Voz de mujer cambiada. Usa «Preparar voces» para actualizar los quizzes.');
+      });
+      selM.addEventListener('change', async () => {
+        if (!(await unlockSettings())) { selM.value = S.voice().maleVoiceId || ''; return; }
+        S.saveVoice({ ...S.voice(), maleVoiceId: selM.value }); toast('Voz de hombre cambiada. Usa «Preparar voces» para actualizar los quizzes.');
+      });
       LL.tts.usage().then((u) => {
         if (!u || u.used == null) return;
         const pct = Math.min(100, Math.round((u.used / Math.max(1, u.limit)) * 100));
@@ -224,6 +238,22 @@ window.LL = window.LL || {};
     renderBackup();
   }
 
+  /* ---------- PIN for the actions of Ajustes (V127) ----------
+   * Ajustes opens without the PIN. Anything that changes, creates, deletes or takes data out of the
+   * device asks for the PIN (if one exists) once per visit; leaving Ajustes locks it again. */
+  let settingsUnlocked = false;
+  function lockSettings() { settingsUnlocked = false; }
+  async function unlockSettings() {
+    if (!S.pinHash() || settingsUnlocked) return true;
+    const ok = await LL.auth.checkPin({ title: '🔒 PIN para hacer cambios en Ajustes', notice: true });
+    if (ok) {
+      settingsUnlocked = true;
+      const note = document.querySelector('.settings-lock'); if (note) note.textContent = '🔓 Cambios permitidos hasta que salgas de Ajustes.';
+    }
+    return ok;
+  }
+  const guarded = (fn) => async (...args) => { if (await unlockSettings()) return fn(...args); return undefined; };
+
   /* ---------- Settings: account, PIN, voice, backup, delete ---------- */
   function renderBackup() {
     const page = $('#screen-backup');
@@ -233,7 +263,8 @@ window.LL = window.LL || {};
     const nQ = S.quizzes().length, nF = S.folders().length;
     const signed = LL.cloud.signedIn();
     page.replaceChildren(el('div.tool-page',
-      el('div', el('h1', '⚙️ Ajustes'), el('p.lead', signed ? 'Tu cuenta, el PIN, la voz y los respaldos.' : 'El PIN, los respaldos y los datos de este dispositivo.')),
+      el('div', el('h1', '⚙️ Ajustes'), el('p.lead', signed ? 'Tu cuenta, el PIN, la voz y los respaldos.' : 'El PIN, los respaldos y los datos de este dispositivo.'),
+        S.pinHash() ? el('p.small.muted.settings-lock', settingsUnlocked ? '🔓 Cambios permitidos hasta que salgas de Ajustes.' : '🔒 Puedes mirar todo. Para cambiar o borrar algo se pide el PIN (una vez).') : null),
       accountPanel(),
       LL.cloud.enabled() ? box(el('h2', '👋 Ver como invitado'),
         el('p', 'Navega exactamente como lo hace un invitado (sin cuenta): solo verás las actividades marcadas «Compartir con invitados» y visibles. Nada se guarda. Para volver, toca «Volver al maestro» arriba.'),
@@ -242,13 +273,13 @@ window.LL = window.LL || {};
       voicePanel(),
       box(el('h2', '📥 Descargar respaldo'),
         el('p', 'Guarda en un archivo todos tus quizzes (' + nQ + '), carpetas (' + nF + ') y estudiantes.'),
-        el('button.btn.primary', { type: 'button', style: { justifySelf: 'start' }, onclick: () => {
+        el('button.btn.primary', { type: 'button', style: { justifySelf: 'start' }, onclick: guarded(() => {
           toast('Preparando respaldo…');
           LL.media.inlineBackup(S.exportBackup()).then((b) => { download('little-learners-respaldo-' + S.todayChicago() + '.json', JSON.stringify(b)); toast('Respaldo descargado.', 'success'); });
-        } }, '📥 Descargar respaldo')),
+        }) }, '📥 Descargar respaldo')),
       box(el('h2', '📤 Importar'),
         el('p', 'Abre un archivo de respaldo, o una carpeta que otro maestro compartió contigo.'),
-        el('button.btn.soft', { type: 'button', style: { justifySelf: 'start' }, onclick: importFlow }, '📤 Elegir archivo…'),
+        el('button.btn.soft', { type: 'button', style: { justifySelf: 'start' }, onclick: guarded(importFlow) }, '📤 Elegir archivo…'),
         el('p.small.muted', 'Para compartir solo una carpeta: en «Actividades», toca ⋯ en la carpeta → «Compartir».')),
       signed ? null : box(el('h2', '📲 Pasar las actividades a una tableta sin cuenta'),
         el('ol', { style: { margin: 0, paddingLeft: '22px', display: 'grid', gap: '6px', fontWeight: 700 } },
@@ -260,13 +291,13 @@ window.LL = window.LL || {};
         el('h3', 'Espacio usado en este navegador'),
         el('div.meter', el('div', { style: { width: pct + '%', background: pct > 80 ? 'var(--bad)' : 'var(--primary)' } })),
         el('p.small.muted', 'Aproximadamente ' + formatBytes(used) + ' de ~5 MB. Las imágenes y los audios ocupan más espacio; las imágenes nuevas se reducen automáticamente.'),
-        el('button.btn.soft', { type: 'button', style: { justifySelf: 'start' }, onclick: freeSpaceFlow }, '🧹 Liberar espacio')),
+        el('button.btn.soft', { type: 'button', style: { justifySelf: 'start' }, onclick: guarded(freeSpaceFlow) }, '🧹 Liberar espacio')),
       el('div.panel', { style: { display: 'grid', gap: '10px', borderColor: '#F3C3C3' } },
         el('h2', '🗑️ Borrar datos'),
         el('p', el('strong', 'Este dispositivo: '), 'borra de este navegador todos los quizzes, carpetas, estudiantes, ajustes y resultados' + (signed ? ', y cierra la sesión. Tu copia en la nube no se toca.' : '. No afecta a otros dispositivos ni a los respaldos descargados.')),
-        el('button.btn.danger-ghost', { type: 'button', style: { justifySelf: 'start' }, onclick: deleteAll }, 'Borrar este dispositivo…'),
+        el('button.btn.danger-ghost', { type: 'button', style: { justifySelf: 'start' }, onclick: guarded(deleteAll) }, 'Borrar este dispositivo…'),
         signed ? el('p', el('strong', 'La nube: '), 'borra tus quizzes, carpetas, estudiantes y voces guardados en tu cuenta, y también de este dispositivo. Tus otras tabletas los quitarán en su siguiente sincronización.') : null,
-        signed ? el('button.btn.danger-ghost', { type: 'button', style: { justifySelf: 'start' }, onclick: deleteCloud }, 'Borrar mis datos de la nube…') : null,
+        signed ? el('button.btn.danger-ghost', { type: 'button', style: { justifySelf: 'start' }, onclick: guarded(deleteCloud) }, 'Borrar mis datos de la nube…') : null,
         signed ? el('p.small.muted', 'Para cerrar la cuenta por completo, pídeselo a quien administra esta página.') : null),
       el('p.small', el('button.link-btn', { type: 'button', onclick: () => LL.app.openInfo('privacidad') }, 'Política de privacidad'), ' · ', el('button.link-btn', { type: 'button', onclick: () => LL.app.openInfo('terminos') }, 'Términos de uso'))));
   }
@@ -357,5 +388,5 @@ window.LL = window.LL || {};
     } catch (e) { toast(e.message, 'error'); }
   }
 
-  LL.teacher = { renderRoster, renderBackup, avatar };
+  LL.teacher = { renderRoster, renderBackup, avatar, lockSettings };
 })();

@@ -130,10 +130,13 @@ window.LL = window.LL || {};
     vis.addEventListener('change', () => { c.visibility = vis.checked ? 'visible' : 'hidden'; changed(); });
     p.append(el('div.field', el('label.switch', vis, 'Visible para estudiantes'), el('span.hint', 'Déjalo apagado mientras lo preparas. Los estudiantes solo ven las actividades visibles.')));
     // V127: guests (people without an account) can try only the activities shared with them.
-    const share = el('input', { type: 'checkbox', checked: !!c.sharedGuest });
-    share.addEventListener('change', () => { c.sharedGuest = share.checked; changed(); });
-    p.append(el('div.field.share-guest', el('label.switch', share, '👋 Compartir con invitados'),
-      el('span.hint', 'Quien entra como invitado (sin cuenta) puede hacer esta actividad. No ve estudiantes ni resultados, y no se guarda nada. Solo aparece si también está visible.')));
+    // Only the administrator's activities can be shared (the database enforces it too).
+    if (LL.auth.isAdmin()) {
+      const share = el('input', { type: 'checkbox', checked: !!c.sharedGuest });
+      share.addEventListener('change', () => { c.sharedGuest = share.checked; changed(); });
+      p.append(el('div.field.share-guest', el('label.switch', share, '👋 Compartir con invitados'),
+        el('span.hint', 'Quien entra como invitado (sin cuenta) puede hacer esta actividad. No ve estudiantes ni resultados, y no se guarda nada. Solo aparece si también está visible.')));
+    }
     if (isSort()) p.append(el('p.type-tag', '🧺 Clasificación rápida'));
     if (isTyping()) p.append(...LL.typingEditor.settingsFields(quiz, { changed }));
 

@@ -1,4 +1,4 @@
-// Little Learners Activities — ElevenLabs voice for quizzes.
+// Little Learners Activities — ElevenLabs voice for quizzes (administrator accounts only, V127).
 //
 // The ElevenLabs API key never reaches the browser: it lives in the Supabase
 // secret ELEVENLABS_API_KEY and is only used here. Audio is generated once per
@@ -57,6 +57,11 @@ Deno.serve(async (req) => {
   const { data: userData, error: userErr } = await admin.auth.getUser(token);
   if (userErr || !userData?.user) return json({ error: "not_signed_in" }, 401);
   const uid = userData.user.id;
+
+  // The ElevenLabs credits are the administrator's: only administrator accounts (table ll_admins) may
+  // use them. Other teachers get { fallback } and the app uses the device voice instead.
+  const { data: adminRow } = await admin.from("ll_admins").select("user_id").eq("user_id", uid).maybeSingle();
+  if (!adminRow) return json({ fallback: true, reason: "not_admin" });
 
   const key = Deno.env.get("ELEVENLABS_API_KEY");
   let body: Record<string, unknown> = {};

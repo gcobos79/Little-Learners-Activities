@@ -40,6 +40,26 @@ window.LL = window.LL || {};
       if (btn) { btn.disabled = false; btn.textContent = btn.dataset.label || btn.textContent; }
     }
   }
+  /* ---------- Administrator (V127) ----------
+   * The database says who is administrator (table ll_admins, function is_ll_admin). Only the
+   * administrator can share activities with guests and use the ElevenLabs voice. The answer is kept
+   * for this account so the screens don't wait for the internet. */
+  const ADMIN = 'll-admin';
+  function isAdmin() {
+    const me = LL.cloud.user();
+    if (!me || !LL.cloud.signedIn()) return false;
+    try { const a = JSON.parse(localStorage.getItem(ADMIN) || 'null'); return !!(a && a.uid === me.id && a.admin); } catch { return false; }
+  }
+  async function refreshAdmin() {
+    const me = LL.cloud.user();
+    if (!me || !LL.cloud.signedIn()) return false;
+    try {
+      const admin = (await LL.cloud.rpc('is_ll_admin', {})) === true;
+      localStorage.setItem(ADMIN, JSON.stringify({ uid: me.id, admin }));
+      return admin;
+    } catch { return isAdmin(); }
+  }
+
   function exitGuest() {
     S.setGuest(null);
     guestFlag(false);
@@ -173,6 +193,7 @@ window.LL = window.LL || {};
       }
       LL.sync.reset(me.id);
     }
+    refreshAdmin();
     LL.app.go('students');
     toast('Sesión iniciada' + (me && me.email ? ': ' + me.email : '') + '. Sincronizando…');
     LL.sync.run().then((ok) => { if (ok) toast('✓ Actividades sincronizadas.', 'success'); });
@@ -271,5 +292,5 @@ window.LL = window.LL || {};
     toast('PIN guardado' + (LL.cloud.signedIn() ? '. Se usará en todos tus dispositivos.' : '.'), 'success');
   }
 
-  LL.auth = { needsLogin, localMode, setLocalMode, enterGuest, exitGuest, guestRemembered, renderLogin, renderSetPassword, afterSignIn, signOut, checkPin, setPinFlow, friendly };
+  LL.auth = { needsLogin, localMode, setLocalMode, enterGuest, exitGuest, guestRemembered, isAdmin, refreshAdmin, renderLogin, renderSetPassword, afterSignIn, signOut, checkPin, setPinFlow, friendly };
 })();

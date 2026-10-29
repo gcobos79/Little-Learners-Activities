@@ -81,11 +81,13 @@ module.exports = function makeMock() {
     }
     if (!u) { api.anonDenied = (api.anonDenied || 0) + 1; return json(route, { message: 'JWT required' }, 401); }
 
+    if (p === '/rest/v1/rpc/is_ll_admin') return json(route, (api.admins || ['u-1111']).includes(u.id));
     if (p === '/rest/v1/rpc/save_quiz') {
       const { p_quiz, p_questions, p_options } = JSON.parse(req.postData());
       const ex = db.quizzes.find((q) => q.id === p_quiz.id);
       if (ex && ex.teacher_id !== u.id) return json(route, { message: 'new row violates row-level security policy' }, 403);
       const row = { ...(ex || { created_at: p_quiz.created_at || tick() }), ...p_quiz, teacher_id: u.id, deleted_at: null, server_updated_at: tick() };
+      if (!(api.admins || ['u-1111']).includes(u.id)) row.shared_guest = ex ? !!ex.shared_guest : false;
       if (ex) Object.assign(ex, row); else db.quizzes.push(row);
       db.quiz_questions = db.quiz_questions.filter((x) => x.quiz_id !== p_quiz.id);
       db.quiz_options = db.quiz_options.filter((x) => x.quiz_id !== p_quiz.id);

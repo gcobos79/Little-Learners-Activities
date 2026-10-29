@@ -1,6 +1,16 @@
 # Changelog
 
 ## V126 — October 2026 (Clasificación rápida)
+- Ajustes opens without the PIN. Actions that change, create, delete or take data out (Cerrar sesión,
+  Crear/Cambiar/Quitar PIN, voz natural on/off and voices, Preparar voces, Descargar respaldo, Importar,
+  Liberar espacio, Borrar este dispositivo, Borrar mis datos de la nube) ask for the PIN once per visit;
+  leaving Ajustes locks them again. Looking around, «Sincronizar ahora», «Ver como invitado» and
+  «Probar» voices need no PIN.
+- Administrator account (gcobos79@gmail.com, table `ll_admins`, function `is_ll_admin()`): only the
+  administrator can share activities with guests (save_quiz ignores the flag for others; the guest
+  catalog and pictures only include the administrator's activities) and use the ElevenLabs voice (the
+  ll-tts edge function answers «not_admin» to other accounts, which then use the device voice). Other
+  teachers don't see those options. Each teacher's own data was already private.
 - Guest guide: guests see a friendly note above the cards: activities are inside folders, a small map
   (📚 Actividades › 📁 Carpeta › 📂 Más carpetas › 🎮 Actividad), a bouncing 👆 on the folder to open,
   and, inside a folder, how to go back (⬅️, «Carpeta anterior», the names at the top). «Entendido ✓»

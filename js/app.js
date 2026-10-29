@@ -15,10 +15,10 @@ window.LL = window.LL || {};
 
   async function go(screen) {
     if (state.screen === 'editor' && screen !== 'editor' && LL.editor && !(await LL.editor.canLeave())) return false;
-    // Ajustes asks for the PIN again every time (coming back from «Información» opened there doesn't).
-    if (screen === 'backup' && state.screen !== 'backup' && !(state.screen === 'info' && infoReturn === 'backup')) {
-      if (!(await LL.auth.checkPin({ title: '🔒 PIN para entrar a Ajustes', notice: true }))) return false;
-    }
+    // Ajustes opens without the PIN; its actions that change or delete something ask for it once per
+    // visit (V127). Leaving Ajustes locks them again (coming back from «Información» opened there doesn't).
+    if (state.screen === 'backup' && screen !== 'backup' && !(screen === 'info' && LL.teacher)) LL.teacher.lockSettings();
+    if (state.screen === 'info' && screen !== 'backup' && infoReturn === 'backup' && LL.teacher) LL.teacher.lockSettings();
     // Guests only see activities: any other screen (sign-in included) ends guest mode.
     if (state.mode === 'guest' && !['library', 'info'].includes(screen)) { const wasPreview = state.guestPreview; leaveGuest(); if (wasPreview && screen === 'login') screen = 'library'; }
     state.screen = screen;
@@ -130,6 +130,7 @@ window.LL = window.LL || {};
   async function goHome() {
     if (state.mode === 'guest') { if (state.guestPreview) { leaveGuest(); go('library'); } else go('login'); return; }
     if (state.screen === 'editor' && !(await LL.editor.canLeave())) return;
+    if (LL.teacher) LL.teacher.lockSettings();
     if (LL.player.isOpen()) LL.player.close();
     state.mode = null; state.student = null; state.teacherUnlocked = false; state.screen = 'editor-left';
     if (LL.auth.needsLogin()) { go('login'); return; }
@@ -294,7 +295,7 @@ window.LL = window.LL || {};
     if (!LL.cloud.signedIn() && LL.auth.guestRemembered()) { if (await LL.auth.enterGuest()) { checkUpdate(); return; } }
     if (LL.auth.needsLogin()) { go('login'); return; }
     go('students');
-    if (LL.cloud.signedIn()) LL.sync.run();
+    if (LL.cloud.signedIn()) { LL.sync.run(); LL.auth.refreshAdmin(); }
     checkUpdate();
   }
 
