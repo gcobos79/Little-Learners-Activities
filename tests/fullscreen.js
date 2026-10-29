@@ -31,7 +31,7 @@ const lib = [{ id: 'q1', familyId: 'q1', version: 1, type: 'quiz', name: 'Colore
   assert(!(await p.isVisible('#player')), 'holding ↩️ leaves the activity');
   assert(!(await fs()), 'leaving the activity leaves full screen');
   // Teacher preview: no full screen.
-  await p.click('.appbar-right .icon-btn'); await p.waitForTimeout(300);
+  // already on «¿Quién eres?» after leaving the activity
   await p.focus('.teacher-gate'); await p.keyboard.press('Enter'); await p.waitForTimeout(400);
   await p.click('.card.quiz:has-text("Colores") .card-main'); await p.waitForTimeout(800);
   assert(await p.isVisible('#player'), 'teacher preview opened');

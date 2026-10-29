@@ -480,7 +480,10 @@ window.LL = window.LL || {};
         const release = () => setTimeout(() => document.removeEventListener('click', swallow, true), 300);
         window.addEventListener('pointerup', release, { once: true });
         setTimeout(() => document.removeEventListener('click', swallow, true), 8000); // safety net
-        close();
+        // A student who leaves an activity goes straight back to «¿Quién eres?» (V127), so the next child
+        // can pick their animal. Guests go back to the folder they were in.
+        if (LL.app.state.mode === 'student') LL.app.goHome();
+        else close();
       }, HOLD_MS);
     });
     exitBtn.addEventListener('pointerup', () => stopHold(true));

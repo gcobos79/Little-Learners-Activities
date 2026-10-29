@@ -1165,7 +1165,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 window.LL = window.LL || {};
 LL.config = {
   // Set by tools/stamp_version.py on every publish.
-  build: '20261029143452',
+  build: '20261029155436',
   version: 'V126',
   // Who runs this site, e.g. 'Sra. García · Escuela Primaria Lincoln'
   owner: 'Geovanny Cobos',
@@ -4159,7 +4159,10 @@ window.LL = window.LL || {};
         const release = () => setTimeout(() => document.removeEventListener('click', swallow, true), 300);
         window.addEventListener('pointerup', release, { once: true });
         setTimeout(() => document.removeEventListener('click', swallow, true), 8000); // safety net
-        close();
+        // A student who leaves an activity goes straight back to «¿Quién eres?» (V127), so the next child
+        // can pick their animal. Guests go back to the folder they were in.
+        if (LL.app.state.mode === 'student') LL.app.goHome();
+        else close();
       }, HOLD_MS);
     });
     exitBtn.addEventListener('pointerup', () => stopHold(true));

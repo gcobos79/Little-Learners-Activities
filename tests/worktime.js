@@ -38,6 +38,8 @@ const lib = [
   // leave, open the sort game
   const r = await (await p.$('#playerExit')).boundingBox();
   await p.mouse.move(r.x + r.width / 2, r.y + r.height / 2); await p.mouse.down(); await p.waitForTimeout(3200); await p.mouse.up(); await p.waitForTimeout(500);
+  // the student is back on «¿Quién eres?»: pick the student again
+  await p.click('.student-card >> nth=0'); await p.waitForTimeout(400);
   await p.click('.card.quiz:has-text("Clasificar")'); await p.waitForTimeout(200);
   assert((await t()) === '0:00', 'sort game: starts at 0:00');
   assert(!(await p.isVisible('.st-time')), 'sort game: only one clock on screen');

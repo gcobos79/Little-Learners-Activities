@@ -1,6 +1,8 @@
 # Changelog
 
 ## V126 — October 2026 (Clasificación rápida)
+- A student who leaves an activity with ↩️ (holding 3 s) goes straight back to «¿Quién eres?» (all the
+  students), not to the folder. Guests and the teacher's preview still go back to where they were.
 - Información shows «Versión instalada» (the build, in Chicago time) to check a tablet is up to date.
 - An activity type this app version doesn't know (made with a newer app) is now kept hidden instead of
   showing as a broken quiz (an old tablet showed only the text of «7.1 Teclado»), and is never uploaded.

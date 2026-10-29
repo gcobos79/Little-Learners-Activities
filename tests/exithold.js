@@ -40,9 +40,10 @@ const lib = [{ id: 'q1', familyId: 'q1', version: 1, type: 'quiz', name: 'Colore
   await p.mouse.down(); await p.waitForTimeout(3200);
   assert(!(await open()), 'holding 3 seconds leaves the activity');
   await p.mouse.up(); await p.waitForTimeout(300);
-  assert(!(await open()) && (await p.isVisible('.card.quiz:has-text("Colores")')), 'back on the activities; nothing reopened');
+  assert(!(await open()) && (await p.isVisible('#studentGrid')) && (await p.evaluate(() => LL.app.state.screen === 'students' && !LL.app.state.student)), 'student: back on «¿Quién eres?» (all the students); nothing reopened');
   // touch hold
   await p.waitForTimeout(400);
+  await p.click('.student-card >> nth=0'); await p.waitForTimeout(400);
   await p.click('.card.quiz:has-text("Colores")'); await p.waitForTimeout(600);
   const cdp = await ctx.newCDPSession(p);
   const c = { x: r.x + r.width / 2, y: r.y + r.height / 2, id: 1 };
@@ -52,8 +53,9 @@ const lib = [{ id: 'q1', familyId: 'q1', version: 1, type: 'quiz', name: 'Colore
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [c] }); await p.waitForTimeout(3200);
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await p.waitForTimeout(300);
   assert(!(await open()), 'touch: holding 3 seconds leaves');
+  assert(await p.isVisible('#studentGrid'), 'touch: also back on «¿Quién eres?»');
   // teacher preview: a normal click leaves
-  await p.click('.appbar-right .icon-btn'); await p.waitForTimeout(300);
+  // already on «¿Quién eres?» after leaving the activity
   await p.focus('.teacher-gate'); await p.keyboard.press('Enter'); await p.waitForTimeout(400);
   await p.click('.card.quiz:has-text("Colores") .card-main'); await p.waitForTimeout(600);
   assert(await open(), 'teacher preview opened');
