@@ -1,5 +1,16 @@
 # Changelog
 
+## V126 — 30 October 2026 (own class list)
+- Activities now has its own class list, table `activities_students`, separate from Little Learners
+  (letters app), which keeps `students`. Adding, editing or removing a child in one app no longer
+  changes the other. Before, deleting a child in Little Learners also erased that child's activity
+  results (ON DELETE CASCADE); that can no longer happen.
+- The 15 current children were copied with the same ids, so every existing result stays linked.
+  New Activities students start at id 1001. Migration: `20261030200000_ll_v126_own_students_table.sql`.
+- Backup of every table before the change: schema `backup_20261030` in Supabase.
+- Tests: the fake Supabase (`tests/mocksb.js`) now only knows `activities_students` and rejects
+  results that embed the old table.
+
 ## V126 — October 2026 (Clasificación rápida)
 - Voice: fix silent Spanish on Chromebooks (online «Google español» voice). Speech now cancels only when
   something is speaking, waits a moment after a cancel before speaking, keeps the reading referenced, and

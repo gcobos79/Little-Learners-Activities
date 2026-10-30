@@ -257,13 +257,13 @@ window.LL = window.LL || {};
 
   /** Read the class list from the database into the device copy. Returns 1 if it changed. */
   async function refreshStudents() {
-    const rows = await LL.cloud.select('students', 'select=id,name,animal,avatar_path,sort_order&active=eq.true&order=sort_order.asc.nullslast,name.asc');
+    const rows = await LL.cloud.select('activities_students', 'select=id,name,animal,avatar_path,sort_order&active=eq.true&order=sort_order.asc.nullslast,name.asc');
     if (!Array.isArray(rows)) return 0;
     const taken = new Set(rows.map((r) => r.animal).filter(Boolean));
     for (const r of rows) {
       if (!r.animal) { // new student added somewhere else without an icon
         r.animal = randomAnimal(taken); taken.add(r.animal);
-        LL.cloud.patch('students', 'id=eq.' + r.id, { animal: r.animal }).catch(() => {});
+        LL.cloud.patch('activities_students', 'id=eq.' + r.id, { animal: r.animal }).catch(() => {});
       }
     }
     const roster = rows.map((r) => ({ id: r.id, name: r.name, animal: r.animal, avatar: ref(r.avatar_path) }));
@@ -278,12 +278,12 @@ window.LL = window.LL || {};
       const list = S.roster();
       const img = avatar && avatar.startsWith('data:') ? await LL.media.upload(avatar, 'students') : avatar;
       // No number of its own: students without one are listed by name (alphabetical order).
-      const rows = await LL.cloud.insert('students', [{ name, animal: animal || randomAnimal(new Set(list.map((s) => s.animal))), avatar_path: path(img), sort_order: null, active: true }], 'id');
+      const rows = await LL.cloud.insert('activities_students', [{ name, animal: animal || randomAnimal(new Set(list.map((s) => s.animal))), avatar_path: path(img), sort_order: null, active: true }], 'id');
       await refreshStudents();
       // If the teacher ordered the list by hand (⬆️), put the new child where its name fits.
       const id = Array.isArray(rows) && rows[0] ? rows[0].id : null;
       if (id == null) return;
-      const manual = await LL.cloud.select('students', 'select=id&active=eq.true&sort_order=not.is.null&limit=1');
+      const manual = await LL.cloud.select('activities_students', 'select=id&active=eq.true&sort_order=not.is.null&limit=1');
       if (Array.isArray(manual) && manual.length) {
         const others = S.roster().filter((s) => s.id !== id);
         await students.reorder(S.placeByName(others, { id, name }).map((s) => s.id));
@@ -291,17 +291,17 @@ window.LL = window.LL || {};
     },
     async update(id, { name, animal, avatar }) {
       const img = avatar && avatar.startsWith('data:') ? await LL.media.upload(avatar, 'students') : avatar;
-      await LL.cloud.patch('students', 'id=eq.' + id, { name, animal, avatar_path: path(img) });
+      await LL.cloud.patch('activities_students', 'id=eq.' + id, { name, animal, avatar_path: path(img) });
       await refreshStudents();
     },
     /** Students are never deleted (their past results stay); they are marked inactive. */
     async remove(id) {
-      await LL.cloud.patch('students', 'id=eq.' + id, { active: false });
+      await LL.cloud.patch('activities_students', 'id=eq.' + id, { active: false });
       await refreshStudents();
     },
     /** Save the current order of the list. */
     async reorder(ids) {
-      for (let i = 0; i < ids.length; i++) await LL.cloud.patch('students', 'id=eq.' + ids[i], { sort_order: i });
+      for (let i = 0; i < ids.length; i++) await LL.cloud.patch('activities_students', 'id=eq.' + ids[i], { sort_order: i });
       await refreshStudents();
     },
   };

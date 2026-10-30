@@ -4,7 +4,7 @@ const ok=(c,m)=>console.log((c?'PASS ':'FAIL ')+m);
 const shots=process.argv[3]||'/tmp';
 (async () => {
   const file=process.argv[2]; const mock=makeMock();
-  mock.db.students.push({id:1,teacher_id:'u-1111',name:'Abigail',animal:'🐱',active:true},{id:2,teacher_id:'u-1111',name:'Daniel',animal:'🦖',active:true});
+  mock.db.activities_students.push({id:1,teacher_id:'u-1111',name:'Abigail',animal:'🐱',active:true},{id:2,teacher_id:'u-1111',name:'Daniel',animal:'🦖',active:true});
   const b=await chromium.launch();
   const mk=async(w,h)=>{const ctx=await b.newContext({viewport:{width:w,height:h}}); await ctx.route('https://abbtbaupzdzdvtkunmtf.supabase.co/**',mock.handler); const p=await ctx.newPage(); p.errs=[]; p.on('pageerror',e=>p.errs.push(e.message)); return p;};
   const A=await mk(1280,800);

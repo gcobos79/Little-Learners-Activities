@@ -6,7 +6,7 @@ const makeMock = require('./mocksb.js');
 const assert = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) process.exitCode = 1; };
 (async () => {
   const mock = makeMock();
-  mock.db.students.push({ id: 1, teacher_id: 'u-1111', name: 'Abigail', animal: '🐱', active: true }, { id: 2, teacher_id: 'u-1111', name: 'Daniel', animal: '🦖', active: true });
+  mock.db.activities_students.push({ id: 1, teacher_id: 'u-1111', name: 'Abigail', animal: '🐱', active: true }, { id: 2, teacher_id: 'u-1111', name: 'Daniel', animal: '🦖', active: true });
   const b = await chromium.launch();
   const ctx = await b.newContext({ viewport: { width: 1280, height: 800 } });
   await ctx.route('https://abbtbaupzdzdvtkunmtf.supabase.co/**', mock.handler);
@@ -30,7 +30,7 @@ const assert = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) pro
   assert((await names()) === 'Abigail,Daniel,Zone Guest', 'signed in: «Zone Guest» goes in its alphabetical place: ' + await names());
   await add('Bruno');
   assert((await names()) === 'Abigail,Bruno,Daniel,Zone Guest', 'signed in: «Bruno» between Abigail and Daniel: ' + await names());
-  const dbZone = mock.db.students.find((s) => s.name === 'Zone Guest');
+  const dbZone = mock.db.activities_students.find((s) => s.name === 'Zone Guest');
   assert(dbZone && dbZone.sort_order == null, 'no hand-made order: the new student has no number of its own');
   const shown = await p.evaluate(() => [...document.querySelectorAll('#screen-students-admin .roster-row, #screen-students-admin li')].map((x) => x.textContent).join('|'));
   assert(shown.indexOf('Abigail') < shown.indexOf('Zone Guest'), 'the Estudiantes page shows Zone Guest after Abigail');

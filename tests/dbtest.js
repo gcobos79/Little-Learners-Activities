@@ -8,7 +8,7 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
   const mock = makeMock();
   const t0 = '2026-10-20T10:00:00.000Z';
   // Existing data in the real project: students without icons, and quizzes saved by V122 in ll_quizzes.
-  mock.db.students.push({ id: 1, teacher_id: 'u-1111', name: 'Sofía', active: true, animal: null }, { id: 2, teacher_id: 'u-1111', name: 'Diego', active: true, animal: '🦁' }, { id: 3, teacher_id: 'u-1111', name: 'Inactivo', active: false, animal: '🐸' }, { id: 4, teacher_id: 'u-2222', name: 'De otra maestra', active: true, animal: '🐼' });
+  mock.db.activities_students.push({ id: 1, teacher_id: 'u-1111', name: 'Sofía', active: true, animal: null }, { id: 2, teacher_id: 'u-1111', name: 'Diego', active: true, animal: '🦁' }, { id: 3, teacher_id: 'u-1111', name: 'Inactivo', active: false, animal: '🐸' }, { id: 4, teacher_id: 'u-2222', name: 'De otra maestra', active: true, animal: '🐼' });
   const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
   mock.db.ll_folders.push({ owner_id: 'u-1111', id: 'folder-1792914497974-36fl6', name: 'Español', parent_id: null, color: '#F6D6D6', updated_at: t0, deleted_at: null, server_updated_at: t0 });
   mock.db.ll_quizzes.push({ owner_id: 'u-1111', id: 'quiz-old-1', family_id: 'quiz-old-1', type: 'quiz', name: 'Granja', version: 1, folder_id: 'folder-1792914497974-36fl6', created_at: t0, updated_at: t0, deleted_at: null, server_updated_at: t0,
@@ -31,7 +31,7 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
   ok(libSize < 3000, 'device copy no longer holds picture data (' + libSize + ' chars)');
   const names = await A.$$eval('.student-card', (a) => a.map((x) => x.textContent));
   ok(names.length === 2 && names.join().includes('Sofía') && !names.join().includes('Abigail') && !names.join().includes('Inactivo') && !names.join().includes('otra'), 'student picker shows real active students only: ' + names.join(', '));
-  ok(mock.db.students.find((s) => s.id === 1).animal, 'student without icon got a random animal saved in the database');
+  ok(mock.db.activities_students.find((s) => s.id === 1).animal, 'student without icon got a random animal saved in the database');
 
   // Teacher: add a student with a picture, remove one
   await A.focus('.teacher-gate'); await A.keyboard.press('Enter'); await A.waitForTimeout(300);
@@ -40,10 +40,10 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
   const [fc] = await Promise.all([A.waitForEvent('filechooser'), A.click('.modal button:has-text("Elegir foto")')]);
   await fc.setFiles({ name: 'v.png', mimeType: 'image/png', buffer: Buffer.from(png.split(',')[1], 'base64') }); await A.waitForTimeout(400);
   await A.click('.modal button:has-text("Agregar")'); await A.waitForTimeout(1200);
-  const v = mock.db.students.find((s) => s.name === 'Valentina');
+  const v = mock.db.activities_students.find((s) => s.name === 'Valentina');
   ok(v && v.teacher_id === 'u-1111' && v.avatar_path && v.animal, 'new student saved in students with picture and animal');
   await A.click('.roster-row:has-text("Diego") button:has-text("Quitar")'); await A.click('.modal button:has-text("Quitar")'); await A.waitForTimeout(800);
-  ok(mock.db.students.find((s) => s.id === 2).active === false, 'removing a student marks them inactive (results kept)');
+  ok(mock.db.activities_students.find((s) => s.id === 2).active === false, 'removing a student marks them inactive (results kept)');
   await A.screenshot({ path: (process.argv[3] || '/tmp') + '/db-students.png' });
 
   // New quiz with a picture answer

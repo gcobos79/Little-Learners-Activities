@@ -105,7 +105,7 @@ window.LL = window.LL || {};
           } }, '＋ Agregar estudiante'),
           cloud ? el('button.btn.ghost', { type: 'button', onclick: async () => { try { await LL.sync.refreshStudents(); renderRoster(); toast('Lista actualizada.'); } catch (e) { toast(LL.auth.friendly(e), 'error'); } } }, '🔄 Actualizar lista') : null)),
       el('p.small.muted', cloud
-        ? 'La lista se guarda en tu cuenta (tabla «students») y aparece en todas tus tabletas. Usa solo el primer nombre o un apodo.'
+        ? 'La lista se guarda en tu cuenta (tabla «activities_students», separada de Little Learners) y aparece en todas tus tabletas. Usa solo el primer nombre o un apodo.'
         : 'Usa solo el primer nombre o un apodo. Sin cuenta, la lista se guarda solo en este navegador.')));
   }
 

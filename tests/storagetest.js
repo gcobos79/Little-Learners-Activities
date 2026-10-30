@@ -7,7 +7,7 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
 (async () => {
   const file = path.resolve(process.argv[2] || '../index.html');
   const mock = makeMock(); mock.noTtsKey = true;
-  mock.db.students.push({ id: 1, teacher_id: 'u-1111', name: 'Sofía', animal: '🐱', active: true });
+  mock.db.activities_students.push({ id: 1, teacher_id: 'u-1111', name: 'Sofía', animal: '🐱', active: true });
   const b = await chromium.launch();
   const ctx = await b.newContext({ viewport: { width: 1280, height: 800 } });
   let offline = false;

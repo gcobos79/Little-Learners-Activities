@@ -6,7 +6,7 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
 (async () => {
   const file = path.resolve(process.argv[2] || '../index.html'); const shots = process.argv[3] || '/tmp';
   const mock = makeMock(); const t0 = '2026-10-20T10:00:00.000Z';
-  mock.db.students.push({ id: 1, teacher_id: 'u-1111', name: 'Sofía', animal: '🐱', active: true }, { id: 2, teacher_id: 'u-1111', name: 'Diego', animal: '🦁', active: true }, { id: 3, teacher_id: 'u-1111', name: 'Lucía', animal: '🐸', active: true });
+  mock.db.activities_students.push({ id: 1, teacher_id: 'u-1111', name: 'Sofía', animal: '🐱', active: true }, { id: 2, teacher_id: 'u-1111', name: 'Diego', animal: '🦁', active: true }, { id: 3, teacher_id: 'u-1111', name: 'Lucía', animal: '🐸', active: true });
   mock.db.quizzes.push({ id: 'qz1', teacher_id: 'u-1111', name: 'Colores', language: 'es', mode: 'assessment', question_order: 'fixed', answer_order: 'fixed', visible: true, created_at: t0, updated_at: t0, deleted_at: null, server_updated_at: t0 });
   mock.db.quiz_questions.push({ quiz_id: 'qz1', id: 'p1', teacher_id: 'u-1111', position: 0, prompt: '¿Rojo?', audio_mode: 'none' }, { quiz_id: 'qz1', id: 'p2', teacher_id: 'u-1111', position: 1, prompt: '¿Azul?', audio_mode: 'none' });
   for (const [q, a, b] of [['p1', 'rojo', 'azul'], ['p2', 'azul', 'verde']]) mock.db.quiz_options.push({ quiz_id: 'qz1', question_id: q, id: 'c', teacher_id: 'u-1111', position: 0, text: a, audio_mode: 'none', is_correct: true }, { quiz_id: 'qz1', question_id: q, id: 'w', teacher_id: 'u-1111', position: 1, text: b, audio_mode: 'none', is_correct: false });

@@ -108,7 +108,7 @@ window.LL = window.LL || {};
     let rows = [], offline = false;
     if (LL.cloud.signedIn()) {
       try {
-        const data = await LL.cloud.select('quiz_results', 'select=id,student_id,score,total,started_at,finished_at,duration_seconds,students(name,animal,avatar_path),quiz_result_answers(position,prompt,chosen_text,correct,response_ms,points,errors)&quiz_id=eq.' + encodeURIComponent(quiz.id) + '&month=eq.' + month);
+        const data = await LL.cloud.select('quiz_results', 'select=id,student_id,score,total,started_at,finished_at,duration_seconds,students:activities_students(name,animal,avatar_path),quiz_result_answers(position,prompt,chosen_text,correct,response_ms,points,errors)&quiz_id=eq.' + encodeURIComponent(quiz.id) + '&month=eq.' + month);
         rows = (data || []).map((r) => ({
           id: r.id, quiz_id: quiz.id, month,
           student_id: r.student_id, student_name: r.students ? r.students.name : '¿?', student_animal: r.students ? r.students.animal : '', student_avatar: r.students ? LL.media.toRef(r.students.avatar_path) : '',

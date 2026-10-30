@@ -30,7 +30,7 @@ const T = 'u-1111';
   mock.db.quiz_options.push(opt('q-share', 'p1', 'a', 'Sí', true), opt('q-share', 'p1', 'b', 'No', false), opt('q-private', 'p1', 'a', 'Sí', true), opt('q-private', 'p1', 'b', 'No', false));
   mock.files.set('quiz-media/' + T + '/images/rojo.png', PNG);
   mock.files.set('quiz-media/' + T + '/images/secreto.png', PNG);
-  mock.db.students.push({ id: 1, teacher_id: T, name: 'Abigail', animal: '🐱', active: true });
+  mock.db.activities_students.push({ id: 1, teacher_id: T, name: 'Abigail', animal: '🐱', active: true });
 
   const b = await chromium.launch();
   const ctx = await b.newContext({ viewport: { width: 1280, height: 800 } });

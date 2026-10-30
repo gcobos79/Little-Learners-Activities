@@ -2,10 +2,10 @@
 // Row-level security is imitated: every request only sees the signed-in teacher's rows.
 module.exports = function makeMock() {
   const users = { 'teacher@test.org': { id: 'u-1111', password: 'secreto123' }, 'other@test.org': { id: 'u-2222', password: 'otro12345' } };
-  const db = { ll_quizzes: [], ll_folders: [], ll_settings: [], students: [], folders: [], quizzes: [], quiz_questions: [], quiz_options: [], quiz_results: [], quiz_result_answers: [] };
+  const db = { ll_quizzes: [], ll_folders: [], ll_settings: [], activities_students: [], folders: [], quizzes: [], quiz_questions: [], quiz_options: [], quiz_results: [], quiz_result_answers: [] };
   let resultSeq = 0;
-  const owner = { ll_quizzes: 'owner_id', ll_folders: 'owner_id', ll_settings: 'owner_id', students: 'teacher_id', folders: 'teacher_id', quizzes: 'teacher_id', quiz_questions: 'teacher_id', quiz_options: 'teacher_id', quiz_results: 'teacher_id', quiz_result_answers: 'teacher_id' };
-  const pk = { ll_quizzes: ['owner_id', 'id'], ll_folders: ['owner_id', 'id'], ll_settings: ['owner_id'], students: ['id'], folders: ['id'], quizzes: ['id'] };
+  const owner = { ll_quizzes: 'owner_id', ll_folders: 'owner_id', ll_settings: 'owner_id', activities_students: 'teacher_id', folders: 'teacher_id', quizzes: 'teacher_id', quiz_questions: 'teacher_id', quiz_options: 'teacher_id', quiz_results: 'teacher_id', quiz_result_answers: 'teacher_id' };
+  const pk = { ll_quizzes: ['owner_id', 'id'], ll_folders: ['owner_id', 'id'], ll_settings: ['owner_id'], activities_students: ['id'], folders: ['id'], quizzes: ['id'] };
   const files = new Map();
   let clock = Date.now(), n = 0, ttsCalls = 0, studentSeq = 100, uploads = 0;
   const tick = () => new Date(++clock).toISOString();
@@ -33,7 +33,8 @@ module.exports = function makeMock() {
   }
   function embed(rows, select, uid) {
     if (select && select.includes('quiz_result_answers(')) {
-      return rows.map((r) => ({ ...r, students: (() => { const s = db.students.find((x) => x.id === r.student_id); return s ? { name: s.name, animal: s.animal, avatar_path: s.avatar_path || null } : null; })(), quiz_result_answers: db.quiz_result_answers.filter((a) => a.result_id === r.id) }));
+      if (!select.includes('students:activities_students(')) throw new Error('results must embed students:activities_students(...)');
+      return rows.map((r) => ({ ...r, students: (() => { const s = db.activities_students.find((x) => x.id === r.student_id); return s ? { name: s.name, animal: s.animal, avatar_path: s.avatar_path || null } : null; })(), quiz_result_answers: db.quiz_result_answers.filter((a) => a.result_id === r.id) }));
     }
     if (!select || !select.includes('quiz_questions(')) return rows;
     return rows.map((q) => ({ ...q, quiz_questions: db.quiz_questions.filter((x) => x.quiz_id === q.id && x.teacher_id === uid).map((x) => ({ ...x, quiz_options: db.quiz_options.filter((o) => o.quiz_id === q.id && o.question_id === x.id && o.teacher_id === uid) })) }));
@@ -99,7 +100,7 @@ module.exports = function makeMock() {
     }
     if (p === '/rest/v1/rpc/save_quiz_result') {
       const { p_result: r, p_answers } = JSON.parse(req.postData());
-      const st = db.students.find((x) => x.id === r.student_id && x.teacher_id === u.id);
+      const st = db.activities_students.find((x) => x.id === r.student_id && x.teacher_id === u.id);
       const qz = db.quizzes.find((x) => x.id === r.quiz_id && x.teacher_id === u.id);
       if (!st || !qz) return json(route, { message: 'violates row-level security policy / foreign key' }, 409);
       let ex = db.quiz_results.find((x) => x.student_id === r.student_id && x.quiz_id === r.quiz_id && x.month === r.month);
@@ -119,7 +120,7 @@ module.exports = function makeMock() {
         if (api.noSortColumns && t === 'quizzes' && /activity_type|settings/.test(url.searchParams.get('select') || '')) return json(route, { message: 'column quizzes.activity_type does not exist', code: '42703' }, 400);
         let out = filter(mine, params);
         if (stamped.has(t)) out = out.sort((a, b) => String(a.server_updated_at).localeCompare(String(b.server_updated_at)));
-        if (t === 'students') out = out.sort((a, b) => (a.sort_order ?? 1e9) - (b.sort_order ?? 1e9) || a.name.localeCompare(b.name));
+        if (t === 'activities_students') out = out.sort((a, b) => (a.sort_order ?? 1e9) - (b.sort_order ?? 1e9) || a.name.localeCompare(b.name));
         const lim = Number(url.searchParams.get('limit') || 0); if (lim) out = out.slice(0, lim);
         return json(route, embed(out, url.searchParams.get('select'), u.id));
       }
@@ -130,7 +131,7 @@ module.exports = function makeMock() {
         for (const r0 of body) {
           const r = { ...r0 }; if (!r[col]) r[col] = u.id;
           if (r[col] !== u.id) return json(route, { message: 'RLS violation' }, 403);
-          if (t === 'students' && r.id == null) r.id = ++studentSeq;
+          if (t === 'activities_students' && r.id == null) r.id = ++studentSeq;
           const k = pk[t]; const i = upsert ? rows.findIndex((x) => k.every((f) => x[f] === r[f])) : -1;
           if (i >= 0 && rows[i][col] !== u.id) return json(route, { message: 'RLS violation' }, 403);
           const row = { ...(i >= 0 ? rows[i] : {}), ...r };
