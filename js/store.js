@@ -108,7 +108,7 @@ window.LL = window.LL || {};
    *  card on the conveyor belt into its group). A sort activity is stored in the same shape as a quiz
    *  so pictures, voices, sync and backups work the same: each group is a "question" (text = group
    *  name) and each card is an "answer" of that group; config.sort has the belt settings. */
-  const ACTIVITY_TYPES = ['quiz', 'sort', 'typing'];
+  const ACTIVITY_TYPES = ['quiz', 'sort', 'typing', 'anagram'];
   const typeOf = (t) => (ACTIVITY_TYPES.includes(t) ? t : 'quiz');
   const isActivity = (t) => !!t && ACTIVITY_TYPES.includes(t.type);
 
@@ -135,6 +135,7 @@ window.LL = window.LL || {};
     if (!(q && q.config && q.config.visibility === 'visible' && Array.isArray(q.config.questions))) return false;
     if (q.type === 'sort') return !sortProblem(q.config);
     if (q.type === 'typing') return !typingProblem(q.config);
+    if (q.type === 'anagram') return !anagramProblem(q.config);
     return q.config.questions.length > 0;
   }
 
@@ -512,6 +513,42 @@ window.LL = window.LL || {};
     return '';
   }
 
+  /* ---------- «Anagrama» helpers (type 'anagram', V127; like Wordwall's «Anagram») ----------
+   * Each word or phrase is a "question" without answers: text = the word or phrase to build.
+   * config.anagram.clues: «Con pistas» (true) or «Sin pistas» (false), for the whole activity.
+   * A clue can have a text (readText), a picture (image) and a sound (audio file); with a text and no
+   * sound file, the voice reads the text. */
+  const ANAGRAM_DEFAULTS = { clues: false };
+  const ANAGRAM_MAX = 40;
+  function newAnagramItem(text = '') { return { id: uid('quiz'), text, image: '', emoji: '', audioMode: 'none', readTextEnabled: false, readText: '', audio: '', correctCount: 1, options: [] }; }
+  function newAnagram(folderId) {
+    return { id: null, type: 'anagram', name: '', folderId: folderId || null, config: { lang: 'es', voiceGender: 'female', mode: 'practice', questionOrder: 'fixed', answerOrder: 'fixed', visibility: 'hidden', coverImage: '', anagram: { ...ANAGRAM_DEFAULTS }, questions: [newAnagramItem(), newAnagramItem(), newAnagramItem()] } };
+  }
+  const anagramSettings = (c) => ({ clues: !!(c && c.anagram && c.anagram.clues) });
+  function anagramSettingsOf(c) {
+    if (!c.anagram || typeof c.anagram !== 'object') c.anagram = {};
+    c.anagram.clues = anagramSettings(c).clues;
+    return c.anagram;
+  }
+  const anagramClueText = (q) => String((q && q.readText) || '').trim();
+  const anagramHasClue = (q) => !!(anagramClueText(q) || (q && q.image) || (q && q.audio));
+  /** '' when the activity can be played, otherwise what is missing. */
+  function anagramProblem(c) {
+    const items = ((c && c.questions) || []);
+    const clues = anagramSettings(c).clues;
+    const filled = items.filter((q) => String(q.text || '').trim());
+    if (!filled.length) return 'Escribe al menos una palabra o frase.';
+    for (let i = 0; i < items.length; i++) {
+      const q = items[i], t = String(q.text || '').replace(/\s+/g, ' ').trim();
+      if (!t) { if (anagramHasClue(q)) return 'La palabra ' + (i + 1) + ' tiene pista pero le falta la palabra.'; continue; }
+      const letters = [...t.replace(/ /g, '')];
+      if (letters.length < 2) return 'La palabra ' + (i + 1) + ' necesita al menos 2 letras.';
+      if (letters.length > ANAGRAM_MAX) return 'La palabra o frase ' + (i + 1) + ' es muy larga (máximo ' + ANAGRAM_MAX + ' letras).';
+      if (clues && !anagramHasClue(q)) return 'Con pistas: a la palabra ' + (i + 1) + ' le falta la pista (texto, imagen o sonido).';
+    }
+    return '';
+  }
+
   /** Returns '' when the question is complete, otherwise a short message. Same rules as V121. */
   function questionProblem(q) {
     const visible = String(q.text || '').trim() || String(q.image || '').trim() || String(q.emoji || '').trim();
@@ -538,5 +575,6 @@ window.LL = window.LL || {};
     newOption, newQuestion, newQuiz, questionProblem, isActivity,
     newSort, newSortGroup, newSortItem, sortSettings, sortSettingsOf, sortProblem, itemFilled, instructionsOf, imageSpeaksOf,
     typeOf, newTyping, newTypingItem, typingSettings, typingSettingsOf, typingProblem,
+    newAnagram, newAnagramItem, anagramSettings, anagramSettingsOf, anagramProblem, anagramClueText, anagramHasClue, ANAGRAM_MAX,
   };
 })();

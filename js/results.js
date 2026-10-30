@@ -198,7 +198,7 @@ window.LL = window.LL || {};
           el('button.icon-btn.rt-del.danger', { type: 'button', title: 'Borrar este resultado', 'aria-label': 'Borrar el resultado de ' + r.student_name, onclick: (e) => { e.stopPropagation(); deleteResult(r); } }, '🗑️'));
         table.append(row);
       }
-      panel.append(table, el('p.small.muted', current.quiz && current.quiz.type === 'sort' ? 'Toca un estudiante para ver dónde llevó cada tarjeta.' : current.quiz && current.quiz.type === 'typing' ? 'Toca un estudiante para ver cada palabra y sus errores.' : 'Toca un estudiante para ver cada pregunta.'));
+      panel.append(table, el('p.small.muted', current.quiz && current.quiz.type === 'sort' ? 'Toca un estudiante para ver dónde llevó cada tarjeta.' : current.quiz && (current.quiz.type === 'typing' || current.quiz.type === 'anagram') ? 'Toca un estudiante para ver cada palabra y sus errores.' : 'Toca un estudiante para ver cada pregunta.'));
     }
     // Who hasn't done it this month
     const done = new Set(rows.map((r) => (r.student_id != null ? 'id:' + r.student_id : 'n:' + r.student_name)));

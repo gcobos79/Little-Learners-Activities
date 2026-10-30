@@ -22,9 +22,10 @@ window.LL = window.LL || {};
 
   const isSort = () => !!quiz && quiz.type === 'sort';
   const isTyping = () => !!quiz && quiz.type === 'typing'; // «Pantalla de Tablet» (V127)
+  const isAnagram = () => !!quiz && quiz.type === 'anagram'; // «Anagrama» (V127)
   /** Activities that aren't a classic quiz say «actividad» (feminine) instead of «quiz». */
-  const isActivityWord = () => isSort() || isTyping();
-  const draftKey = () => quiz.id || (isSort() ? 'new-sort' : isTyping() ? 'new-typing' : 'new');
+  const isActivityWord = () => isSort() || isTyping() || isAnagram();
+  const draftKey = () => quiz.id || (isSort() ? 'new-sort' : isTyping() ? 'new-typing' : isAnagram() ? 'new-anagram' : 'new');
 
   /** kind (new activities only): 'quiz' or 'sort' («Clasificación rápida»). */
   async function open(id, folderId, kind) {
@@ -36,8 +37,9 @@ window.LL = window.LL || {};
       quiz.config = { lang: 'es', voiceGender: 'female', mode: 'practice', questionOrder: 'fixed', answerOrder: 'fixed', visibility: 'hidden', coverImage: '', ...quiz.config };
       if (quiz.type === 'sort') quiz.config.sort = S.sortSettings(quiz.config);
       if (quiz.type === 'typing') quiz.config.typing = S.typingSettings(quiz.config);
+      if (quiz.type === 'anagram') quiz.config.anagram = S.anagramSettings(quiz.config);
     } else {
-      quiz = kind === 'sort' ? S.newSort(folderId) : kind === 'typing' ? S.newTyping(folderId) : S.newQuiz(folderId);
+      quiz = kind === 'sort' ? S.newSort(folderId) : kind === 'typing' ? S.newTyping(folderId) : kind === 'anagram' ? S.newAnagram(folderId) : S.newQuiz(folderId);
     }
     snapshot = JSON.stringify(quiz);
     qIndex = 0;
@@ -51,6 +53,7 @@ window.LL = window.LL || {};
     }
     if (isSort()) { while (quiz.config.questions.length < 2) quiz.config.questions.push(S.newSortGroup()); }
     else if (isTyping()) { if (!quiz.config.questions.length) quiz.config.questions.push(S.newTypingItem()); }
+    else if (isAnagram()) { if (!quiz.config.questions.length) quiz.config.questions.push(S.newAnagramItem()); }
     else if (!quiz.config.questions.length) quiz.config.questions.push(S.newQuestion());
     await LL.app.go('editor');
     renderAll();
@@ -59,6 +62,7 @@ window.LL = window.LL || {};
 
   function changed() {
     if (isTyping() && LL.typingEditor) LL.typingEditor.refresh(); // mode / language change what is valid
+    if (isAnagram() && LL.anagramEditor) LL.anagramEditor.refresh();
     if (isDirty()) S.writeDraft({ quizId: draftKey(), quiz, at: new Date().toISOString() });
     const st = $('#edState');
     if (st) {
@@ -72,7 +76,7 @@ window.LL = window.LL || {};
   function renderAll() {
     const r = root();
     r.replaceChildren();
-    const name = el('input.name-input#edName', { type: 'text', maxlength: '90', placeholder: isSort() ? 'Nombre de la actividad (ej. Clasificar A, F, K, P)' : isTyping() ? 'Nombre de la actividad (ej. Escribo saludos)' : 'Nombre del quiz (ej. Animales)', value: quiz.name, 'aria-label': isActivityWord() ? 'Nombre de la actividad' : 'Nombre del quiz' });
+    const name = el('input.name-input#edName', { type: 'text', maxlength: '90', placeholder: isSort() ? 'Nombre de la actividad (ej. Clasificar A, F, K, P)' : isTyping() ? 'Nombre de la actividad (ej. Escribo saludos)' : isAnagram() ? 'Nombre de la actividad (ej. Nombres de mis compañeros)' : 'Nombre del quiz (ej. Animales)', value: quiz.name, 'aria-label': isActivityWord() ? 'Nombre de la actividad' : 'Nombre del quiz' });
     name.addEventListener('input', () => { quiz.name = name.value; changed(); });
 
     r.append(el('div.editor-top',
@@ -83,6 +87,13 @@ window.LL = window.LL || {};
     r.append(el('p.small#edState', { style: { margin: '-8px 0 12px', fontWeight: '800' } }));
     r.append(instructionsField());
 
+    if (isAnagram()) {
+      const main = el('div.panel.sort-editor.tp-editor.an-editor#edAnagram');
+      r.append(el('div.editor-layout.sort-layout', el('aside.editor-side', settingsPanel()), main));
+      LL.anagramEditor.render(main, quiz, { changed, store });
+      changed();
+      return;
+    }
     if (isTyping()) {
       const main = el('div.panel.sort-editor.tp-editor#edTyping');
       r.append(el('div.editor-layout.sort-layout', el('aside.editor-side', settingsPanel()), main));
@@ -111,7 +122,7 @@ window.LL = window.LL || {};
     const c = quiz.config;
     if (!c.instructions && c.sort && c.sort.instruction) c.instructions = c.sort.instruction; // early V126 sort activities
     if (c.sort) delete c.sort.instruction;
-    const box = el('textarea', { rows: '2', maxlength: '300', placeholder: isSort() ? 'Ej. Escucha el nombre de cada dibujo y llévalo a la letra con la que empieza.' : isTyping() ? 'Ej. Copia la palabra con el teclado. Al terminar, toca Enter.' : 'Ej. Escucha la pregunta y toca la respuesta correcta.', 'aria-label': 'Instrucciones de la actividad' });
+    const box = el('textarea', { rows: '2', maxlength: '300', placeholder: isSort() ? 'Ej. Escucha el nombre de cada dibujo y llévalo a la letra con la que empieza.' : isTyping() ? 'Ej. Copia la palabra con el teclado. Al terminar, toca Enter.' : isAnagram() ? 'Ej. Arrastra cada letra a su casilla para formar la palabra.' : 'Ej. Escucha la pregunta y toca la respuesta correcta.', 'aria-label': 'Instrucciones de la actividad' });
     box.value = c.instructions || '';
     box.addEventListener('input', () => { c.instructions = box.value; changed(); });
     const test = el('button.btn.sm.ghost', { type: 'button', onclick: () => { if (box.value.trim()) speak(box.value, c.lang, c.voiceGender); else { toast('Escribe primero las instrucciones.'); box.focus(); } } }, '🔊 Escuchar');
@@ -139,6 +150,7 @@ window.LL = window.LL || {};
     }
     if (isSort()) p.append(el('p.type-tag', '🧺 Clasificación rápida'));
     if (isTyping()) p.append(...LL.typingEditor.settingsFields(quiz, { changed }));
+    if (isAnagram()) p.append(...LL.anagramEditor.settingsFields(quiz, { changed }));
 
     const voiceNote = el('span.hint.voice-note', { 'aria-live': 'polite' });
     const drawVoiceNote = () => {
@@ -163,7 +175,7 @@ window.LL = window.LL || {};
     qr.addEventListener('change', () => { c.questionOrder = qr.checked ? 'random' : 'fixed'; changed(); });
     const ar = el('input', { type: 'checkbox', checked: c.answerOrder === 'random' });
     ar.addEventListener('change', () => { c.answerOrder = ar.checked ? 'random' : 'fixed'; changed(); });
-    if (isTyping()) p.append(el('div.field', 'Orden', el('label.switch', qr, 'Mezclar palabras')));
+    if (isTyping() || isAnagram()) p.append(el('div.field', 'Orden', el('label.switch', qr, 'Mezclar palabras')));
     else if (!isSort()) p.append(el('div.field', 'Orden', el('label.switch', qr, 'Mezclar preguntas'), el('label.switch', ar, 'Mezclar respuestas')));
     // V127: one choice for the whole quiz: does tapping a question's picture play its sound?
     if (!isActivityWord()) {
@@ -519,6 +531,7 @@ window.LL = window.LL || {};
     if (!quiz.name) { toast(isActivityWord() ? 'Escribe un nombre para la actividad.' : 'Escribe un nombre para el quiz.', 'error'); $('#edName').focus(); return false; }
     if (isSort()) return saveSort();
     if (isTyping()) return saveTyping();
+    if (isAnagram()) return saveAnagram();
     // A question that was never touched is simply dropped.
     const blank = (q) => !String(q.text || '').trim() && !q.image && !q.audio && !String(q.readText || '').trim() && q.options.every((o) => !String(o.text || '').trim() && !o.image && !o.audio && !o.correct);
     const qs = quiz.config.questions;
@@ -588,6 +601,28 @@ window.LL = window.LL || {};
       if (q.audioMode !== 'file') q.audioMode = 'voice';
     });
     const problem = S.typingProblem(c);
+    if (problem && c.visibility === 'visible') {
+      renderAll();
+      toast('Para que los estudiantes la vean: ' + problem, 'error');
+      return false;
+    }
+    return writeAndRefresh(problem ? 'Guardada como «En preparación». ' + problem : (c.visibility === 'visible' ? '✓ Guardada. Los estudiantes ya pueden verla.' : '✓ Guardada (en preparación).'));
+  }
+
+  /** «Anagrama»: empty rows are dropped; it can be visible only when playable. */
+  function saveAnagram() {
+    const c = quiz.config;
+    S.anagramSettingsOf(c);
+    c.answerOrder = 'fixed';
+    const filled = c.questions.filter((q) => String(q.text || '').trim() || S.anagramHasClue(q));
+    c.questions = filled.length ? filled : [S.newAnagramItem()];
+    c.questions.forEach((q) => {
+      q.text = LL.anagramGame.normalize(q.text);
+      q.readText = String(q.readText || '').trim();
+      q.options = []; q.correctCount = 1;
+      LL.anagramEditor.syncClue(q);
+    });
+    const problem = S.anagramProblem(c);
     if (problem && c.visibility === 'visible') {
       renderAll();
       toast('Para que los estudiantes la vean: ' + problem, 'error');

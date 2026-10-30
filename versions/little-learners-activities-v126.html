@@ -1082,6 +1082,98 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 .local-mode-box summary { cursor: pointer; font-weight: 800; color: var(--muted); }
 .voice-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: 12px; background: var(--surface-2); }
 
+/* =====================================================================
+ * «Anagrama» (activity type 'anagram', V127)
+ * Clue card (yellow) · white card with the boxes of the word · tray with the mixed-up letter tiles.
+ * ===================================================================== */
+.player.is-anagram .player-body { overflow: hidden; }
+.an { --an-size: 72px; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: clamp(14px, 2.4vh, 28px); padding-top: 10px; }
+.an-tag {
+  position: absolute; top: -12px; left: 18px; z-index: 1; padding: 3px 14px; border-radius: 999px;
+  background: #fff; font-weight: 900; font-size: clamp(13px, 1.8vh, 16px); box-shadow: 0 2px 0 rgba(0, 0, 0, .08);
+}
+.an-clue, .an-area { position: relative; border-radius: 26px; padding: clamp(12px, 1.8vh, 18px) clamp(10px, 1.4vw, 18px) clamp(10px, 1.4vh, 16px); }
+.an-clue { background: linear-gradient(180deg, #FFE9A8, #FFD66B); box-shadow: 0 4px 0 #E3AE2B; align-self: center; max-width: 100%; }
+.an-clue-in { display: flex; align-items: center; justify-content: center; gap: clamp(12px, 2vw, 24px); background: #FFF8E1; border: 3px solid #E39B00; border-radius: 18px; padding: 8px clamp(12px, 2vw, 22px); }
+.an-clue-img { flex: none; border: 0; padding: 4px; border-radius: 16px; background: #fff; box-shadow: 0 3px 0 rgba(0, 0, 0, .1); height: min(22vh, 200px); aspect-ratio: 1; cursor: pointer; }
+.an-clue-img img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.an-clue-img.pop { animation: img-pop .35s ease; }
+.an-clue-text { font-size: clamp(20px, 3.4vh, 34px); font-weight: 800; text-align: center; max-width: 60ch; }
+.an-area { background: linear-gradient(180deg, #D9CCF7, #C3B1F1); box-shadow: 0 4px 0 #A48FDF, 0 10px 24px rgba(110, 70, 200, .12); transition: background .3s; }
+.an-board {
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: center; row-gap: calc(var(--an-size) * .22);
+  background: #fff; border: 3px solid #6D4BC8; border-radius: 18px; padding: calc(var(--an-size) * .22) 12px; min-height: calc(var(--an-size) * 1.5);
+  transition: background .3s, border-color .3s;
+}
+.an-word { display: inline-flex; gap: calc(var(--an-size) * .1); white-space: nowrap; }
+.an-gap { display: inline-block; width: calc(var(--an-size) * .55); }
+.an-slot {
+  width: var(--an-size); height: var(--an-size); border-radius: calc(var(--an-size) * .2); flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 3px dashed #A9B9D6; background: #F3F6FC; transition: transform .15s, background .2s, border-color .2s;
+}
+.an-slot.over { border-style: solid; border-color: var(--primary); background: var(--primary-soft); transform: scale(1.08); }
+.an-slot.ok { border-style: solid; border-color: #16A34A; background: #DCF7E6; }
+.an-slot.bad { animation: anBad .5s ease; }
+@keyframes anBad { 0%, 100% { transform: translateX(0); background: #F3F6FC; } 15% { background: #FEE2E2; border-color: #DC2626; } 25% { transform: translateX(-7px); } 50% { transform: translateX(6px); } 75% { transform: translateX(-4px); } }
+.an-letter, .an-tile { font-weight: 900; font-size: calc(var(--an-size) * .6); line-height: 1; color: #1F2A44; }
+.an-letter { animation: popIn .35s cubic-bezier(.3, 1.6, .5, 1); }
+.an-area.win .an-board { background: #DCF7E6; border-color: #16A34A; }
+.an-points { position: absolute; right: 22px; top: -18px; padding: 6px 18px; border-radius: 999px; background: var(--sun); font-weight: 900; font-size: clamp(18px, 2.8vh, 30px); box-shadow: 0 3px 0 #D99A00; animation: popIn .45s cubic-bezier(.3, 1.6, .5, 1); }
+.an-tray-wrap { display: flex; justify-content: center; }
+.an-tray { display: flex; flex-wrap: wrap; justify-content: center; gap: calc(var(--an-size) * .18); max-width: 100%; padding: 4px; }
+.an-home { width: var(--an-size); height: var(--an-size); border-radius: calc(var(--an-size) * .2); flex: none; }
+.an-home.empty { border: 3px dashed #D6DEEC; }
+.an-tile {
+  width: 100%; height: 100%; border-radius: calc(var(--an-size) * .2); display: flex; align-items: center; justify-content: center;
+  background: var(--tile, #FFD66B); box-shadow: 0 5px 0 rgba(0, 0, 0, .16); cursor: grab;
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
+.an-home:nth-child(6n+1) .an-tile { --tile: #FFD66B; }
+.an-home:nth-child(6n+2) .an-tile { --tile: #9FD8FF; }
+.an-home:nth-child(6n+3) .an-tile { --tile: #FFB3C7; }
+.an-home:nth-child(6n+4) .an-tile { --tile: #B7EFA6; }
+.an-home:nth-child(6n+5) .an-tile { --tile: #D7C2FF; }
+.an-home:nth-child(6n+6) .an-tile { --tile: #FFC98F; }
+.an-tile.lifted { opacity: .25; }
+.an-tile.wig { animation: wiggle .4s ease; }
+.an-ghost { position: fixed; z-index: 1000; pointer-events: none; margin: 0; transform: scale(1.12); box-shadow: 0 14px 26px rgba(0, 0, 0, .22); cursor: grabbing; }
+.an-ghost.returning { transition: left .25s ease, top .25s ease, transform .25s ease; transform: scale(1); }
+/* Editor */
+.an-clue-choice { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.an-head, .an-item { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+.an-head { margin: 4px 0 4px; }
+.an-head.with-clues { grid-template-columns: 30px minmax(0, 1fr) minmax(0, 1fr) auto; }
+.an-col { font-weight: 900; }
+.an-swap { justify-self: end; }
+.an-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.an-num { font-weight: 900; text-align: right; }
+.an-cells { display: grid; grid-template-columns: minmax(0, 1fr); border: 2px solid var(--line); border-radius: 12px; background: #fff; overflow: hidden; }
+.an-items.with-clues .an-cells { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.an-cell { display: flex; align-items: center; min-width: 0; }
+.an-cell input { flex: 1; min-width: 0; border: 0; border-radius: 0; background: transparent; font-size: 19px; font-weight: 700; padding: 11px 12px; box-shadow: none; }
+.an-cell input:focus { outline: 3px solid var(--primary-soft); outline-offset: -3px; }
+.an-clue-cell { border-left: 2px solid var(--line); background: #FFFCF0; }
+.an-clue-tools { display: inline-flex; align-items: center; gap: 2px; padding-right: 6px; }
+.an-in-btn { border: 0; background: transparent; font-size: 20px; width: 36px; height: 36px; border-radius: 10px; cursor: pointer; display: grid; place-items: center; padding: 2px; }
+.an-in-btn:hover { background: var(--primary-soft); }
+.an-in-btn.x { font-size: 13px; width: 24px; color: var(--muted); }
+.an-in-btn.pic img { width: 32px; height: 32px; object-fit: cover; border-radius: 6px; }
+.an-in-btn.rec { background: #FEE2E2; animation: anRec 1s ease-in-out infinite; }
+@keyframes anRec { 50% { background: #FCA5A5; } }
+.an-row-tools { display: flex; gap: 2px; }
+.an-row-tools .icon-btn { width: 30px; height: 32px; font-size: 13px; border-radius: 8px; border-width: 1px; }
+.an-item > .tp-item-warn { grid-column: 2 / -1; }
+.an-item.blank .an-cells { border-style: dashed; }
+@media (max-width: 700px) {
+  .an-items.with-clues .an-cells { grid-template-columns: 1fr; }
+  .an-clue-cell { border-left: 0; border-top: 2px solid var(--line); }
+  .an-item { grid-template-columns: 24px 1fr; }
+  .an-row-tools { grid-column: 2; justify-content: flex-end; }
+  .an-head.with-clues { grid-template-columns: 24px 1fr auto; } .an-head.with-clues .an-col + .an-col { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .an-in-btn.rec, .an-slot.bad, .an-letter, .an-points, .an-tile.wig, .an-clue-img.pop { animation: none !important; } .an-ghost.returning { transition: none; } }
+
 </style>
 </head>
 <body class="mode-home">
@@ -1166,7 +1258,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 window.LL = window.LL || {};
 LL.config = {
   // Set by tools/stamp_version.py on every publish.
-  build: '20261030211057',
+  build: '20261030215233',
   version: 'V126',
   // Who runs this site, e.g. 'Sra. García · Escuela Primaria Lincoln'
   owner: 'Geovanny Cobos',
@@ -1296,7 +1388,7 @@ window.LL = window.LL || {};
    *  card on the conveyor belt into its group). A sort activity is stored in the same shape as a quiz
    *  so pictures, voices, sync and backups work the same: each group is a "question" (text = group
    *  name) and each card is an "answer" of that group; config.sort has the belt settings. */
-  const ACTIVITY_TYPES = ['quiz', 'sort', 'typing'];
+  const ACTIVITY_TYPES = ['quiz', 'sort', 'typing', 'anagram'];
   const typeOf = (t) => (ACTIVITY_TYPES.includes(t) ? t : 'quiz');
   const isActivity = (t) => !!t && ACTIVITY_TYPES.includes(t.type);
 
@@ -1323,6 +1415,7 @@ window.LL = window.LL || {};
     if (!(q && q.config && q.config.visibility === 'visible' && Array.isArray(q.config.questions))) return false;
     if (q.type === 'sort') return !sortProblem(q.config);
     if (q.type === 'typing') return !typingProblem(q.config);
+    if (q.type === 'anagram') return !anagramProblem(q.config);
     return q.config.questions.length > 0;
   }
 
@@ -1700,6 +1793,42 @@ window.LL = window.LL || {};
     return '';
   }
 
+  /* ---------- «Anagrama» helpers (type 'anagram', V127; like Wordwall's «Anagram») ----------
+   * Each word or phrase is a "question" without answers: text = the word or phrase to build.
+   * config.anagram.clues: «Con pistas» (true) or «Sin pistas» (false), for the whole activity.
+   * A clue can have a text (readText), a picture (image) and a sound (audio file); with a text and no
+   * sound file, the voice reads the text. */
+  const ANAGRAM_DEFAULTS = { clues: false };
+  const ANAGRAM_MAX = 40;
+  function newAnagramItem(text = '') { return { id: uid('quiz'), text, image: '', emoji: '', audioMode: 'none', readTextEnabled: false, readText: '', audio: '', correctCount: 1, options: [] }; }
+  function newAnagram(folderId) {
+    return { id: null, type: 'anagram', name: '', folderId: folderId || null, config: { lang: 'es', voiceGender: 'female', mode: 'practice', questionOrder: 'fixed', answerOrder: 'fixed', visibility: 'hidden', coverImage: '', anagram: { ...ANAGRAM_DEFAULTS }, questions: [newAnagramItem(), newAnagramItem(), newAnagramItem()] } };
+  }
+  const anagramSettings = (c) => ({ clues: !!(c && c.anagram && c.anagram.clues) });
+  function anagramSettingsOf(c) {
+    if (!c.anagram || typeof c.anagram !== 'object') c.anagram = {};
+    c.anagram.clues = anagramSettings(c).clues;
+    return c.anagram;
+  }
+  const anagramClueText = (q) => String((q && q.readText) || '').trim();
+  const anagramHasClue = (q) => !!(anagramClueText(q) || (q && q.image) || (q && q.audio));
+  /** '' when the activity can be played, otherwise what is missing. */
+  function anagramProblem(c) {
+    const items = ((c && c.questions) || []);
+    const clues = anagramSettings(c).clues;
+    const filled = items.filter((q) => String(q.text || '').trim());
+    if (!filled.length) return 'Escribe al menos una palabra o frase.';
+    for (let i = 0; i < items.length; i++) {
+      const q = items[i], t = String(q.text || '').replace(/\s+/g, ' ').trim();
+      if (!t) { if (anagramHasClue(q)) return 'La palabra ' + (i + 1) + ' tiene pista pero le falta la palabra.'; continue; }
+      const letters = [...t.replace(/ /g, '')];
+      if (letters.length < 2) return 'La palabra ' + (i + 1) + ' necesita al menos 2 letras.';
+      if (letters.length > ANAGRAM_MAX) return 'La palabra o frase ' + (i + 1) + ' es muy larga (máximo ' + ANAGRAM_MAX + ' letras).';
+      if (clues && !anagramHasClue(q)) return 'Con pistas: a la palabra ' + (i + 1) + ' le falta la pista (texto, imagen o sonido).';
+    }
+    return '';
+  }
+
   /** Returns '' when the question is complete, otherwise a short message. Same rules as V121. */
   function questionProblem(q) {
     const visible = String(q.text || '').trim() || String(q.image || '').trim() || String(q.emoji || '').trim();
@@ -1726,6 +1855,7 @@ window.LL = window.LL || {};
     newOption, newQuestion, newQuiz, questionProblem, isActivity,
     newSort, newSortGroup, newSortItem, sortSettings, sortSettingsOf, sortProblem, itemFilled, instructionsOf, imageSpeaksOf,
     typeOf, newTyping, newTypingItem, typingSettings, typingSettingsOf, typingProblem,
+    newAnagram, newAnagramItem, anagramSettings, anagramSettingsOf, anagramProblem, anagramClueText, anagramHasClue, ANAGRAM_MAX,
   };
 })();
 
@@ -2582,7 +2712,8 @@ window.LL = window.LL || {};
         imageSpeaks: r.image_speaks !== false,
         sharedGuest: !!r.shared_guest,
         ...(r.activity_type === 'sort' ? { sort: S.sortSettings({ sort: r.settings || {} }) } : {}),
-        ...(r.activity_type === 'typing' ? { typing: S.typingSettings({ typing: r.settings || {} }) } : {}) },
+        ...(r.activity_type === 'typing' ? { typing: S.typingSettings({ typing: r.settings || {} }) } : {}),
+        ...(r.activity_type === 'anagram' ? { anagram: S.anagramSettings({ anagram: r.settings || {} }) } : {}) },
     };
   }
 
@@ -2619,7 +2750,7 @@ window.LL = window.LL || {};
     });
     return {
       p_quiz: { id: entry.id, folder_id: entry.folderId && folderIds.has(entry.folderId) ? entry.folderId : null, name: String(entry.name || '').slice(0, 200), language: c.lang, voice_gender: c.voiceGender === 'male' ? 'male' : 'female', mode: 'practice', question_order: c.questionOrder, answer_order: c.answerOrder, visible: c.visibility === 'visible', cover_path: path(c.coverImage), created_at: entry.createdAt || entry.updatedAt, updated_at: entry.updatedAt,
-        activity_type: S.typeOf(entry.type), settings: entry.type === 'sort' ? S.sortSettings(c) : entry.type === 'typing' ? S.typingSettings(c) : {},
+        activity_type: S.typeOf(entry.type), settings: entry.type === 'sort' ? S.sortSettings(c) : entry.type === 'typing' ? S.typingSettings(c) : entry.type === 'anagram' ? S.anagramSettings(c) : {},
         instructions: S.instructionsOf(c).slice(0, 300), image_speaks: S.imageSpeaksOf(c), shared_guest: !!c.sharedGuest },
       p_questions: questions,
       p_options: options,
@@ -3277,6 +3408,240 @@ window.LL = window.LL || {};
 
 </script>
   <script>
+/* js/anagram-game.js */
+/* «Anagrama» (activity type 'anagram', V127), like Wordwall's «Anagram».
+ *
+ * The child builds a word or phrase from its mixed-up letters: each letter is a tile that is dragged
+ * (finger or mouse) to its box. Spaces of a phrase are shown as gaps, not as tiles.
+ *
+ * Rules (from the teacher):
+ *   - A letter dropped on its box stays there (green). Repeated letters can go in any box with that
+ *     same letter.
+ *   - A letter dropped on a wrong box goes back to its place (buzzer) and counts as a mistake.
+ *     Dropped outside the boxes (or on a filled box) it just goes back, without a mistake.
+ *   - When every box is filled, the voice says the word or phrase and the next one comes.
+ *   - Points per word (same as «Pantalla de Tablet»): 0 mistakes = 1; 1–2 = 0.75; 3–4 = 0.5;
+ *     5–6 = 0.25; more = 0.
+ *   - «Con pistas»: a clue card shows the picture and/or text; its sound (file, or the voice reading
+ *     the text) plays at the start and with 🔊 or a tap on the picture.
+ */
+window.LL = window.LL || {};
+(function () {
+  const { el, confetti } = LL.ui;
+  const feedbackTone = (ok) => LL.ui.feedbackTone(ok);
+  let game = null;
+
+  const normalize = (t) => String(t || '').normalize('NFC').replace(/\s+/g, ' ').trim();
+  const pointsFor = (errors) => (errors <= 0 ? 1 : errors <= 2 ? 0.75 : errors <= 4 ? 0.5 : errors <= 6 ? 0.25 : 0);
+
+  /** Mix the letters; never leave them already in order (when that is possible). */
+  function mix(chars) {
+    const idx = chars.map((_, i) => i);
+    const same = (a) => a.every((k, i) => chars[k] === chars[i]);
+    const allSame = chars.every((c) => c === chars[0]);
+    for (let tries = 0; tries < 30; tries++) {
+      for (let i = idx.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [idx[i], idx[j]] = [idx[j], idx[i]]; }
+      if (allSame || !same(idx)) break;
+    }
+    return idx;
+  }
+
+  /** host: element to fill. q: { text, image, readText }. o: { clues, say(), onDone(result) } */
+  function start(host, q, o) {
+    stop();
+    const text = normalize(q.text);
+    const g = game = { host, q, o, text, errors: 0, placed: 0, done: false, startedAt: Date.now(), timers: [], drag: null };
+
+    // Clue card («Con pistas»).
+    const clueText = o.clues ? String(q.readText || '').trim() : '';
+    const hasImg = o.clues && LL.media.isImage(q.image);
+    let clue = null;
+    if (clueText || hasImg) {
+      const img = hasImg ? el('button.an-clue-img', { type: 'button', 'aria-label': LL.ui.tr('Escuchar la pista', 'Listen to the clue'), title: LL.ui.tr('Toca para escuchar', 'Tap to listen') }, el('img', { src: q.image, alt: '' })) : null;
+      if (img) img.addEventListener('click', () => { o.say && o.say(); img.classList.remove('pop'); void img.offsetWidth; img.classList.add('pop'); });
+      clue = el('div.an-clue' + (hasImg ? '.has-img' : ''), el('span.an-tag', LL.ui.tr('💡 Pista', '💡 Clue')), el('div.an-clue-in', img, clueText ? el('div.an-clue-text', clueText) : null));
+    }
+
+    // Boxes: one per letter; the letters of a word stay together on a line.
+    g.slots = [];
+    const board = el('div.an-board', { role: 'group', 'aria-label': LL.ui.tr('Casillas de la palabra', 'Boxes of the word') });
+    let word = null;
+    [...text].forEach((ch) => {
+      if (ch === ' ') { word = null; board.append(el('span.an-gap', { 'aria-hidden': 'true' })); return; }
+      if (!word) { word = el('span.an-word'); board.append(word); }
+      const slot = el('span.an-slot', { dataset: { i: String(g.slots.length) } });
+      g.slots.push({ ch, el: slot, filled: false });
+      word.append(slot);
+    });
+
+    // Tiles: the mixed letters, each on its own spot (the spot stays when the letter leaves).
+    const chars = g.slots.map((s) => s.ch);
+    g.tiles = [];
+    const tray = el('div.an-tray');
+    mix(chars).forEach((k) => {
+      const home = el('span.an-home');
+      const tile = el('span.an-tile', { role: 'button', tabindex: '-1', 'aria-label': chars[k] }, chars[k]);
+      const t = { ch: chars[k], el: tile, home, used: false };
+      tile.addEventListener('pointerdown', (e) => grab(g, t, e));
+      tile.addEventListener('dragstart', (e) => e.preventDefault());
+      home.append(tile);
+      tray.append(home);
+      g.tiles.push(t);
+    });
+
+    g.root = el('div.an', clue, el('div.an-area', el('span.an-tag', LL.ui.tr('🔤 Forma la palabra', '🔤 Build the word')), board), el('div.an-tray-wrap', tray));
+    g.board = board;
+    host.replaceChildren(g.root);
+    requestAnimationFrame(() => fit(g));
+    g.onResize = () => fit(g);
+    window.addEventListener('resize', g.onResize);
+    return { total: 1 };
+  }
+
+  function stop() {
+    const g = game; if (!g) return;
+    g.timers.forEach(clearTimeout);
+    window.removeEventListener('resize', g.onResize);
+    endDrag(g, true);
+    game = null;
+  }
+  const later = (g, ms, fn) => { const t = setTimeout(() => { if (game === g) fn(); }, ms); g.timers.push(t); };
+
+  /** Size of boxes and tiles: as big as possible while the longest line fits. */
+  function fit(g) {
+    if (game !== g) return;
+    const w = g.board.clientWidth || g.host.clientWidth || 800;
+    const words = g.text.split(' ').map((x) => [...x].length);
+    const total = words.reduce((a, b) => a + b, 0) + (words.length - 1) * 0.5;
+    const longest = Math.max(...words);
+    const room = (n) => Math.floor((w - 16) / (n * 1.14));
+    const maxH = Math.max(46, Math.floor(innerHeight * 0.13));
+    let size = Math.min(110, maxH, room(total));
+    if (size < 52) size = Math.min(110, maxH, room(longest)); // a long phrase wraps at its spaces
+    size = Math.max(30, size);
+    g.root.style.setProperty('--an-size', size + 'px');
+    // Then make sure everything also fits in height (clue, boxes and tiles), shrinking a little at a time.
+    const avail = g.host.clientHeight;
+    let guard = 0;
+    while (avail && size > 30 && g.root.scrollHeight > avail + 1 && guard++ < 40) {
+      size -= 3;
+      g.root.style.setProperty('--an-size', size + 'px');
+    }
+  }
+
+  /* ---------- Dragging ---------- */
+  function grab(g, t, e) {
+    if (game !== g || g.done || t.used || g.drag) return;
+    if (e.button > 0) return;
+    e.preventDefault();
+    const r = t.el.getBoundingClientRect();
+    const ghost = t.el.cloneNode(true);
+    ghost.classList.add('an-ghost');
+    Object.assign(ghost.style, { width: r.width + 'px', height: r.height + 'px', left: r.left + 'px', top: r.top + 'px' });
+    document.body.append(ghost);
+    t.el.classList.add('lifted');
+    const d = g.drag = { t, ghost, dx: e.clientX - r.left, dy: e.clientY - r.top, id: e.pointerId, over: null };
+    d.move = (ev) => { if (ev.pointerId !== d.id) return; ev.preventDefault(); moveTo(g, ev.clientX, ev.clientY); };
+    d.up = (ev) => { if (ev.pointerId !== d.id) return; drop(g, ev.clientX, ev.clientY); };
+    d.cancel = (ev) => { if (ev.pointerId !== d.id) return; back(g, t); endDrag(g); };
+    window.addEventListener('pointermove', d.move, { passive: false });
+    window.addEventListener('pointerup', d.up);
+    window.addEventListener('pointercancel', d.cancel);
+    moveTo(g, e.clientX, e.clientY);
+  }
+
+  function moveTo(g, x, y) {
+    const d = g.drag; if (!d) return;
+    d.ghost.style.left = (x - d.dx) + 'px';
+    d.ghost.style.top = (y - d.dy) + 'px';
+    const s = slotAt(g, x, y);
+    if (d.over !== s) {
+      if (d.over) d.over.el.classList.remove('over');
+      d.over = s;
+      if (s && !s.filled) s.el.classList.add('over');
+    }
+  }
+
+  /** The box under the finger (or the nearest one, if the finger is just beside it). */
+  function slotAt(g, x, y) {
+    let best = null, bestD = Infinity;
+    for (const s of g.slots) {
+      const r = s.el.getBoundingClientRect();
+      const pad = r.width * 0.35;
+      if (x < r.left - pad || x > r.right + pad || y < r.top - pad || y > r.bottom + pad) continue;
+      const dist = Math.hypot(x - (r.left + r.width / 2), y - (r.top + r.height / 2));
+      if (dist < bestD) { bestD = dist; best = s; }
+    }
+    return best;
+  }
+
+  function drop(g, x, y) {
+    const d = g.drag; if (!d) return;
+    const t = d.t;
+    const s = slotAt(g, x, y);
+    if (!s || s.filled) { back(g, t); endDrag(g); return; } // outside the boxes: no mistake
+    if (s.ch === t.ch) { place(g, t, s); endDrag(g); return; }
+    // Wrong box: the letter goes back to its place.
+    g.errors++;
+    feedbackTone(false);
+    s.el.classList.remove('bad'); void s.el.offsetWidth; s.el.classList.add('bad');
+    back(g, t);
+    endDrag(g);
+  }
+
+  function endDrag(g, silent) {
+    const d = g && g.drag; if (!d) return;
+    window.removeEventListener('pointermove', d.move);
+    window.removeEventListener('pointerup', d.up);
+    window.removeEventListener('pointercancel', d.cancel);
+    if (d.over) d.over.el.classList.remove('over');
+    if (silent) d.ghost.remove();
+    g.drag = null;
+  }
+
+  /** Fly the dragged copy back to the letter's spot. */
+  function back(g, t) {
+    const d = g.drag; if (!d) return;
+    const ghost = d.ghost;
+    const r = t.el.getBoundingClientRect();
+    ghost.classList.add('returning');
+    ghost.style.left = r.left + 'px';
+    ghost.style.top = r.top + 'px';
+    setTimeout(() => { ghost.remove(); t.el.classList.remove('lifted'); t.el.classList.remove('wig'); void t.el.offsetWidth; t.el.classList.add('wig'); }, 260);
+  }
+
+  function place(g, t, s) {
+    feedbackTone(true);
+    g.drag.ghost.remove();
+    t.used = true;
+    t.el.classList.remove('lifted');
+    t.home.classList.add('empty');
+    t.el.remove();
+    s.filled = true;
+    s.el.classList.remove('over');
+    s.el.append(el('span.an-letter', s.ch));
+    s.el.classList.add('ok');
+    g.placed++;
+    if (g.placed === g.slots.length) complete(g);
+  }
+
+  function complete(g) {
+    g.done = true;
+    const points = pointsFor(g.errors);
+    g.root.querySelector('.an-area').classList.add('win');
+    const r = g.board.getBoundingClientRect();
+    confetti(r.left + r.width / 2, r.top + r.height / 2);
+    g.root.querySelector('.an-area').append(el('span.an-points' + (points === 1 ? '.full' : ''), points === 1 ? LL.ui.tr('⭐ ¡Perfecto!', '⭐ Perfect!') : points > 0 ? LL.ui.tr('⭐ ¡Muy bien!', '⭐ Great job!') : LL.ui.tr('👍 ¡Lo lograste!', '👍 You did it!')));
+    // The voice says the word or phrase as a reward, then the next one comes.
+    later(g, 450, () => { g.o.sayWord && g.o.sayWord(g.text); });
+    later(g, 2600, () => { const o = g.o; const res = { built: g.text, errors: g.errors, points, ms: Date.now() - g.startedAt }; stop(); o.onDone && o.onDone(res); });
+  }
+
+  LL.anagramGame = { start, stop, isRunning: () => !!game, normalize, pointsFor };
+})();
+
+</script>
+  <script>
 /* js/typing-game.js */
 /* «Pantalla de Tablet» (activity type 'typing', V127).
  *
@@ -3766,6 +4131,8 @@ window.LL = window.LL || {};
   const isSort = () => !!quiz && quiz.type === 'sort';
   // «Pantalla de Tablet» (type 'typing', V127): copy each word with the on-screen tablet keyboard.
   const isTyping = () => !!quiz && quiz.type === 'typing';
+  // «Anagrama» (type 'anagram', V127): drag the mixed-up letters into the boxes of the word.
+  const isAnagram = () => !!quiz && quiz.type === 'anagram';
 
   /* Full screen (V127): a student's activity fills the whole screen, so the browser bar and
    * other tabs are out of reach. The teacher's preview stays in the window. Browsers only allow
@@ -3810,8 +4177,10 @@ window.LL = window.LL || {};
     $('#playerHelp').hidden = !LL.store.instructionsOf(entry.config);
     root().classList.toggle('is-sort', entry.type === 'sort');
     root().classList.toggle('is-typing', entry.type === 'typing');
+    root().classList.toggle('is-anagram', entry.type === 'anagram');
     questions = entry.type === 'sort' ? [] : LL.store.clone(entry.config?.questions || []);
     if (entry.type === 'typing') questions = questions.filter((q) => LL.typingGame.normalize(q.text));
+    if (entry.type === 'anagram') questions = questions.filter((q) => LL.anagramGame.normalize(q.text).replace(/ /g, '').length >= 2);
     if (entry.config?.questionOrder === 'random' && !options.preview) questions = shuffle(questions);
     index = Math.max(0, Math.min(options.startIndex || 0, questions.length - 1));
     newAttempt();
@@ -3837,6 +4206,7 @@ window.LL = window.LL || {};
     stopSound();
     if (LL.sortGame) LL.sortGame.stop();
     if (LL.typingGame) LL.typingGame.stop();
+    if (LL.anagramGame) LL.anagramGame.stop();
     root().hidden = true;
     leaveFullscreen();
     document.body.style.overflow = '';
@@ -3900,6 +4270,7 @@ window.LL = window.LL || {};
     clearTimer();
     stopSound();
     if (LL.typingGame) LL.typingGame.stop();
+    if (LL.anagramGame) LL.anagramGame.stop();
     answered = false;
     selected = new Set();
     const q = questions[index];
@@ -3907,13 +4278,14 @@ window.LL = window.LL || {};
     b.replaceChildren();
     if (!q) {
       renderProgress();
-      b.append(el('div.finish', el('div.stars', '🤔'), el('h1', isTyping() ? LL.ui.tr('Esta actividad todavía no tiene palabras.', 'This activity has no words yet.') : LL.ui.tr('Esta actividad todavía no tiene preguntas.', 'This activity has no questions yet.'))));
+      b.append(el('div.finish', el('div.stars', '🤔'), el('h1', isTyping() || isAnagram() ? LL.ui.tr('Esta actividad todavía no tiene palabras.', 'This activity has no words yet.') : LL.ui.tr('Esta actividad todavía no tiene preguntas.', 'This activity has no questions yet.'))));
       $('#playerSpeak').disabled = true;
       return;
     }
     renderProgress();
     shownAt = Date.now();
     if (isTyping()) { renderTyping(q); return; }
+    if (isAnagram()) { renderAnagram(q); return; }
 
     // Question
     const hasImg = LL.media.isImage(q.image);
@@ -4039,6 +4411,41 @@ window.LL = window.LL || {};
     autoRead(word);
   }
 
+  /** «Anagrama»: one word or phrase per screen; its letters are dragged into the boxes. */
+  function renderAnagram(q) {
+    const clues = !!(quiz.config?.anagram?.clues);
+    const clueText = clues ? String(q.readText || '').trim() : '';
+    // The clue's sound: its file, or the voice reading the clue text. Without clues there is nothing to play
+    // (the word itself is only said at the end, as a reward).
+    const clue = { ...q, text: clueText, readTextEnabled: false, readText: '',
+      audioMode: clues && q.audioMode === 'file' && q.audio ? 'file' : clueText ? 'voice' : 'none' };
+    const speakBtn = $('#playerSpeak');
+    speakBtn.disabled = !hasPromptSound(clue);
+    speakBtn.onclick = () => playPrompt(clue);
+    const myRun = run;
+    const wordItem = { ...q, text: LL.anagramGame.normalize(q.text), readTextEnabled: false, readText: '', audioMode: 'voice' };
+    LL.anagramGame.start(body(), q, {
+      clues,
+      say: () => { if (hasPromptSound(clue)) playPrompt(clue); },
+      sayWord: () => { if (myRun === run && !root().hidden) { stopSound(); sayItem(wordItem, wordItem.text); } },
+      onDone: (r) => {
+        if (myRun !== run || root().hidden) return;
+        answered = true;
+        if (attempt && !attempt.answers.some((a) => a.question_id === q.id)) {
+          const original = (quiz.config?.questions || []).findIndex((x) => x.id === q.id);
+          attempt.answers.push({
+            position: original >= 0 ? original : index, question_id: q.id,
+            prompt: r.built.slice(0, 300), chosen_option_ids: [], chosen_text: r.built.slice(0, 200),
+            correct: r.errors === 0, points: r.points, errors: r.errors, response_ms: r.ms,
+          });
+        }
+        if (index < questions.length - 1) { index++; render(); } else finish();
+      },
+    });
+    if (LL.tts) LL.tts.prefetch([clue, wordItem], quiz.config?.voiceGender || 'female');
+    autoRead(clue);
+  }
+
   /** Shrink only the answer texts that don't fit their box. */
   function fitLabels(grid) {
     grid.querySelectorAll('.option .label').forEach((tx) => {
@@ -4107,6 +4514,7 @@ window.LL = window.LL || {};
   function finish() {
     clearTimer();
     if (LL.typingGame) LL.typingGame.stop();
+    if (LL.anagramGame) LL.anagramGame.stop();
     stopClock();
     if (attempt) showClock(Date.now() - Date.parse(attempt.startedAt));
     index = questions.length;
@@ -4452,7 +4860,7 @@ window.LL = window.LL || {};
           el('button.icon-btn.rt-del.danger', { type: 'button', title: 'Borrar este resultado', 'aria-label': 'Borrar el resultado de ' + r.student_name, onclick: (e) => { e.stopPropagation(); deleteResult(r); } }, '🗑️'));
         table.append(row);
       }
-      panel.append(table, el('p.small.muted', current.quiz && current.quiz.type === 'sort' ? 'Toca un estudiante para ver dónde llevó cada tarjeta.' : current.quiz && current.quiz.type === 'typing' ? 'Toca un estudiante para ver cada palabra y sus errores.' : 'Toca un estudiante para ver cada pregunta.'));
+      panel.append(table, el('p.small.muted', current.quiz && current.quiz.type === 'sort' ? 'Toca un estudiante para ver dónde llevó cada tarjeta.' : current.quiz && (current.quiz.type === 'typing' || current.quiz.type === 'anagram') ? 'Toca un estudiante para ver cada palabra y sus errores.' : 'Toca un estudiante para ver cada pregunta.'));
     }
     // Who hasn't done it this month
     const done = new Set(rows.map((r) => (r.student_id != null ? 'id:' + r.student_id : 'n:' + r.student_name)));
@@ -4695,7 +5103,9 @@ window.LL = window.LL || {};
         el('button.kind-choice', { type: 'button', onclick: pick('sort') },
           el('span.kind-icon', '🧺'), el('span.kind-name', 'Clasificación rápida'), el('span.kind-desc', 'Las tarjetas pasan por una banda y el niño lleva cada una a su grupo.')),
         el('button.kind-choice', { type: 'button', onclick: pick('typing') },
-          el('span.kind-icon', '⌨️'), el('span.kind-name', 'Pantalla de Tablet'), el('span.kind-desc', 'El niño copia palabras o frases con el teclado de la tablet: letras, Shift, Borrar y Enter.'))),
+          el('span.kind-icon', '⌨️'), el('span.kind-name', 'Pantalla de Tablet'), el('span.kind-desc', 'El niño copia palabras o frases con el teclado de la tablet: letras, Shift, Borrar y Enter.')),
+        el('button.kind-choice', { type: 'button', onclick: pick('anagram') },
+          el('span.kind-icon', '🔤'), el('span.kind-name', 'Anagrama'), el('span.kind-desc', 'El niño forma una palabra o frase arrastrando sus letras revueltas a las casillas.'))),
       actions: [{ label: 'Cancelar', kind: 'ghost', value: false }],
     });
   }
@@ -4710,13 +5120,17 @@ window.LL = window.LL || {};
       const n = qs.filter((q) => String(q.text || '').trim()).length;
       return LL.ui.tr('Pantalla de Tablet · ' + n + (n === 1 ? ' palabra' : ' palabras'), 'Tablet Screen · ' + n + (n === 1 ? ' word' : ' words'));
     }
+    if (t.type === 'anagram') {
+      const n = qs.filter((q) => String(q.text || '').trim()).length;
+      return LL.ui.tr('Anagrama · ' + n + (n === 1 ? ' palabra' : ' palabras'), 'Anagram · ' + n + (n === 1 ? ' word' : ' words'));
+    }
     return LL.ui.tr('Quiz · ' + qs.length + (qs.length === 1 ? ' pregunta' : ' preguntas'), 'Quiz · ' + qs.length + (qs.length === 1 ? ' question' : ' questions'));
   }
 
   function quizCard(t, student) {
     const cover = t.config?.coverImage || '';
     const main = el('button.card-main', { type: 'button', onclick: () => play(t) },
-      LL.media.isImage(cover) ? el('img.cover', { src: cover, alt: '' }) : el('span.cover-placeholder', { 'aria-hidden': 'true' }, t.type === 'sort' ? '🧺' : t.type === 'typing' ? '⌨️' : '❓'),
+      LL.media.isImage(cover) ? el('img.cover', { src: cover, alt: '' }) : el('span.cover-placeholder', { 'aria-hidden': 'true' }, t.type === 'sort' ? '🧺' : t.type === 'typing' ? '⌨️' : t.type === 'anagram' ? '🔤' : '❓'),
       el('span.name', t.name),
       el('span.meta', cardMeta(t)));
     const card = el('div.card.quiz', { dataset: { quizId: t.id } }, main);
@@ -5146,6 +5560,191 @@ window.LL = window.LL || {};
 
 </script>
   <script>
+/* js/anagram-editor.js */
+/* Editor for «Anagrama» (activity type 'anagram', V127), like Wordwall's «Anagram» editor:
+ * «Sin pistas» / «Con pistas» for the whole activity, then a numbered list of words or phrases.
+ * With clues, each word can have a clue text, a picture and a sound (audio file). Each word is stored
+ * as a quiz "question" without answers (see store.js), so saving, pictures, voices and sync are
+ * shared with the other activity types. */
+window.LL = window.LL || {};
+(function () {
+  const { el, toast, imageFileToDataURL, audioFileToDataURL, pickFile, speak, playAudio, stopSound } = LL.ui;
+  const S = LL.store;
+  const MAX_ITEMS = 100;
+  let refreshFn = null;
+  let recording = null; // { q, rec, limit } while the microphone records a clue
+
+  /** Keep the stored sound settings in step with the clue: a sound file plays it; otherwise the
+   *  voice reads the clue text; nothing when there is neither. */
+  function syncClue(q) {
+    const t = S.anagramClueText(q);
+    q.readTextEnabled = !!t;
+    q.audioMode = q.audio ? 'file' : t ? 'voice' : 'none';
+  }
+
+  /** container: element to fill. api: { changed(), store(dataUrl, folder) → Promise<ref> } */
+  function render(container, quiz, api) {
+    const c = quiz.config;
+    const set = S.anagramSettingsOf(c);
+    const items = c.questions;
+    container.replaceChildren();
+
+    const status = el('div');
+    const refreshStatus = () => {
+      const msg = S.anagramProblem(c);
+      const n = items.filter((q) => String(q.text || '').trim()).length;
+      status.className = msg ? 'problem-box' : 'ok-box';
+      status.textContent = msg ? '⚠️ ' + msg : '✓ Lista: ' + n + (n === 1 ? ' palabra o frase.' : ' palabras o frases.');
+    };
+    const changed = () => { refreshStatus(); api.changed(); };
+    refreshFn = () => { if (status.isConnected) refreshStatus(); };
+
+    // «Sin pistas» / «Con pistas» (whole activity).
+    const clueChoice = el('div.an-clue-choice', { role: 'radiogroup', 'aria-label': 'Pistas' });
+    const drawChoice = () => {
+      clueChoice.replaceChildren(...[[false, '🚫 Sin pistas', 'Solo las letras.'], [true, '💡 Con pistas', 'Cada palabra lleva una pista: texto, sonido 🎤 y/o imagen 🖼️.']].map(([v, name, desc]) =>
+        el('button.tp-mode', { type: 'button', role: 'radio', 'aria-checked': String(set.clues === v), onclick: () => { set.clues = v; drawChoice(); drawItems(); changed(); } },
+          el('span.tp-mode-name', name), el('span.tp-mode-desc', desc))));
+    };
+
+    const list = el('ol.an-items');
+    const head = el('div.an-head');
+    const drawHead = () => {
+      head.replaceChildren(...[el('span'), el('span.an-col', 'Palabra'),
+        set.clues ? el('span.an-col', 'Pista') : null,
+        set.clues ? el('button.btn.sm.ghost.an-swap', { type: 'button', title: 'Pasa cada palabra a la pista y cada pista a la palabra', onclick: () => {
+          items.forEach((q) => { const w = q.text || ''; q.text = q.readText || ''; q.readText = w; syncClue(q); delete q.tts; });
+          drawItems(); changed();
+        } }, '⇄ Intercambiar columnas') : null].filter(Boolean));
+      head.classList.toggle('with-clues', set.clues);
+    };
+    const count = el('span.small.muted');
+    const drawItems = () => {
+      list.classList.toggle('with-clues', set.clues);
+      drawHead();
+      list.replaceChildren(...items.map((q, i) => itemRow(q, i)));
+      addItem.disabled = items.length >= MAX_ITEMS;
+      count.textContent = items.length + ' / ' + MAX_ITEMS;
+      refreshStatus();
+    };
+
+    function itemRow(q, i) {
+      const n = i + 1;
+      const text = el('input.an-word-input', { type: 'text', maxlength: '60', placeholder: 'Palabra o frase', value: q.text || '', 'aria-label': 'Palabra o frase ' + n, autocomplete: 'off', spellcheck: 'false' });
+      const warn = el('span.tp-item-warn');
+      const check = () => {
+        const letters = [...String(text.value || '').replace(/\s+/g, '')].length;
+        warn.textContent = letters > S.ANAGRAM_MAX ? '⚠️ Máximo ' + S.ANAGRAM_MAX + ' letras (tiene ' + letters + ').' : letters === 1 ? '⚠️ Necesita al menos 2 letras.' : '';
+        row.classList.toggle('blank', !String(text.value).trim());
+      };
+      text.addEventListener('input', () => { q.text = text.value; delete q.tts; check(); changed(); });
+      const mv = (d) => { const j = i + d; if (j < 0 || j >= items.length) return; [items[i], items[j]] = [items[j], items[i]]; drawItems(); changed(); };
+
+      // Clue column (like Wordwall): the clue text, with 🎤 (record its sound) and 🖼️ (its picture) inside.
+      let clueCell = null;
+      if (set.clues) {
+        const clueText = el('input.an-clue-input', { type: 'text', maxlength: '120', placeholder: 'Pista', value: q.readText || '', 'aria-label': 'Pista de la palabra ' + n });
+        clueText.addEventListener('input', () => { q.readText = clueText.value; syncClue(q); delete q.tts; changed(); });
+        const tools = el('span.an-clue-tools');
+        const drawTools = () => {
+          const mic = el('button.an-in-btn' + (recording && recording.q === q ? '.rec' : ''), { type: 'button',
+            title: recording && recording.q === q ? 'Detener la grabación' : q.audio ? 'Grabar otra vez el sonido de la pista' : 'Grabar el sonido de la pista (micrófono)',
+            'aria-label': (recording && recording.q === q ? 'Detener la grabación de la pista ' : 'Grabar el sonido de la pista ') + n,
+            onclick: () => toggleRecord(q, drawTools) }, recording && recording.q === q ? '⏹️' : '🎤');
+          const pic = el('button.an-in-btn.pic', { type: 'button', title: q.image ? 'Cambiar la imagen de la pista' : 'Elegir una imagen para la pista', 'aria-label': (q.image ? 'Cambiar la imagen de la pista ' : 'Elegir una imagen para la pista ') + n },
+            q.image ? el('img', { src: q.image, alt: '' }) : '🖼️');
+          pic.addEventListener('click', async () => {
+            const f = await pickFile('image/*'); if (!f) return;
+            try { q.image = await api.store(await imageFileToDataURL(f, 800, 0.8), 'images'); drawTools(); changed(); } catch (e) { toast(e.message, 'error'); }
+          });
+          tools.replaceChildren(...[
+            q.audio ? el('button.an-in-btn', { type: 'button', title: 'Escuchar el sonido', 'aria-label': 'Escuchar el sonido de la pista ' + n, onclick: () => playAudio(q.audio) }, '▶️') : null,
+            q.audio ? el('button.an-in-btn.x', { type: 'button', title: 'Quitar el sonido', 'aria-label': 'Quitar el sonido de la pista ' + n, onclick: () => { stopSound(); q.audio = ''; syncClue(q); drawTools(); changed(); } }, '✕') : null,
+            mic, pic,
+            q.image ? el('button.an-in-btn.x', { type: 'button', title: 'Quitar la imagen', 'aria-label': 'Quitar la imagen de la pista ' + n, onclick: () => { q.image = ''; drawTools(); changed(); } }, '✕') : null,
+          ].filter(Boolean));
+        };
+        drawTools();
+        clueCell = el('div.an-cell.an-clue-cell', clueText, tools);
+      }
+
+      const row = el('li.an-item',
+        el('span.an-num', n + '.'),
+        el('div.an-cells', el('div.an-cell', text), clueCell),
+        el('div.an-row-tools',
+          el('button.icon-btn', { type: 'button', 'aria-label': 'Escuchar la palabra ' + n, title: 'Escuchar la palabra', onclick: () => { if (String(q.text || '').trim()) speak(q.text, c.lang, c.voiceGender); else toast('Escribe la palabra para que se pueda escuchar.'); } }, '🔊'),
+          el('button.icon-btn', { type: 'button', 'aria-label': 'Subir la palabra ' + n, title: 'Subir', disabled: i === 0, onclick: () => mv(-1) }, '↑'),
+          el('button.icon-btn', { type: 'button', 'aria-label': 'Bajar la palabra ' + n, title: 'Bajar', disabled: i === items.length - 1, onclick: () => mv(1) }, '↓'),
+          el('button.icon-btn', { type: 'button', 'aria-label': 'Duplicar la palabra ' + n, title: 'Duplicar', disabled: items.length >= MAX_ITEMS, onclick: () => { const copy = { ...S.clone(q), id: S.newAnagramItem().id }; delete copy.tts; items.splice(i + 1, 0, copy); drawItems(); changed(); } }, '⧉'),
+          el('button.icon-btn.danger', { type: 'button', 'aria-label': 'Eliminar la palabra ' + n, title: 'Eliminar', disabled: items.length <= 1, onclick: () => { items.splice(i, 1); drawItems(); changed(); } }, '🗑️')),
+        warn);
+      check();
+      return row;
+    }
+
+    /** 🎤: record the clue's sound with the microphone; a second tap stops and keeps it. */
+    async function toggleRecord(q, redraw) {
+      if (recording) {
+        const r = recording;
+        if (r.q !== q) { toast('Primero detén la otra grabación.'); return; }
+        r.rec.stop();
+        return;
+      }
+      if (!navigator.mediaDevices || !window.MediaRecorder) { toast('Este navegador no puede grabar. Prueba en Chrome.', 'error'); return; }
+      let stream;
+      try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+      catch (e) { toast('No se pudo usar el micrófono. Revisa el permiso del navegador.', 'error'); return; }
+      const type = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg'].find((t) => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || '';
+      const rec = type ? new MediaRecorder(stream, { mimeType: type }) : new MediaRecorder(stream);
+      const chunks = [];
+      recording = { q, rec };
+      rec.addEventListener('dataavailable', (e) => { if (e.data && e.data.size) chunks.push(e.data); });
+      rec.addEventListener('stop', async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        clearTimeout(recording && recording.limit);
+        recording = null;
+        const mime = String(rec.mimeType || type || 'audio/webm').split(';')[0];
+        const blob = new Blob(chunks, { type: mime });
+        if (blob.size) {
+          try { q.audio = await api.store(await audioFileToDataURL(new File([blob], 'pista.' + (mime.split('/')[1] || 'webm'), { type: mime })), 'audio'); syncClue(q); changed(); toast('🎤 Sonido grabado.', 'success'); }
+          catch (e) { toast(e.message, 'error'); }
+        }
+        redraw();
+      });
+      rec.start();
+      recording.limit = setTimeout(() => { if (rec.state === 'recording') rec.stop(); }, 30000); // 30 s at most
+      toast('🎤 Grabando… toca ⏹️ para terminar.');
+      redraw();
+    }
+
+    const addItem = el('button.btn.soft', { type: 'button', onclick: () => {
+      if (items.length >= MAX_ITEMS) return;
+      items.push(S.newAnagramItem()); drawItems(); changed();
+      const rows = list.querySelectorAll('.an-word-input'); rows[rows.length - 1] && rows[rows.length - 1].focus();
+    } }, '＋ Agregar palabra');
+
+    drawChoice();
+    container.append(
+      el('div.sort-editor-head', el('h2', '🔤 Palabras y frases')),
+      el('p.small.muted', 'El niño forma cada palabra o frase arrastrando sus letras revueltas a las casillas. Si pone una letra en la casilla equivocada, la letra regresa a su lugar. Los espacios de una frase se ven como separación. Al terminar, la voz dice la palabra.'),
+      clueChoice, status, head, list,
+      el('div.sort-editor-foot', addItem, el('span.small.muted', 'mín. 1 · máx. ' + MAX_ITEMS), count));
+    drawItems();
+  }
+
+  /** Shown in the editor's ⚙️ Ajustes panel. */
+  function settingsFields() {
+    return [
+      el('p.type-tag', '🔤 Anagrama'),
+      el('div.field', 'Puntos', el('span.hint', 'Por palabra: sin errores 1 · 1–2 errores 0.75 · 3–4 errores 0.5 · 5–6 errores 0.25 · más de 6 errores 0. Un error es soltar una letra en una casilla que no es la suya.')),
+    ];
+  }
+
+  LL.anagramEditor = { render, settingsFields, syncClue, refresh: () => refreshFn && refreshFn() };
+})();
+
+</script>
+  <script>
 /* js/typing-editor.js */
 /* Editor for «Pantalla de Tablet» (activity type 'typing', V127).
  * A numbered list of words or phrases, each with an optional picture (needed in Mode 3). Each word is
@@ -5303,9 +5902,10 @@ window.LL = window.LL || {};
 
   const isSort = () => !!quiz && quiz.type === 'sort';
   const isTyping = () => !!quiz && quiz.type === 'typing'; // «Pantalla de Tablet» (V127)
+  const isAnagram = () => !!quiz && quiz.type === 'anagram'; // «Anagrama» (V127)
   /** Activities that aren't a classic quiz say «actividad» (feminine) instead of «quiz». */
-  const isActivityWord = () => isSort() || isTyping();
-  const draftKey = () => quiz.id || (isSort() ? 'new-sort' : isTyping() ? 'new-typing' : 'new');
+  const isActivityWord = () => isSort() || isTyping() || isAnagram();
+  const draftKey = () => quiz.id || (isSort() ? 'new-sort' : isTyping() ? 'new-typing' : isAnagram() ? 'new-anagram' : 'new');
 
   /** kind (new activities only): 'quiz' or 'sort' («Clasificación rápida»). */
   async function open(id, folderId, kind) {
@@ -5317,8 +5917,9 @@ window.LL = window.LL || {};
       quiz.config = { lang: 'es', voiceGender: 'female', mode: 'practice', questionOrder: 'fixed', answerOrder: 'fixed', visibility: 'hidden', coverImage: '', ...quiz.config };
       if (quiz.type === 'sort') quiz.config.sort = S.sortSettings(quiz.config);
       if (quiz.type === 'typing') quiz.config.typing = S.typingSettings(quiz.config);
+      if (quiz.type === 'anagram') quiz.config.anagram = S.anagramSettings(quiz.config);
     } else {
-      quiz = kind === 'sort' ? S.newSort(folderId) : kind === 'typing' ? S.newTyping(folderId) : S.newQuiz(folderId);
+      quiz = kind === 'sort' ? S.newSort(folderId) : kind === 'typing' ? S.newTyping(folderId) : kind === 'anagram' ? S.newAnagram(folderId) : S.newQuiz(folderId);
     }
     snapshot = JSON.stringify(quiz);
     qIndex = 0;
@@ -5332,6 +5933,7 @@ window.LL = window.LL || {};
     }
     if (isSort()) { while (quiz.config.questions.length < 2) quiz.config.questions.push(S.newSortGroup()); }
     else if (isTyping()) { if (!quiz.config.questions.length) quiz.config.questions.push(S.newTypingItem()); }
+    else if (isAnagram()) { if (!quiz.config.questions.length) quiz.config.questions.push(S.newAnagramItem()); }
     else if (!quiz.config.questions.length) quiz.config.questions.push(S.newQuestion());
     await LL.app.go('editor');
     renderAll();
@@ -5340,6 +5942,7 @@ window.LL = window.LL || {};
 
   function changed() {
     if (isTyping() && LL.typingEditor) LL.typingEditor.refresh(); // mode / language change what is valid
+    if (isAnagram() && LL.anagramEditor) LL.anagramEditor.refresh();
     if (isDirty()) S.writeDraft({ quizId: draftKey(), quiz, at: new Date().toISOString() });
     const st = $('#edState');
     if (st) {
@@ -5353,7 +5956,7 @@ window.LL = window.LL || {};
   function renderAll() {
     const r = root();
     r.replaceChildren();
-    const name = el('input.name-input#edName', { type: 'text', maxlength: '90', placeholder: isSort() ? 'Nombre de la actividad (ej. Clasificar A, F, K, P)' : isTyping() ? 'Nombre de la actividad (ej. Escribo saludos)' : 'Nombre del quiz (ej. Animales)', value: quiz.name, 'aria-label': isActivityWord() ? 'Nombre de la actividad' : 'Nombre del quiz' });
+    const name = el('input.name-input#edName', { type: 'text', maxlength: '90', placeholder: isSort() ? 'Nombre de la actividad (ej. Clasificar A, F, K, P)' : isTyping() ? 'Nombre de la actividad (ej. Escribo saludos)' : isAnagram() ? 'Nombre de la actividad (ej. Nombres de mis compañeros)' : 'Nombre del quiz (ej. Animales)', value: quiz.name, 'aria-label': isActivityWord() ? 'Nombre de la actividad' : 'Nombre del quiz' });
     name.addEventListener('input', () => { quiz.name = name.value; changed(); });
 
     r.append(el('div.editor-top',
@@ -5364,6 +5967,13 @@ window.LL = window.LL || {};
     r.append(el('p.small#edState', { style: { margin: '-8px 0 12px', fontWeight: '800' } }));
     r.append(instructionsField());
 
+    if (isAnagram()) {
+      const main = el('div.panel.sort-editor.tp-editor.an-editor#edAnagram');
+      r.append(el('div.editor-layout.sort-layout', el('aside.editor-side', settingsPanel()), main));
+      LL.anagramEditor.render(main, quiz, { changed, store });
+      changed();
+      return;
+    }
     if (isTyping()) {
       const main = el('div.panel.sort-editor.tp-editor#edTyping');
       r.append(el('div.editor-layout.sort-layout', el('aside.editor-side', settingsPanel()), main));
@@ -5392,7 +6002,7 @@ window.LL = window.LL || {};
     const c = quiz.config;
     if (!c.instructions && c.sort && c.sort.instruction) c.instructions = c.sort.instruction; // early V126 sort activities
     if (c.sort) delete c.sort.instruction;
-    const box = el('textarea', { rows: '2', maxlength: '300', placeholder: isSort() ? 'Ej. Escucha el nombre de cada dibujo y llévalo a la letra con la que empieza.' : isTyping() ? 'Ej. Copia la palabra con el teclado. Al terminar, toca Enter.' : 'Ej. Escucha la pregunta y toca la respuesta correcta.', 'aria-label': 'Instrucciones de la actividad' });
+    const box = el('textarea', { rows: '2', maxlength: '300', placeholder: isSort() ? 'Ej. Escucha el nombre de cada dibujo y llévalo a la letra con la que empieza.' : isTyping() ? 'Ej. Copia la palabra con el teclado. Al terminar, toca Enter.' : isAnagram() ? 'Ej. Arrastra cada letra a su casilla para formar la palabra.' : 'Ej. Escucha la pregunta y toca la respuesta correcta.', 'aria-label': 'Instrucciones de la actividad' });
     box.value = c.instructions || '';
     box.addEventListener('input', () => { c.instructions = box.value; changed(); });
     const test = el('button.btn.sm.ghost', { type: 'button', onclick: () => { if (box.value.trim()) speak(box.value, c.lang, c.voiceGender); else { toast('Escribe primero las instrucciones.'); box.focus(); } } }, '🔊 Escuchar');
@@ -5420,6 +6030,7 @@ window.LL = window.LL || {};
     }
     if (isSort()) p.append(el('p.type-tag', '🧺 Clasificación rápida'));
     if (isTyping()) p.append(...LL.typingEditor.settingsFields(quiz, { changed }));
+    if (isAnagram()) p.append(...LL.anagramEditor.settingsFields(quiz, { changed }));
 
     const voiceNote = el('span.hint.voice-note', { 'aria-live': 'polite' });
     const drawVoiceNote = () => {
@@ -5444,7 +6055,7 @@ window.LL = window.LL || {};
     qr.addEventListener('change', () => { c.questionOrder = qr.checked ? 'random' : 'fixed'; changed(); });
     const ar = el('input', { type: 'checkbox', checked: c.answerOrder === 'random' });
     ar.addEventListener('change', () => { c.answerOrder = ar.checked ? 'random' : 'fixed'; changed(); });
-    if (isTyping()) p.append(el('div.field', 'Orden', el('label.switch', qr, 'Mezclar palabras')));
+    if (isTyping() || isAnagram()) p.append(el('div.field', 'Orden', el('label.switch', qr, 'Mezclar palabras')));
     else if (!isSort()) p.append(el('div.field', 'Orden', el('label.switch', qr, 'Mezclar preguntas'), el('label.switch', ar, 'Mezclar respuestas')));
     // V127: one choice for the whole quiz: does tapping a question's picture play its sound?
     if (!isActivityWord()) {
@@ -5800,6 +6411,7 @@ window.LL = window.LL || {};
     if (!quiz.name) { toast(isActivityWord() ? 'Escribe un nombre para la actividad.' : 'Escribe un nombre para el quiz.', 'error'); $('#edName').focus(); return false; }
     if (isSort()) return saveSort();
     if (isTyping()) return saveTyping();
+    if (isAnagram()) return saveAnagram();
     // A question that was never touched is simply dropped.
     const blank = (q) => !String(q.text || '').trim() && !q.image && !q.audio && !String(q.readText || '').trim() && q.options.every((o) => !String(o.text || '').trim() && !o.image && !o.audio && !o.correct);
     const qs = quiz.config.questions;
@@ -5869,6 +6481,28 @@ window.LL = window.LL || {};
       if (q.audioMode !== 'file') q.audioMode = 'voice';
     });
     const problem = S.typingProblem(c);
+    if (problem && c.visibility === 'visible') {
+      renderAll();
+      toast('Para que los estudiantes la vean: ' + problem, 'error');
+      return false;
+    }
+    return writeAndRefresh(problem ? 'Guardada como «En preparación». ' + problem : (c.visibility === 'visible' ? '✓ Guardada. Los estudiantes ya pueden verla.' : '✓ Guardada (en preparación).'));
+  }
+
+  /** «Anagrama»: empty rows are dropped; it can be visible only when playable. */
+  function saveAnagram() {
+    const c = quiz.config;
+    S.anagramSettingsOf(c);
+    c.answerOrder = 'fixed';
+    const filled = c.questions.filter((q) => String(q.text || '').trim() || S.anagramHasClue(q));
+    c.questions = filled.length ? filled : [S.newAnagramItem()];
+    c.questions.forEach((q) => {
+      q.text = LL.anagramGame.normalize(q.text);
+      q.readText = String(q.readText || '').trim();
+      q.options = []; q.correctCount = 1;
+      LL.anagramEditor.syncClue(q);
+    });
+    const problem = S.anagramProblem(c);
     if (problem && c.visibility === 'visible') {
       renderAll();
       toast('Para que los estudiantes la vean: ' + problem, 'error');

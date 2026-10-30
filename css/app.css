@@ -1073,3 +1073,95 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 .local-mode-box { margin-top: 6px; padding: 10px 14px; border-radius: 14px; background: var(--surface-2); display: grid; gap: 8px; }
 .local-mode-box summary { cursor: pointer; font-weight: 800; color: var(--muted); }
 .voice-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: 12px; background: var(--surface-2); }
+
+/* =====================================================================
+ * «Anagrama» (activity type 'anagram', V127)
+ * Clue card (yellow) · white card with the boxes of the word · tray with the mixed-up letter tiles.
+ * ===================================================================== */
+.player.is-anagram .player-body { overflow: hidden; }
+.an { --an-size: 72px; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: clamp(14px, 2.4vh, 28px); padding-top: 10px; }
+.an-tag {
+  position: absolute; top: -12px; left: 18px; z-index: 1; padding: 3px 14px; border-radius: 999px;
+  background: #fff; font-weight: 900; font-size: clamp(13px, 1.8vh, 16px); box-shadow: 0 2px 0 rgba(0, 0, 0, .08);
+}
+.an-clue, .an-area { position: relative; border-radius: 26px; padding: clamp(12px, 1.8vh, 18px) clamp(10px, 1.4vw, 18px) clamp(10px, 1.4vh, 16px); }
+.an-clue { background: linear-gradient(180deg, #FFE9A8, #FFD66B); box-shadow: 0 4px 0 #E3AE2B; align-self: center; max-width: 100%; }
+.an-clue-in { display: flex; align-items: center; justify-content: center; gap: clamp(12px, 2vw, 24px); background: #FFF8E1; border: 3px solid #E39B00; border-radius: 18px; padding: 8px clamp(12px, 2vw, 22px); }
+.an-clue-img { flex: none; border: 0; padding: 4px; border-radius: 16px; background: #fff; box-shadow: 0 3px 0 rgba(0, 0, 0, .1); height: min(22vh, 200px); aspect-ratio: 1; cursor: pointer; }
+.an-clue-img img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.an-clue-img.pop { animation: img-pop .35s ease; }
+.an-clue-text { font-size: clamp(20px, 3.4vh, 34px); font-weight: 800; text-align: center; max-width: 60ch; }
+.an-area { background: linear-gradient(180deg, #D9CCF7, #C3B1F1); box-shadow: 0 4px 0 #A48FDF, 0 10px 24px rgba(110, 70, 200, .12); transition: background .3s; }
+.an-board {
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: center; row-gap: calc(var(--an-size) * .22);
+  background: #fff; border: 3px solid #6D4BC8; border-radius: 18px; padding: calc(var(--an-size) * .22) 12px; min-height: calc(var(--an-size) * 1.5);
+  transition: background .3s, border-color .3s;
+}
+.an-word { display: inline-flex; gap: calc(var(--an-size) * .1); white-space: nowrap; }
+.an-gap { display: inline-block; width: calc(var(--an-size) * .55); }
+.an-slot {
+  width: var(--an-size); height: var(--an-size); border-radius: calc(var(--an-size) * .2); flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 3px dashed #A9B9D6; background: #F3F6FC; transition: transform .15s, background .2s, border-color .2s;
+}
+.an-slot.over { border-style: solid; border-color: var(--primary); background: var(--primary-soft); transform: scale(1.08); }
+.an-slot.ok { border-style: solid; border-color: #16A34A; background: #DCF7E6; }
+.an-slot.bad { animation: anBad .5s ease; }
+@keyframes anBad { 0%, 100% { transform: translateX(0); background: #F3F6FC; } 15% { background: #FEE2E2; border-color: #DC2626; } 25% { transform: translateX(-7px); } 50% { transform: translateX(6px); } 75% { transform: translateX(-4px); } }
+.an-letter, .an-tile { font-weight: 900; font-size: calc(var(--an-size) * .6); line-height: 1; color: #1F2A44; }
+.an-letter { animation: popIn .35s cubic-bezier(.3, 1.6, .5, 1); }
+.an-area.win .an-board { background: #DCF7E6; border-color: #16A34A; }
+.an-points { position: absolute; right: 22px; top: -18px; padding: 6px 18px; border-radius: 999px; background: var(--sun); font-weight: 900; font-size: clamp(18px, 2.8vh, 30px); box-shadow: 0 3px 0 #D99A00; animation: popIn .45s cubic-bezier(.3, 1.6, .5, 1); }
+.an-tray-wrap { display: flex; justify-content: center; }
+.an-tray { display: flex; flex-wrap: wrap; justify-content: center; gap: calc(var(--an-size) * .18); max-width: 100%; padding: 4px; }
+.an-home { width: var(--an-size); height: var(--an-size); border-radius: calc(var(--an-size) * .2); flex: none; }
+.an-home.empty { border: 3px dashed #D6DEEC; }
+.an-tile {
+  width: 100%; height: 100%; border-radius: calc(var(--an-size) * .2); display: flex; align-items: center; justify-content: center;
+  background: var(--tile, #FFD66B); box-shadow: 0 5px 0 rgba(0, 0, 0, .16); cursor: grab;
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
+.an-home:nth-child(6n+1) .an-tile { --tile: #FFD66B; }
+.an-home:nth-child(6n+2) .an-tile { --tile: #9FD8FF; }
+.an-home:nth-child(6n+3) .an-tile { --tile: #FFB3C7; }
+.an-home:nth-child(6n+4) .an-tile { --tile: #B7EFA6; }
+.an-home:nth-child(6n+5) .an-tile { --tile: #D7C2FF; }
+.an-home:nth-child(6n+6) .an-tile { --tile: #FFC98F; }
+.an-tile.lifted { opacity: .25; }
+.an-tile.wig { animation: wiggle .4s ease; }
+.an-ghost { position: fixed; z-index: 1000; pointer-events: none; margin: 0; transform: scale(1.12); box-shadow: 0 14px 26px rgba(0, 0, 0, .22); cursor: grabbing; }
+.an-ghost.returning { transition: left .25s ease, top .25s ease, transform .25s ease; transform: scale(1); }
+/* Editor */
+.an-clue-choice { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.an-head, .an-item { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+.an-head { margin: 4px 0 4px; }
+.an-head.with-clues { grid-template-columns: 30px minmax(0, 1fr) minmax(0, 1fr) auto; }
+.an-col { font-weight: 900; }
+.an-swap { justify-self: end; }
+.an-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.an-num { font-weight: 900; text-align: right; }
+.an-cells { display: grid; grid-template-columns: minmax(0, 1fr); border: 2px solid var(--line); border-radius: 12px; background: #fff; overflow: hidden; }
+.an-items.with-clues .an-cells { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.an-cell { display: flex; align-items: center; min-width: 0; }
+.an-cell input { flex: 1; min-width: 0; border: 0; border-radius: 0; background: transparent; font-size: 19px; font-weight: 700; padding: 11px 12px; box-shadow: none; }
+.an-cell input:focus { outline: 3px solid var(--primary-soft); outline-offset: -3px; }
+.an-clue-cell { border-left: 2px solid var(--line); background: #FFFCF0; }
+.an-clue-tools { display: inline-flex; align-items: center; gap: 2px; padding-right: 6px; }
+.an-in-btn { border: 0; background: transparent; font-size: 20px; width: 36px; height: 36px; border-radius: 10px; cursor: pointer; display: grid; place-items: center; padding: 2px; }
+.an-in-btn:hover { background: var(--primary-soft); }
+.an-in-btn.x { font-size: 13px; width: 24px; color: var(--muted); }
+.an-in-btn.pic img { width: 32px; height: 32px; object-fit: cover; border-radius: 6px; }
+.an-in-btn.rec { background: #FEE2E2; animation: anRec 1s ease-in-out infinite; }
+@keyframes anRec { 50% { background: #FCA5A5; } }
+.an-row-tools { display: flex; gap: 2px; }
+.an-row-tools .icon-btn { width: 30px; height: 32px; font-size: 13px; border-radius: 8px; border-width: 1px; }
+.an-item > .tp-item-warn { grid-column: 2 / -1; }
+.an-item.blank .an-cells { border-style: dashed; }
+@media (max-width: 700px) {
+  .an-items.with-clues .an-cells { grid-template-columns: 1fr; }
+  .an-clue-cell { border-left: 0; border-top: 2px solid var(--line); }
+  .an-item { grid-template-columns: 24px 1fr; }
+  .an-row-tools { grid-column: 2; justify-content: flex-end; }
+  .an-head.with-clues { grid-template-columns: 24px 1fr auto; } .an-head.with-clues .an-col + .an-col { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .an-in-btn.rec, .an-slot.bad, .an-letter, .an-points, .an-tile.wig, .an-clue-img.pop { animation: none !important; } .an-ghost.returning { transition: none; } }

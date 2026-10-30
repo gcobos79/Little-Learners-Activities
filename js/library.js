@@ -160,7 +160,9 @@ window.LL = window.LL || {};
         el('button.kind-choice', { type: 'button', onclick: pick('sort') },
           el('span.kind-icon', '🧺'), el('span.kind-name', 'Clasificación rápida'), el('span.kind-desc', 'Las tarjetas pasan por una banda y el niño lleva cada una a su grupo.')),
         el('button.kind-choice', { type: 'button', onclick: pick('typing') },
-          el('span.kind-icon', '⌨️'), el('span.kind-name', 'Pantalla de Tablet'), el('span.kind-desc', 'El niño copia palabras o frases con el teclado de la tablet: letras, Shift, Borrar y Enter.'))),
+          el('span.kind-icon', '⌨️'), el('span.kind-name', 'Pantalla de Tablet'), el('span.kind-desc', 'El niño copia palabras o frases con el teclado de la tablet: letras, Shift, Borrar y Enter.')),
+        el('button.kind-choice', { type: 'button', onclick: pick('anagram') },
+          el('span.kind-icon', '🔤'), el('span.kind-name', 'Anagrama'), el('span.kind-desc', 'El niño forma una palabra o frase arrastrando sus letras revueltas a las casillas.'))),
       actions: [{ label: 'Cancelar', kind: 'ghost', value: false }],
     });
   }
@@ -175,13 +177,17 @@ window.LL = window.LL || {};
       const n = qs.filter((q) => String(q.text || '').trim()).length;
       return LL.ui.tr('Pantalla de Tablet · ' + n + (n === 1 ? ' palabra' : ' palabras'), 'Tablet Screen · ' + n + (n === 1 ? ' word' : ' words'));
     }
+    if (t.type === 'anagram') {
+      const n = qs.filter((q) => String(q.text || '').trim()).length;
+      return LL.ui.tr('Anagrama · ' + n + (n === 1 ? ' palabra' : ' palabras'), 'Anagram · ' + n + (n === 1 ? ' word' : ' words'));
+    }
     return LL.ui.tr('Quiz · ' + qs.length + (qs.length === 1 ? ' pregunta' : ' preguntas'), 'Quiz · ' + qs.length + (qs.length === 1 ? ' question' : ' questions'));
   }
 
   function quizCard(t, student) {
     const cover = t.config?.coverImage || '';
     const main = el('button.card-main', { type: 'button', onclick: () => play(t) },
-      LL.media.isImage(cover) ? el('img.cover', { src: cover, alt: '' }) : el('span.cover-placeholder', { 'aria-hidden': 'true' }, t.type === 'sort' ? '🧺' : t.type === 'typing' ? '⌨️' : '❓'),
+      LL.media.isImage(cover) ? el('img.cover', { src: cover, alt: '' }) : el('span.cover-placeholder', { 'aria-hidden': 'true' }, t.type === 'sort' ? '🧺' : t.type === 'typing' ? '⌨️' : t.type === 'anagram' ? '🔤' : '❓'),
       el('span.name', t.name),
       el('span.meta', cardMeta(t)));
     const card = el('div.card.quiz', { dataset: { quizId: t.id } }, main);

@@ -40,6 +40,8 @@ window.LL = window.LL || {};
   const isSort = () => !!quiz && quiz.type === 'sort';
   // «Pantalla de Tablet» (type 'typing', V127): copy each word with the on-screen tablet keyboard.
   const isTyping = () => !!quiz && quiz.type === 'typing';
+  // «Anagrama» (type 'anagram', V127): drag the mixed-up letters into the boxes of the word.
+  const isAnagram = () => !!quiz && quiz.type === 'anagram';
 
   /* Full screen (V127): a student's activity fills the whole screen, so the browser bar and
    * other tabs are out of reach. The teacher's preview stays in the window. Browsers only allow
@@ -84,8 +86,10 @@ window.LL = window.LL || {};
     $('#playerHelp').hidden = !LL.store.instructionsOf(entry.config);
     root().classList.toggle('is-sort', entry.type === 'sort');
     root().classList.toggle('is-typing', entry.type === 'typing');
+    root().classList.toggle('is-anagram', entry.type === 'anagram');
     questions = entry.type === 'sort' ? [] : LL.store.clone(entry.config?.questions || []);
     if (entry.type === 'typing') questions = questions.filter((q) => LL.typingGame.normalize(q.text));
+    if (entry.type === 'anagram') questions = questions.filter((q) => LL.anagramGame.normalize(q.text).replace(/ /g, '').length >= 2);
     if (entry.config?.questionOrder === 'random' && !options.preview) questions = shuffle(questions);
     index = Math.max(0, Math.min(options.startIndex || 0, questions.length - 1));
     newAttempt();
@@ -111,6 +115,7 @@ window.LL = window.LL || {};
     stopSound();
     if (LL.sortGame) LL.sortGame.stop();
     if (LL.typingGame) LL.typingGame.stop();
+    if (LL.anagramGame) LL.anagramGame.stop();
     root().hidden = true;
     leaveFullscreen();
     document.body.style.overflow = '';
@@ -174,6 +179,7 @@ window.LL = window.LL || {};
     clearTimer();
     stopSound();
     if (LL.typingGame) LL.typingGame.stop();
+    if (LL.anagramGame) LL.anagramGame.stop();
     answered = false;
     selected = new Set();
     const q = questions[index];
@@ -181,13 +187,14 @@ window.LL = window.LL || {};
     b.replaceChildren();
     if (!q) {
       renderProgress();
-      b.append(el('div.finish', el('div.stars', '🤔'), el('h1', isTyping() ? LL.ui.tr('Esta actividad todavía no tiene palabras.', 'This activity has no words yet.') : LL.ui.tr('Esta actividad todavía no tiene preguntas.', 'This activity has no questions yet.'))));
+      b.append(el('div.finish', el('div.stars', '🤔'), el('h1', isTyping() || isAnagram() ? LL.ui.tr('Esta actividad todavía no tiene palabras.', 'This activity has no words yet.') : LL.ui.tr('Esta actividad todavía no tiene preguntas.', 'This activity has no questions yet.'))));
       $('#playerSpeak').disabled = true;
       return;
     }
     renderProgress();
     shownAt = Date.now();
     if (isTyping()) { renderTyping(q); return; }
+    if (isAnagram()) { renderAnagram(q); return; }
 
     // Question
     const hasImg = LL.media.isImage(q.image);
@@ -313,6 +320,41 @@ window.LL = window.LL || {};
     autoRead(word);
   }
 
+  /** «Anagrama»: one word or phrase per screen; its letters are dragged into the boxes. */
+  function renderAnagram(q) {
+    const clues = !!(quiz.config?.anagram?.clues);
+    const clueText = clues ? String(q.readText || '').trim() : '';
+    // The clue's sound: its file, or the voice reading the clue text. Without clues there is nothing to play
+    // (the word itself is only said at the end, as a reward).
+    const clue = { ...q, text: clueText, readTextEnabled: false, readText: '',
+      audioMode: clues && q.audioMode === 'file' && q.audio ? 'file' : clueText ? 'voice' : 'none' };
+    const speakBtn = $('#playerSpeak');
+    speakBtn.disabled = !hasPromptSound(clue);
+    speakBtn.onclick = () => playPrompt(clue);
+    const myRun = run;
+    const wordItem = { ...q, text: LL.anagramGame.normalize(q.text), readTextEnabled: false, readText: '', audioMode: 'voice' };
+    LL.anagramGame.start(body(), q, {
+      clues,
+      say: () => { if (hasPromptSound(clue)) playPrompt(clue); },
+      sayWord: () => { if (myRun === run && !root().hidden) { stopSound(); sayItem(wordItem, wordItem.text); } },
+      onDone: (r) => {
+        if (myRun !== run || root().hidden) return;
+        answered = true;
+        if (attempt && !attempt.answers.some((a) => a.question_id === q.id)) {
+          const original = (quiz.config?.questions || []).findIndex((x) => x.id === q.id);
+          attempt.answers.push({
+            position: original >= 0 ? original : index, question_id: q.id,
+            prompt: r.built.slice(0, 300), chosen_option_ids: [], chosen_text: r.built.slice(0, 200),
+            correct: r.errors === 0, points: r.points, errors: r.errors, response_ms: r.ms,
+          });
+        }
+        if (index < questions.length - 1) { index++; render(); } else finish();
+      },
+    });
+    if (LL.tts) LL.tts.prefetch([clue, wordItem], quiz.config?.voiceGender || 'female');
+    autoRead(clue);
+  }
+
   /** Shrink only the answer texts that don't fit their box. */
   function fitLabels(grid) {
     grid.querySelectorAll('.option .label').forEach((tx) => {
@@ -381,6 +423,7 @@ window.LL = window.LL || {};
   function finish() {
     clearTimer();
     if (LL.typingGame) LL.typingGame.stop();
+    if (LL.anagramGame) LL.anagramGame.stop();
     stopClock();
     if (attempt) showClock(Date.now() - Date.parse(attempt.startedAt));
     index = questions.length;
