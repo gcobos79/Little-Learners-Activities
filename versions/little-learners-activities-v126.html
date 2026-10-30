@@ -324,7 +324,7 @@ body.q-sorting, body.q-sorting * { cursor: grabbing !important; user-select: non
 .option:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,.08); }
 .option:disabled { cursor: default; }
 .option img { flex: 1 1 auto; min-height: 0; max-width: 100%; max-height: 100%; object-fit: contain; }
-.option .label { line-height: 1.05; text-align: center; overflow-wrap: anywhere; max-width: 100%; font-size: clamp(18px, min(60cqi, 60cqh), 120px); }
+.option .label { line-height: 1.05; text-align: center; overflow-wrap: anywhere; max-width: 100%; font-size: clamp(18px, min(60cqi, 60cqh, calc(125cqi / var(--len, 2))), 120px); }
 .option.has-image .label { font-size: clamp(14px, min(14cqi, 18cqh), 44px); flex: 0 0 auto; }
 .option.selected { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft), 0 5px 0 rgba(0,0,0,.08); }
 .option.flash-correct { animation: flashGood 1s steps(2, end) 2; border-color: #15803D; }
@@ -1166,7 +1166,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 window.LL = window.LL || {};
 LL.config = {
   // Set by tools/stamp_version.py on every publish.
-  build: '20261030195610',
+  build: '20261030211057',
   version: 'V126',
   // Who runs this site, e.g. 'Sra. García · Escuela Primaria Lincoln'
   owner: 'Geovanny Cobos',
@@ -3962,7 +3962,13 @@ window.LL = window.LL || {};
       btn.style.setProperty('--pastel', PASTELS[i % PASTELS.length]);
       btn.style.setProperty('--i', String(i));
       if (img) btn.append(el('img', { src: o.image, alt: o.text || '' }));
-      if (o.text) btn.append(el('span.label', o.text));
+      // Text-only answers: the longest word sets --len, so the letters shrink to fit instead of a word
+      // being split across lines (e.g. «ABC» shown as «AB / C»).
+      if (o.text) {
+        const label = el('span.label', o.text);
+        label.style.setProperty('--len', String(Math.max(2, ...String(o.text).split(/\s+/).map((w) => [...w].length))));
+        btn.append(label);
+      }
       if ((o.audioMode === 'file' && o.audio) || (o.audioMode === 'voice' && (o.text || o.readText))) {
         const s = el('span.icon-btn.answer-sound', { role: 'button', tabindex: '0', 'aria-label': 'Escuchar esta respuesta' }, '🔊');
         const play = (e) => {

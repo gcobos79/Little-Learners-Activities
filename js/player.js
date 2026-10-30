@@ -236,7 +236,13 @@ window.LL = window.LL || {};
       btn.style.setProperty('--pastel', PASTELS[i % PASTELS.length]);
       btn.style.setProperty('--i', String(i));
       if (img) btn.append(el('img', { src: o.image, alt: o.text || '' }));
-      if (o.text) btn.append(el('span.label', o.text));
+      // Text-only answers: the longest word sets --len, so the letters shrink to fit instead of a word
+      // being split across lines (e.g. «ABC» shown as «AB / C»).
+      if (o.text) {
+        const label = el('span.label', o.text);
+        label.style.setProperty('--len', String(Math.max(2, ...String(o.text).split(/\s+/).map((w) => [...w].length))));
+        btn.append(label);
+      }
       if ((o.audioMode === 'file' && o.audio) || (o.audioMode === 'voice' && (o.text || o.readText))) {
         const s = el('span.icon-btn.answer-sound', { role: 'button', tabindex: '0', 'aria-label': 'Escuchar esta respuesta' }, '🔊');
         const play = (e) => {
