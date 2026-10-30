@@ -1,4 +1,4 @@
-// Students leave an activity only by holding ↩️ for 3 seconds (V125).
+// Students leave an activity only by holding ↩️ for half a second (V125; 3 s → 0.5 s on Oct 30).
 const { chromium } = require('playwright');
 const path = require('path');
 const assert = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) process.exitCode = 1; };
@@ -24,21 +24,21 @@ const lib = [{ id: 'q1', familyId: 'q1', version: 1, type: 'quiz', name: 'Colore
   // Escape: stays
   await p.keyboard.press('Escape'); await p.waitForTimeout(200);
   assert(await open(), 'Esc does not leave for students');
-  // hold 1.5 s then release: stays
+  // hold 0.2 s then release: stays
   const r = await (await p.$('#playerExit')).boundingBox();
   await p.mouse.move(r.x + r.width / 2, r.y + r.height / 2);
-  await p.mouse.down(); await p.waitForTimeout(1500);
+  await p.mouse.down(); await p.waitForTimeout(200);
   assert(await p.isVisible('#playerExit.holding'), 'holding shows the ring filling');
   if (shot) await p.screenshot({ path: shot, clip: { x: 0, y: 0, width: 400, height: 140 } });
   await p.mouse.up(); await p.waitForTimeout(300);
-  assert(await open(), 'letting go before 3 seconds: stays');
+  assert(await open(), 'letting go before half a second: stays');
   // finger slides off: cancels
-  await p.mouse.down(); await p.waitForTimeout(800); await p.mouse.move(r.x + 300, r.y + 300); await p.waitForTimeout(2600); await p.mouse.up();
+  await p.mouse.down(); await p.waitForTimeout(200); await p.mouse.move(r.x + 300, r.y + 300); await p.waitForTimeout(600); await p.mouse.up();
   assert(await open(), 'sliding the finger off the button cancels');
-  // hold 3 s: leaves
+  // hold 0.5 s: leaves
   await p.mouse.move(r.x + r.width / 2, r.y + r.height / 2);
-  await p.mouse.down(); await p.waitForTimeout(3200);
-  assert(!(await open()), 'holding 3 seconds leaves the activity');
+  await p.mouse.down(); await p.waitForTimeout(800);
+  assert(!(await open()), 'holding half a second leaves the activity');
   await p.mouse.up(); await p.waitForTimeout(300);
   assert(!(await open()) && (await p.isVisible('#studentGrid')) && (await p.evaluate(() => LL.app.state.screen === 'students' && !LL.app.state.student)), 'student: back on «¿Quién eres?» (all the students); nothing reopened');
   // touch hold
@@ -47,12 +47,12 @@ const lib = [{ id: 'q1', familyId: 'q1', version: 1, type: 'quiz', name: 'Colore
   await p.click('.card.quiz:has-text("Colores")'); await p.waitForTimeout(600);
   const cdp = await ctx.newCDPSession(p);
   const c = { x: r.x + r.width / 2, y: r.y + r.height / 2, id: 1 };
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [c] }); await p.waitForTimeout(1000);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [c] }); await p.waitForTimeout(200);
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await p.waitForTimeout(300);
-  assert(await open(), 'touch: 1 second is not enough');
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [c] }); await p.waitForTimeout(3200);
+  assert(await open(), 'touch: 0.2 seconds is not enough');
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [c] }); await p.waitForTimeout(800);
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await p.waitForTimeout(300);
-  assert(!(await open()), 'touch: holding 3 seconds leaves');
+  assert(!(await open()), 'touch: holding half a second leaves');
   assert(await p.isVisible('#studentGrid'), 'touch: also back on «¿Quién eres?»');
   // teacher preview: a normal click leaves
   // already on «¿Quién eres?» after leaving the activity

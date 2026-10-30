@@ -126,7 +126,7 @@ const IMG_DIR = process.argv[4];
   // Otra vez restarts
   await p.click('.finish button:has-text("Otra vez")'); await p.waitForTimeout(800);
   assert((await p.$$('.sort-card')).length === 5, '«Otra vez» starts again with all cards');
-  // Exit needs the 3-second hold for students
+  // Exit needs the half-second hold for students
   await p.click('#playerExit'); await p.waitForTimeout(300);
   assert(await p.isVisible('#player'), 'quick tap on ↩️ does not leave');
   await p.evaluate(() => LL.player.close()); await p.waitForTimeout(300);

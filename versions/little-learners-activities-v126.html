@@ -755,7 +755,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 #playerExit .exit-icon { position: relative; z-index: 1; pointer-events: none; }
 #playerExit .hold-ring { position: absolute; inset: -5px; width: calc(100% + 10px); height: calc(100% + 10px); transform: rotate(-90deg); pointer-events: none; }
 #playerExit .hold-ring circle { fill: none; stroke: var(--primary); stroke-width: 8; stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 100; opacity: 0; }
-#playerExit.holding .hold-ring circle { opacity: 1; stroke-dashoffset: 0; transition: stroke-dashoffset 3s linear; }
+#playerExit.holding .hold-ring circle { opacity: 1; stroke-dashoffset: 0; transition: stroke-dashoffset .5s linear; }
 #playerExit.holding { background: var(--primary-soft); transform: scale(1.06); }
 #playerExit.nudge { animation: exit-nudge .45s ease; }
 @keyframes exit-nudge { 20%, 60% { transform: translateX(-4px); } 40%, 80% { transform: translateX(4px); } }
@@ -1166,7 +1166,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, section[tabindex="-1"]:focus, 
 window.LL = window.LL || {};
 LL.config = {
   // Set by tools/stamp_version.py on every publish.
-  build: '20261030194211',
+  build: '20261030195610',
   version: 'V126',
   // Who runs this site, e.g. 'Sra. García · Escuela Primaria Lincoln'
   owner: 'Geovanny Cobos',
@@ -4176,11 +4176,11 @@ window.LL = window.LL || {};
 
   // Wire fixed controls once.
   document.addEventListener('DOMContentLoaded', () => {
-    // Exit: students must hold the button for 3 seconds (a ring fills up), so a stray tap
+    // Exit: students must hold the button for half a second (a ring fills up), so a stray tap
     // doesn't end the activity. In the teacher's preview a normal click is enough.
     $('#playerHelp').addEventListener('click', () => sayInstructions());
     const exitBtn = $('#playerExit');
-    const HOLD_MS = 3000;
+    const HOLD_MS = 500;
     let holdTimer = null, held = false;
     const studentMode = () => !opts.preview;
     const hint = () => {

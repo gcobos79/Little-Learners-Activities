@@ -24,7 +24,7 @@ const lib = [{ id: 'q1', familyId: 'q1', version: 1, type: 'quiz', name: 'Colore
   assert(!(await fs()) && (await p.isVisible('#player')), 'left full screen, activity still open');
   await p.click('#playerBody', { position: { x: 20, y: 20 } }); await p.waitForTimeout(600);
   assert(await fs(), 'a tap in the activity returns to full screen');
-  // Hold ↩️ 3 s: leaves the activity and full screen.
+  // Hold ↩️ (0.5 s): leaves the activity and full screen.
   const r = await (await p.$('#playerExit')).boundingBox();
   await p.mouse.move(r.x + r.width / 2, r.y + r.height / 2);
   await p.mouse.down(); await p.waitForTimeout(3200); await p.mouse.up(); await p.waitForTimeout(600);

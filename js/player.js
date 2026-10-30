@@ -450,11 +450,11 @@ window.LL = window.LL || {};
 
   // Wire fixed controls once.
   document.addEventListener('DOMContentLoaded', () => {
-    // Exit: students must hold the button for 3 seconds (a ring fills up), so a stray tap
+    // Exit: students must hold the button for half a second (a ring fills up), so a stray tap
     // doesn't end the activity. In the teacher's preview a normal click is enough.
     $('#playerHelp').addEventListener('click', () => sayInstructions());
     const exitBtn = $('#playerExit');
-    const HOLD_MS = 3000;
+    const HOLD_MS = 500;
     let holdTimer = null, held = false;
     const studentMode = () => !opts.preview;
     const hint = () => {
